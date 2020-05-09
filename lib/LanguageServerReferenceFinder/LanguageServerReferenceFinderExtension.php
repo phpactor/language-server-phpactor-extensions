@@ -7,10 +7,12 @@ use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\GotoDefinitionHandler;
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\GotoImplementationHandler;
+use Phpactor\Extension\LanguageServerReferenceFinder\Handler\ReferencesHandler;
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\TypeDefinitionHandler;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
 use Phpactor\MapResolver\Resolver;
+use Phpactor\ReferenceFinder\ReferenceFinder;
 
 class LanguageServerReferenceFinderExtension implements Extension
 {
@@ -30,6 +32,14 @@ class LanguageServerReferenceFinderExtension implements Extension
             return new TypeDefinitionHandler(
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
                 $container->get(ReferenceFinderExtension::SERVICE_TYPE_LOCATOR)
+            );
+        }, [ LanguageServerExtension::TAG_SESSION_HANDLER => [] ]);
+
+        $container->register(ReferencesHandler::class, function (Container $container) {
+            return new ReferencesHandler(
+                $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
+                $container->get(ReferenceFinder::class),
+                $container->get(ReferenceFinderExtension::SERVICE_DEFINITION_LOCATOR)
             );
         }, [ LanguageServerExtension::TAG_SESSION_HANDLER => [] ]);
 

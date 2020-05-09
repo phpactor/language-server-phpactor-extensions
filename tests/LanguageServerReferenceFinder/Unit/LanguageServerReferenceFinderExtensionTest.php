@@ -2,6 +2,7 @@
 
 namespace Phpactor\Extension\LanguageServerReferenceFinder\Tests\Unit;
 
+use LanguageServerProtocol\ReferenceContext;
 use LanguageServerProtocol\TextDocumentIdentifier;
 use LanguageServerProtocol\TextDocumentItem;
 use PHPUnit\Framework\TestCase;
@@ -47,6 +48,21 @@ class LanguageServerReferenceFinderExtensionTest extends TestCase
             ],
         ]);
         $this->assertNull($response->result, 'Type was not found');
+    }
+
+    public function testReferenceFinder(): void
+    {
+        $tester = $this->createTester();
+        $tester->initialize();
+        $tester->openDocument(new TextDocumentItem(__FILE__, 'php', 1, file_get_contents(__FILE__)));
+
+        $response = $tester->dispatchAndWait(1, 'textDocument/references', [
+            'textDocument' => new TextDocumentIdentifier(__FILE__),
+            'position' => [
+            ],
+            'context' => new ReferenceContext()
+        ]);
+        $this->assertIsArray($response->result, 'Returned empty references');
     }
 
     private function createTester(): ServerTester
