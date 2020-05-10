@@ -13,6 +13,7 @@ use Phpactor\LanguageServer\Test\HandlerTester;
 use Phpactor\ReferenceFinder\DefinitionLocation;
 use Phpactor\ReferenceFinder\DefinitionLocator;
 use Phpactor\ReferenceFinder\Exception\CouldNotLocateDefinition;
+use Phpactor\ReferenceFinder\PotentialLocation;
 use Phpactor\ReferenceFinder\ReferenceFinder;
 use Phpactor\TestUtils\PHPUnit\TestCase;
 use Phpactor\TextDocument\ByteOffset;
@@ -80,7 +81,7 @@ class ReferencesHandlerTest extends TestCase
             $document,
             ByteOffset::fromInt(7)
         )->willYield([
-            new Location($document->uri(), ByteOffset::fromInt(2))
+            PotentialLocation::surely(new Location($document->uri(), ByteOffset::fromInt(2)))
         ])->shouldBeCalled();
 
         $tester = new HandlerTester($this->createReferencesHandler());
@@ -109,7 +110,7 @@ class ReferencesHandlerTest extends TestCase
             $document,
             ByteOffset::fromInt(7)
         )->willYield([
-            new Location($document->uri(), ByteOffset::fromInt(2))
+            PotentialLocation::surely(new Location($document->uri(), ByteOffset::fromInt(2)))
         ])->shouldBeCalled();
 
         $this->locator->locateDefinition(
@@ -143,7 +144,7 @@ class ReferencesHandlerTest extends TestCase
             $document,
             ByteOffset::fromInt(7)
         )->willYield([
-            new Location($document->uri(), ByteOffset::fromInt(2))
+            PotentialLocation::surely(new Location($document->uri(), ByteOffset::fromInt(2)))
         ])->shouldBeCalled();
 
         $this->locator->locateDefinition(

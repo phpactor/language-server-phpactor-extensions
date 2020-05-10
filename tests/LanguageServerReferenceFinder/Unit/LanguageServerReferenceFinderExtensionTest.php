@@ -15,6 +15,7 @@ use Phpactor\FilePathResolverExtension\FilePathResolverExtension;
 use Phpactor\LanguageServer\Core\Server\ResponseWatcher;
 use Phpactor\LanguageServer\Core\Server\ServerClient;
 use Phpactor\LanguageServer\Core\Server\Transmitter\NullMessageTransmitter;
+use Phpactor\LanguageServer\Core\Server\Transmitter\TestMessageTransmitter;
 use Phpactor\LanguageServer\LanguageServerBuilder;
 use Phpactor\LanguageServer\Test\ServerTester;
 
@@ -60,7 +61,8 @@ class LanguageServerReferenceFinderExtensionTest extends TestCase
             'textDocument' => new TextDocumentIdentifier(__FILE__),
             'position' => [
             ],
-            'context' => new ReferenceContext()
+            'context' => new ReferenceContext(),
+            'client' => new ServerClient(new TestMessageTransmitter(), new ResponseWatcher())
         ]);
         $this->assertIsArray($response->result, 'Returned empty references');
     }

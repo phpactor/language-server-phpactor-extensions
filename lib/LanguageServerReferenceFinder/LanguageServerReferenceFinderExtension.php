@@ -16,6 +16,8 @@ use Phpactor\ReferenceFinder\ReferenceFinder;
 
 class LanguageServerReferenceFinderExtension implements Extension
 {
+    const PARAM_REFERENCE_TIMEOUT = 'language_server_reference_reference_finder.reference_timeout';
+
     /**
      * {@inheritDoc}
      */
@@ -39,7 +41,8 @@ class LanguageServerReferenceFinderExtension implements Extension
             return new ReferencesHandler(
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
                 $container->get(ReferenceFinder::class),
-                $container->get(ReferenceFinderExtension::SERVICE_DEFINITION_LOCATOR)
+                $container->get(ReferenceFinderExtension::SERVICE_DEFINITION_LOCATOR),
+                $container->getParameter(self::PARAM_REFERENCE_TIMEOUT)
             );
         }, [ LanguageServerExtension::TAG_SESSION_HANDLER => [] ]);
 
@@ -56,5 +59,8 @@ class LanguageServerReferenceFinderExtension implements Extension
      */
     public function configure(Resolver $schema)
     {
+        $schema->setDefaults([
+            self::PARAM_REFERENCE_TIMEOUT => 10
+        ]);
     }
 }
