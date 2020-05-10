@@ -17,7 +17,6 @@ use Phpactor\ReferenceFinder\DefinitionLocator;
 use Phpactor\ReferenceFinder\Exception\CouldNotLocateDefinition;
 use Phpactor\ReferenceFinder\ReferenceFinder;
 use Phpactor\TextDocument\Location;
-use Phpactor\TextDocument\Locations;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocumentBuilder;
 
@@ -38,8 +37,11 @@ class ReferencesHandler implements Handler, CanRegisterCapabilities
      */
     private $definitionLocator;
 
-    public function __construct(Workspace $workspace, ReferenceFinder $finder, DefinitionLocator $definitionLocator)
-    {
+    public function __construct(
+        Workspace $workspace,
+        ReferenceFinder $finder,
+        DefinitionLocator $definitionLocator
+    ) {
         $this->workspace = $workspace;
         $this->finder = $finder;
         $this->definitionLocator = $definitionLocator;
@@ -71,28 +73,29 @@ class ReferencesHandler implements Handler, CanRegisterCapabilities
             )->build();
 
             $offset = ByteOffset::fromInt($position->toOffset($textDocument->text));
-            $locations = new Locations([]);
 
+            $locations = [];
             if ($context->includeDeclaration) {
                 try {
                     $location = $this->definitionLocator->locateDefinition($phpactorDocument, $offset);
-                    $locations = $locations->append(new Locations([
-                        new Location($location->uri(), $location->offset())
-                    ]));
+                    $locations[] = new Location($location->uri(), $location->offset());
                 } catch (CouldNotLocateDefinition $notFound) {
                 }
             }
 
-            $locations = $locations->append($this->finder->findReferences($phpactorDocument, $offset));
+            foreach ($this->finder->findReferences($phpactorDocument, $offset) as $location) {
+                $locations[] = $location;
+            }
 
             return $this->toLocations($locations);
         });
     }
 
     /**
+     * @param Location[] $locations
      * @return LspLocation[]
      */
-    private function toLocations(Locations $locations): array
+    private function toLocations(array $locations): array
     {
         $lspLocations = [];
         foreach ($locations as $location) {

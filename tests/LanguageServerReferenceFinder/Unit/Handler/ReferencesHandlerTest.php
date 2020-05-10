@@ -17,7 +17,6 @@ use Phpactor\ReferenceFinder\ReferenceFinder;
 use Phpactor\TestUtils\PHPUnit\TestCase;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\Location;
-use Phpactor\TextDocument\Locations;
 use Phpactor\TextDocument\TextDocumentBuilder;
 
 class ReferencesHandlerTest extends TestCase
@@ -80,9 +79,9 @@ class ReferencesHandlerTest extends TestCase
         $this->finder->findReferences(
             $document,
             ByteOffset::fromInt(7)
-        )->willReturn(new Locations([
+        )->willYield([
             new Location($document->uri(), ByteOffset::fromInt(2))
-        ]))->shouldBeCalled();
+        ])->shouldBeCalled();
 
         $tester = new HandlerTester($this->createReferencesHandler());
 
@@ -109,9 +108,9 @@ class ReferencesHandlerTest extends TestCase
         $this->finder->findReferences(
             $document,
             ByteOffset::fromInt(7)
-        )->willReturn(new Locations([
+        )->willYield([
             new Location($document->uri(), ByteOffset::fromInt(2))
-        ]))->shouldBeCalled();
+        ])->shouldBeCalled();
 
         $this->locator->locateDefinition(
             $document,
@@ -143,9 +142,9 @@ class ReferencesHandlerTest extends TestCase
         $this->finder->findReferences(
             $document,
             ByteOffset::fromInt(7)
-        )->willReturn(new Locations([
+        )->willYield([
             new Location($document->uri(), ByteOffset::fromInt(2))
-        ]))->shouldBeCalled();
+        ])->shouldBeCalled();
 
         $this->locator->locateDefinition(
             $document,
