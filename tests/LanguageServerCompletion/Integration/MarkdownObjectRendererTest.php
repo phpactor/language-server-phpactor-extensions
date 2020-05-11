@@ -184,6 +184,14 @@ EOT
             },
             'class_reflection3.md',
         ];
+
+        yield 'final class' => [
+            '',
+            function (Reflector $reflector) {
+                return $reflector->reflectClassesIn('<?php final class Foobar {}')->first();
+            },
+            'class_reflection4.md',
+        ];
     }
 
     /**
