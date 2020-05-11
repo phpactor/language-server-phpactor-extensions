@@ -97,9 +97,14 @@ class ReferencesHandler implements Handler, CanRegisterCapabilities
 
             $start = microtime(true);
             $count = 0;
+            $risky = 0;
             foreach ($this->finder->findReferences($phpactorDocument, $offset) as $potentialLocation) {
                 if ($potentialLocation->isSurely()) {
                     $locations[] = $potentialLocation->location();
+                }
+
+                if ($potentialLocation->isMaybe()) {
+                    $risky++;
                 }
 
                 if ($count++ % 100 === 0 && $count > 0) {
@@ -137,9 +142,9 @@ class ReferencesHandler implements Handler, CanRegisterCapabilities
             $client->notification('window/showMessage', [
                 'type' => MessageType::INFO,
                 'message' => sprintf(
-                    'Found %s reference(s) from %s candidates',
+                    'Found %s reference(s)%s',
                     count($locations),
-                    $count
+                    $risky ? sprintf(' %s unresolvable references excluded', $risky) : ''
                 )
             ]);
 
