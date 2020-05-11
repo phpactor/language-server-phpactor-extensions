@@ -2,6 +2,7 @@
 
 namespace Phpactor\Extension\LanguageServerReferenceFinder\Handler;
 
+use Amp\Delayed;
 use Amp\Promise;
 use LanguageServerProtocol\Location as LspLocation;
 use LanguageServerProtocol\MessageType;
@@ -106,7 +107,7 @@ class ReferencesHandler implements Handler, CanRegisterCapabilities
                         'type' => MessageType::INFO,
                         'message' => sprintf(
                             '... scanned %s references confirmed %s ...',
-                            $count,
+                            $count - 1,
                             count($locations)
                         )
                     ]);
@@ -125,6 +126,11 @@ class ReferencesHandler implements Handler, CanRegisterCapabilities
                         )
                     ]);
                     return $this->toLocations($locations);
+                }
+
+                if ($count++ % 10) {
+                    // give other co-routines a chance
+                    yield new Delayed(0);
                 }
             }
 
