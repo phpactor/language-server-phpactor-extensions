@@ -62,6 +62,12 @@
     "extra": {
         "branch-alias": {
             "dev-master": "0.4.x-dev"
-        }
+        },
+        "phpactor.extension_class": [
+            "Phpactor\\Extension\\LanguageServerCompletion\\LanguageServerCompletionExtension",
+            "Phpactor\\Extension\\LanguageServerIndexer\\LanguageServerIndexerExtension",
+            "Phpactor\\Extension\\LanguageServerReferenceFinder\\LanguageServerReferenceFinderExtension",
+            "Phpactor\\Extension\\LanguageServerWorseReflection\\LanguageServerWorseReflectionExtension"
+        ]
     }
 }
