@@ -39,7 +39,7 @@ class LanguageServerWorseReflectionExtension implements Extension
 
         $container->register(WorkspaceIndexListener::class, function (Container $container) {
             return new WorkspaceIndexListener(
-                $container->get(WorkspaceIndex::class),
+                $container->get(WorkspaceIndex::class)
             );
         }, [ LanguageServerExtension::TAG_LISTENER_PROVIDER => [] ]);
 
