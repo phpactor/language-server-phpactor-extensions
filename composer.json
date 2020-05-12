@@ -50,7 +50,8 @@
             "Phpactor\\Extension\\LanguageServerCompletion\\Tests\\": "tests/LanguageServerCompletion/",
             "Phpactor\\Extension\\LanguageServerReferenceFinder\\Tests\\": "tests/LanguageServerReferenceFinder/",
             "Phpactor\\Extension\\LanguageServerIndexer\\Tests\\": "tests/LanguageServerIndexer/",
-            "Phpactor\\Extension\\LanguageServerWorseReflection\\Tests\\": "tests/LanguageServerWorseReflection/"
+            "Phpactor\\Extension\\LanguageServerWorseReflection\\Tests\\": "tests/LanguageServerWorseReflection/",
+            "Phpactor\\Extension\\LanguageServerBridge\\Tests\\": "tests/LanguageServerBridge/"
         }
     },
     "scripts": {
