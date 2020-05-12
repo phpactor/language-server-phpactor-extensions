@@ -5,6 +5,7 @@ namespace Phpactor\Extension\LanguageServerReferenceFinder;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
+use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\GotoDefinitionHandler;
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\GotoImplementationHandler;
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\ReferencesHandler;
@@ -26,14 +27,16 @@ class LanguageServerReferenceFinderExtension implements Extension
         $container->register(GotoDefinitionHandler::class, function (Container $container) {
             return new GotoDefinitionHandler(
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
-                $container->get(ReferenceFinderExtension::SERVICE_DEFINITION_LOCATOR)
+                $container->get(ReferenceFinderExtension::SERVICE_DEFINITION_LOCATOR),
+                $container->get(LocationConverter::class)
             );
         }, [ LanguageServerExtension::TAG_SESSION_HANDLER => [] ]);
 
         $container->register(TypeDefinitionHandler::class, function (Container $container) {
             return new TypeDefinitionHandler(
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
-                $container->get(ReferenceFinderExtension::SERVICE_TYPE_LOCATOR)
+                $container->get(ReferenceFinderExtension::SERVICE_TYPE_LOCATOR),
+                $container->get(LocationConverter::class)
             );
         }, [ LanguageServerExtension::TAG_SESSION_HANDLER => [] ]);
 
@@ -42,6 +45,7 @@ class LanguageServerReferenceFinderExtension implements Extension
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
                 $container->get(ReferenceFinder::class),
                 $container->get(ReferenceFinderExtension::SERVICE_DEFINITION_LOCATOR),
+                $container->get(LocationConverter::class),
                 $container->getParameter(self::PARAM_REFERENCE_TIMEOUT)
             );
         }, [ LanguageServerExtension::TAG_SESSION_HANDLER => [] ]);
@@ -49,7 +53,8 @@ class LanguageServerReferenceFinderExtension implements Extension
         $container->register(GotoImplementationHandler::class, function (Container $container) {
             return new GotoImplementationHandler(
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
-                $container->get(ReferenceFinderExtension::SERVICE_IMPLEMENTATION_FINDER)
+                $container->get(ReferenceFinderExtension::SERVICE_IMPLEMENTATION_FINDER),
+                $container->get(LocationConverter::class)
             );
         }, [ LanguageServerExtension::TAG_SESSION_HANDLER => [] ]);
     }

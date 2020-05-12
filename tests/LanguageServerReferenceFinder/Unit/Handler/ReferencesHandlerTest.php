@@ -7,6 +7,7 @@ use LanguageServerProtocol\Position;
 use LanguageServerProtocol\ReferenceContext;
 use LanguageServerProtocol\TextDocumentIdentifier;
 use LanguageServerProtocol\TextDocumentItem;
+use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\ReferencesHandler;
 use Phpactor\LanguageServer\Core\Session\Workspace;
 use Phpactor\LanguageServer\Test\HandlerTester;
@@ -171,7 +172,8 @@ class ReferencesHandlerTest extends TestCase
         return new ReferencesHandler(
             $this->workspace,
             $this->finder->reveal(),
-            $this->locator->reveal()
+            $this->locator->reveal(),
+            new LocationConverter($this->workspace)
         );
     }
 }

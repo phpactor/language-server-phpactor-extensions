@@ -10,6 +10,7 @@ use Phpactor\Extension\CompletionWorse\CompletionWorseExtension;
 use Phpactor\Extension\Completion\CompletionExtension;
 use Phpactor\Extension\ComposerAutoloader\ComposerAutoloaderExtension;
 use Phpactor\Extension\Console\ConsoleExtension;
+use Phpactor\Extension\LanguageServerBridge\LanguageServerBridgeExtension;
 use Phpactor\Extension\LanguageServerCompletion\LanguageServerCompletionExtension;
 use Phpactor\Extension\LanguageServerHover\LanguageServerHoverExtension;
 use Phpactor\Extension\LanguageServerIndexer\LanguageServerIndexerExtension;
@@ -42,6 +43,7 @@ $container = PhpactorContainer::fromExtensions([
     ReferenceFinderExtension::class,
     IndexerExtension::class,
     SourceCodeFilesystemExtension::class,
+    LanguageServerBridgeExtension::class,
 ], [
     FilePathResolverExtension::PARAM_PROJECT_ROOT => realpath(__DIR__ . '/..'),
     FilePathResolverExtension::PARAM_APPLICATION_ROOT => realpath(__DIR__ .'/..'),

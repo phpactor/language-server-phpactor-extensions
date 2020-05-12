@@ -6,6 +6,7 @@ use LanguageServerProtocol\Location as LspLocation;
 use LanguageServerProtocol\Position;
 use LanguageServerProtocol\TextDocumentIdentifier;
 use LanguageServerProtocol\TextDocumentItem;
+use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\GotoImplementationHandler;
 use Phpactor\LanguageServer\Core\Session\Workspace;
 use Phpactor\LanguageServer\Test\HandlerTester;
@@ -77,6 +78,7 @@ class GotoImplementationHandlerTest extends TestCase
         $tester = new HandlerTester(new GotoImplementationHandler(
             $this->workspace,
             $this->finder->reveal(),
+            new LocationConverter($this->workspace)
         ));
 
         $response = $tester->dispatchAndWait('textDocument/implementation', [

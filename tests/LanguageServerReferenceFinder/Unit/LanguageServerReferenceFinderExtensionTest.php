@@ -7,6 +7,7 @@ use LanguageServerProtocol\TextDocumentIdentifier;
 use LanguageServerProtocol\TextDocumentItem;
 use PHPUnit\Framework\TestCase;
 use Phpactor\Container\PhpactorContainer;
+use Phpactor\Extension\LanguageServerBridge\LanguageServerBridgeExtension;
 use Phpactor\Extension\LanguageServerReferenceFinder\LanguageServerReferenceFinderExtension;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\Logger\LoggingExtension;
@@ -75,6 +76,7 @@ class LanguageServerReferenceFinderExtensionTest extends TestCase
             LanguageServerReferenceFinderExtension::class,
             ReferenceFinderExtension::class,
             FilePathResolverExtension::class,
+            LanguageServerBridgeExtension::class,
         ]);
         
         $builder = $container->get(LanguageServerExtension::SERVICE_LANGUAGE_SERVER_BUILDER);

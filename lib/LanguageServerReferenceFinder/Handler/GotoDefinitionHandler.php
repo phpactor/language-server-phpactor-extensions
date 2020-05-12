@@ -3,12 +3,10 @@
 namespace Phpactor\Extension\LanguageServerReferenceFinder\Handler;
 
 use Amp\Promise;
-use LanguageServerProtocol\Location;
 use LanguageServerProtocol\Position;
-use LanguageServerProtocol\Range;
 use LanguageServerProtocol\ServerCapabilities;
 use LanguageServerProtocol\TextDocumentIdentifier;
-use Phpactor\Extension\LanguageServer\Helper\OffsetHelper;
+use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\LanguageServer\Core\Handler\CanRegisterCapabilities;
 use Phpactor\LanguageServer\Core\Handler\Handler;
 use Phpactor\LanguageServer\Core\Session\Workspace;
@@ -16,7 +14,6 @@ use Phpactor\ReferenceFinder\DefinitionLocator;
 use Phpactor\ReferenceFinder\Exception\CouldNotLocateDefinition;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocumentBuilder;
-use RuntimeException;
 
 class GotoDefinitionHandler implements Handler, CanRegisterCapabilities
 {
@@ -30,10 +27,16 @@ class GotoDefinitionHandler implements Handler, CanRegisterCapabilities
      */
     private $workspace;
 
-    public function __construct(Workspace $workspace, DefinitionLocator $definitionLocator)
+    /**
+     * @var LocationConverter
+     */
+    private $locationConverter;
+
+    public function __construct(Workspace $workspace, DefinitionLocator $definitionLocator, LocationConverter $locationConverter)
     {
         $this->definitionLocator = $definitionLocator;
         $this->workspace = $workspace;
+        $this->locationConverter = $locationConverter;
     }
 
     public function methods(): array
@@ -61,28 +64,7 @@ class GotoDefinitionHandler implements Handler, CanRegisterCapabilities
                 return null;
             }
 
-            // this _should_ exist for sure, but would be better to refactor the
-            // goto definition result to return the source code.
-            $sourceCode = file_get_contents($location->uri());
-
-            if (false === $sourceCode) {
-                throw new RuntimeException(sprintf(
-                    'Could not read file "%s"',
-                    $location->uri()
-                ));
-            }
-
-            $startPosition = OffsetHelper::offsetToPosition(
-                $sourceCode,
-                $location->offset()->toInt()
-            );
-
-            $location = new Location($location->uri(), new Range(
-                $startPosition,
-                $startPosition
-            ));
-
-            return $location;
+            return $this->locationConverter->toLspLocation($location);
         });
     }
 

@@ -6,6 +6,7 @@ use LanguageServerProtocol\Location;
 use LanguageServerProtocol\Position;
 use LanguageServerProtocol\TextDocumentIdentifier;
 use LanguageServerProtocol\TextDocumentItem;
+use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\GotoDefinitionHandler;
 use Phpactor\LanguageServer\Core\Server\ServerClient;
 use Phpactor\LanguageServer\Core\Session\Workspace;
@@ -83,6 +84,7 @@ class GotoDefinitionHandlerTest extends TestCase
         $tester = new HandlerTester(new GotoDefinitionHandler(
             $this->workspace,
             $this->locator->reveal(),
+            new LocationConverter($this->workspace)
         ));
         $response = $tester->dispatchAndWait('textDocument/definition', [
             'textDocument' => $this->identifier,
