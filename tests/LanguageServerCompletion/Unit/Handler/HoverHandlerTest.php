@@ -61,6 +61,26 @@ EOT
             ,
         ];
 
+        yield 'method with parent documentation' => [
+            <<<'EOT'
+<?php 
+
+class Foobar {
+    /** 
+     * The original documentation
+     */
+    private function foo():string {} 
+}
+class A extends Foobar { 
+    /** 
+     * This is a method 
+     */
+    private function f<>oo():string {} 
+}
+EOT
+            ,
+        ];
+
         yield 'class' => [
             '<?php cl<>ass A { } }',
             'A'

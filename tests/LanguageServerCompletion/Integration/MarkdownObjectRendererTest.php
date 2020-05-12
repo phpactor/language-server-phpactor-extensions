@@ -6,6 +6,7 @@ use Closure;
 use Generator;
 use Phpactor\Extension\LanguageServerCompletion\Tests\IntegrationTestCase;
 use Phpactor\Extension\LanguageServerHover\Renderer\HoverInformation;
+use Phpactor\Extension\LanguageServerHover\Renderer\MemberDocblock;
 use Phpactor\ObjectRenderer\Model\ObjectRenderer;
 use Phpactor\ObjectRenderer\ObjectRendererBuilder;
 use Phpactor\TestUtils\ExtractOffset;
@@ -35,8 +36,8 @@ class MarkdownObjectRendererTest extends IntegrationTestCase
 
     protected function setUp(): void
     {
-        $this->workspace()->reset();
         $this->workspace()->mkdir('project');
+        $this->workspace()->reset();
         $this->locator = new StubSourceLocator(ReflectorBuilder::create()->build(), $this->workspace()->path('project'), $this->workspace()->path('cache'));
         $this->reflector = ReflectorBuilder::create()
             ->addLocator($this->locator)
@@ -60,6 +61,7 @@ class MarkdownObjectRendererTest extends IntegrationTestCase
      * @dataProvider provideFunction
      * @dataProvider provideSymbolOffset
      * @dataProvider provideType
+     * @dataProvider provideMemberDocblock
      */
     public function testRender(string $manifest, Closure $objectFactory, string $expected, bool $capture = false): void
     {
@@ -78,7 +80,6 @@ class MarkdownObjectRendererTest extends IntegrationTestCase
             fwrite(STDOUT, sprintf("\nCaptured %s\n\n>>> START\n%s\n<<< END", $path, $actual));
             file_put_contents($path, $actual);
         }
-
 
         self::assertEquals(file_get_contents($path), $actual);
     }
@@ -351,6 +352,58 @@ EOT
             },
             'method5.md',
         ];
+
+        yield 'overridden method' => [
+            '',
+            function (Reflector $reflector) {
+                return $reflector->reflectClassesIn(
+                    <<<'EOT'
+<?php
+
+class ParentClass
+{
+    public function foobar()
+    {
+    }
+}
+
+class OneClass extends ParentClass
+{
+    public function foobar()
+    {
+    }
+}
+EOT
+                )->get('OneClass')->methods()->get('foobar');
+            },
+            'method6.md',
+        ];
+
+        yield 'overridden method from interface' => [
+            '',
+            function (Reflector $reflector) {
+                return $reflector->reflectClassesIn(
+                    <<<'EOT'
+<?php
+
+interface ClassInterface
+{
+    public function foobar()
+    {
+    }
+}
+
+class OneClass implements ClassInterface
+{
+    public function foobar()
+    {
+    }
+}
+EOT
+                )->get('OneClass')->methods()->get('foobar');
+            },
+            'method7.md',
+        ];
     }
 
     /**
@@ -574,6 +627,206 @@ EOT
                 return Type::mixed();
             },
             'type1.md',
+        ];
+    }
+
+    /**
+     * @return Generator<array>
+     */
+    public function provideMemberDocblock()
+    {
+        yield 'single member with no doc' => [
+            '',
+            function (Reflector $reflector) {
+                return new MemberDocblock($reflector->reflectClassesIn(
+                    <<<'EOT'
+<?php
+
+class OneClass
+{
+    public function foo();
+}
+EOT
+                )->first()->methods()->get('foo'));
+            },
+            'member_docblock1.md',
+        ];
+
+        yield 'single member with doc' => [
+            '',
+            function (Reflector $reflector) {
+                return new MemberDocblock($reflector->reflectClassesIn(
+                    <<<'EOT'
+<?php
+
+class OneClass
+{
+    /**
+     * Foobar
+     */
+    public function foo();
+}
+EOT
+                )->first()->methods()->get('foo'));
+            },
+            'member_docblock2.md',
+        ];
+
+        yield 'member with concrete parent doc' => [
+            '',
+            function (Reflector $reflector) {
+                return new MemberDocblock($reflector->reflectClassesIn(
+                    <<<'EOT'
+<?php
+
+class Barfoo
+{
+    /**
+     * Barfoo
+     */
+    public function foo();
+}
+class OneClass extends Barfoo
+{
+    /**
+     * Foobar
+     */
+    public function foo();
+}
+EOT
+                )->get('OneClass')->methods()->get('foo'));
+            },
+            'member_docblock3.md',
+        ];
+
+        yield 'member with multiple concrete parent doc' => [
+            '',
+            function (Reflector $reflector) {
+                return new MemberDocblock($reflector->reflectClassesIn(
+                    <<<'EOT'
+<?php
+class Doobar
+{
+    /**
+     * Doobar
+     */
+    public function foo();
+}
+
+class Barfoo extends Doobar
+{
+    /**
+     * Barfoo
+     */
+    public function foo();
+}
+class OneClass extends Barfoo
+{
+    /**
+     * Foobar
+     */
+    public function foo();
+}
+EOT
+                )->get('OneClass')->methods()->get('foo'));
+            },
+            'member_docblock4.md',
+        ];
+
+        yield 'member with interface parent' => [
+            '',
+            function (Reflector $reflector) {
+                return new MemberDocblock($reflector->reflectClassesIn(
+                    <<<'EOT'
+<?php
+
+interface Dong
+{
+    /**
+     * Foobar
+     */
+    public function foo();
+}
+
+class OneClass implements Dong
+{
+    public function foo();
+}
+EOT
+                )->get('OneClass')->methods()->get('foo'));
+            },
+            'member_docblock5.md',
+        ];
+
+        yield 'member with multiple interface parent' => [
+            '',
+            function (Reflector $reflector) {
+                return new MemberDocblock($reflector->reflectClassesIn(
+                    <<<'EOT'
+<?php
+
+interface Bong
+{
+    /**
+     * Bong
+     */
+    public function foo();
+}
+
+interface Dong
+{
+    /**
+     * Foobar
+     */
+    public function foo();
+}
+
+class OneClass implements Dong, Bong
+{
+    public function foo();
+}
+EOT
+                )->get('OneClass')->methods()->get('foo'));
+            },
+            'member_docblock6.md',
+        ];
+
+        yield 'do not repeat interfaces' => [
+            '',
+            function (Reflector $reflector) {
+                return new MemberDocblock($reflector->reflectClassesIn(
+                    <<<'EOT'
+<?php
+
+interface Bong
+{
+    /**
+     * Bong
+     */
+    public function foo();
+}
+
+interface Dong
+{
+    /**
+     * Foobar
+     */
+    public function foo();
+}
+
+class TwoClass implements Dong, Bong
+{
+    public function foo();
+}
+
+class OneClass extends TwoClass implements Dong, Bong
+{
+    public function foo();
+}
+EOT
+                )->get('OneClass')->methods()->get('foo'));
+            },
+            'member_docblock7.md',
         ];
     }
 }

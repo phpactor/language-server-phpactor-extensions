@@ -11,6 +11,7 @@ use LanguageServerProtocol\ServerCapabilities;
 use LanguageServerProtocol\TextDocumentIdentifier;
 use Phpactor\Completion\Core\Exception\CouldNotFormat;
 use Phpactor\Extension\LanguageServerHover\Renderer\HoverInformation;
+use Phpactor\Extension\LanguageServerHover\Renderer\MemberDocblock;
 use Phpactor\Extension\LanguageServer\Helper\OffsetHelper;
 use Phpactor\LanguageServer\Core\Handler\CanRegisterCapabilities;
 use Phpactor\LanguageServer\Core\Handler\Handler;
@@ -154,7 +155,13 @@ class HoverHandler implements Handler, CanRegisterCapabilities
                     return sprintf('Unknown symbol type "%s"', $symbolType);
             }
 
-            return $this->renderer->render(new HoverInformation((string)$container.' '.$sep.' '.(string)$member->name(), $member->docblock()->formatted(), $member));
+            return $this->renderer->render(new HoverInformation(
+                (string)$container.' '.$sep.' '.(string)$member->name(),
+                $this->renderer->render(
+                new MemberDocblock($member)
+            ),
+                $member
+            ));
         } catch (NotFound $e) {
             return $e->getMessage();
         }

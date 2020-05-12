@@ -1,0 +1,7 @@
+{%- for ancestor in object.ancestorsAndSelf -%}
+{{ render(ancestor.docblock) }}
+{%- if not loop.last %}
+
+---
+{% endif -%}
+{%- endfor -%}
