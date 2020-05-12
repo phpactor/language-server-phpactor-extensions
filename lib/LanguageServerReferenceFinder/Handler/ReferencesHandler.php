@@ -11,6 +11,7 @@ use LanguageServerProtocol\Position;
 use LanguageServerProtocol\ReferenceContext;
 use LanguageServerProtocol\ServerCapabilities;
 use LanguageServerProtocol\TextDocumentIdentifier;
+use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerReferenceFinder\LanguageServerReferenceFinderExtension;
 use Phpactor\Extension\LanguageServer\Helper\OffsetHelper;
 use Phpactor\LanguageServer\Core\Handler\CanRegisterCapabilities;
@@ -22,6 +23,7 @@ use Phpactor\ReferenceFinder\Exception\CouldNotLocateDefinition;
 use Phpactor\ReferenceFinder\ReferenceFinder;
 use Phpactor\TextDocument\Location;
 use Phpactor\TextDocument\ByteOffset;
+use Phpactor\TextDocument\Locations;
 use Phpactor\TextDocument\TextDocumentBuilder;
 
 class ReferencesHandler implements Handler, CanRegisterCapabilities
@@ -46,16 +48,23 @@ class ReferencesHandler implements Handler, CanRegisterCapabilities
      */
     private $timeoutSeconds;
 
+    /**
+     * @var LocationConverter
+     */
+    private $locationConverter;
+
     public function __construct(
         Workspace $workspace,
         ReferenceFinder $finder,
         DefinitionLocator $definitionLocator,
+        LocationConverter $locationConverter,
         float $timeoutSeconds = 5.0
     ) {
         $this->workspace = $workspace;
         $this->finder = $finder;
         $this->definitionLocator = $definitionLocator;
         $this->timeoutSeconds = $timeoutSeconds;
+        $this->locationConverter = $locationConverter;
     }
 
     /**
@@ -158,24 +167,7 @@ class ReferencesHandler implements Handler, CanRegisterCapabilities
      */
     private function toLocations(array $locations): array
     {
-        $lspLocations = [];
-        foreach ($locations as $location) {
-            assert($location instanceof Location);
-
-            $contents = @file_get_contents($location->uri());
-
-            if (false === $contents) {
-                continue;
-            }
-
-            $startPosition = OffsetHelper::offsetToPosition($contents, $location->offset()->toInt());
-            $lspLocations[] = new LspLocation($location->uri()->__toString(), new Range(
-                $startPosition,
-                $startPosition
-            ));
-        }
-
-        return $lspLocations;
+        return $this->locationConverter->toLspLocations(new Locations($locations));
     }
 
     public function registerCapabiltiies(ServerCapabilities $capabilities): void
