@@ -9,7 +9,6 @@ use LanguageServerProtocol\TextDocumentItem;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerBridge\Tests\IntegrationTestCase;
 use Phpactor\LanguageServer\Core\Session\Workspace;
-use Phpactor\TestUtils\PHPUnit\TestCase;
 use Phpactor\TextDocument\Location;
 use Phpactor\TextDocument\Locations;
 use LanguageServerProtocol\Location as LspLocation;
@@ -38,7 +37,8 @@ class LocationConverterTest extends IntegrationTestCase
 
         $workspace = new Workspace();
         $converter = new LocationConverter($workspace);
-        self::assertEquals($expected, $converter->toLspLocations($locations));;
+        self::assertEquals($expected, $converter->toLspLocations($locations));
+        ;
     }
 
     /**
@@ -64,7 +64,8 @@ class LocationConverterTest extends IntegrationTestCase
 
         $expected = new LspLocation($uri, $expectedRange);
 
-        self::assertEquals($expected, (new LocationConverter($workspace))->toLspLocation($location));;
+        self::assertEquals($expected, (new LocationConverter($workspace))->toLspLocation($location));
+        ;
     }
 
     /**

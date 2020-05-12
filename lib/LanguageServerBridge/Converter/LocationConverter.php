@@ -68,7 +68,8 @@ class LocationConverter
 
         if (false === $contents) {
             throw new CouldNotLoadFileContents(sprintf(
-                'Could not load file contents "%s"', $uri
+                'Could not load file contents "%s"',
+                $uri
             ));
         }
 
