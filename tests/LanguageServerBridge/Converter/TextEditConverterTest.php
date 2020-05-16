@@ -32,11 +32,12 @@ class TextEditConverterTest extends IntegrationTestCase
 
     public function testConvertsTextEdits(): void
     {
+        $text = '1234567890';
         self::assertEquals([
             new LspTextEdit(new Range(
-                new Position(1, 1),
-                new Position(1, 4),
+                new Position(0, 1),
+                new Position(0, 4),
             ), 'foo'),
-        ], $this->converter->toLspTextEdits(TextEdits::one(TextEdit::create(1, 3, 'foo'))));
+        ], $this->converter->toLspTextEdits(TextEdits::one(TextEdit::create(1, 3, 'foo')), $text));
     }
 }

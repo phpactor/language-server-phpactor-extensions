@@ -18,11 +18,16 @@ class LocationConverter
      */
     private $workspace;
 
-    public function __construct(Workspace $workspace)
+    /**
+     * @var OffsetConverter
+     */
+    private $offsetConverter;
+
+    public function __construct(Workspace $workspace, ?OffsetConverter $offsetConverter = null)
     {
         $this->workspace = $workspace;
+        $this->offsetConverter = $offsetConverter ?: new OffsetConverter();
     }
-
 
     public function toLspLocations(Locations $locations): array
     {
@@ -37,25 +42,9 @@ class LocationConverter
     public function toLspLocation(Location $location): LspLocation
     {
         $text = $this->loadText($location->uri());
-        $position = $this->offsetToPosition($text, $location->offset()->toInt());
+        $position = $this->offsetConverter->offsetToPosition($text, $location->offset());
 
         return new LspLocation($location->uri()->__toString(), new Range($position, $position));
-    }
-
-    private function offsetToPosition(string $text, int $offset): Position
-    {
-        $text = substr($text, 0, $offset);
-        $line = mb_substr_count($text, PHP_EOL);
-
-        if ($line === 0) {
-            return new Position($line, mb_strlen($text));
-        }
-
-        $lastNewLinePos = mb_strrpos($text, PHP_EOL);
-        $remainingLine = mb_substr($text, $lastNewLinePos + mb_strlen(PHP_EOL));
-        $char = mb_strlen($remainingLine);
-
-        return new Position($line, $char);
     }
 
     private function loadText(TextDocumentUri $uri): string
