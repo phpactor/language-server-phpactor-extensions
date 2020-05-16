@@ -6,6 +6,7 @@ use Amp\CancellationToken;
 use Amp\CancelledException;
 use Amp\Delayed;
 use Amp\Promise;
+use LanguageServerProtocol\Command;
 use LanguageServerProtocol\CompletionItem;
 use LanguageServerProtocol\CompletionList;
 use LanguageServerProtocol\CompletionOptions;
@@ -120,7 +121,7 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
                     $insertText,
                     $this->textEdit($suggestion, $textDocument),
                     null,
-                    null,
+                    $this->command($textDocument->uri, $position->toOffset($textDocument->text), $suggestion->classImport()),
                     null,
                     $insertTextFormat
                 );
@@ -161,6 +162,19 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
                 OffsetHelper::offsetToPosition($textDocument->text, $range->end()->toInt())
             ),
             $suggestion->name()
+        );
+    }
+
+    private function command(string $uri, int $offset, ?string $fqn): ?Command
+    {
+        if (!$fqn) {
+            return null;
+        }
+
+        return new Command(
+            'Import class',
+            'code_transform.import_class',
+            [$uri, $offset, $fqn]
         );
     }
 }
