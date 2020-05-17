@@ -13,6 +13,8 @@ class LanguageServerCodeTransformExtension implements Extension
      */
     public function load(ContainerBuilder $container)
     {
+        // the required services are still in the main Phpactor repository, the
+        // need to be moved to the code-transform extension
     }
 
     /**

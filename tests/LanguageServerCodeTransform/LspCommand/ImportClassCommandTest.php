@@ -16,7 +16,6 @@ use Phpactor\LanguageServer\Workspace\CommandDispatcher;
 use Phpactor\TestUtils\PHPUnit\TestCase;
 use Phpactor\TextDocument\TextEdit;
 use Phpactor\TextDocument\TextEdits;
-use Prophecy\Prophecy\ObjectProphecy;
 
 class ImportClassCommandTest extends TestCase
 {

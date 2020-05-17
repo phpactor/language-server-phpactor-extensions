@@ -38,8 +38,7 @@ class ImportClassCommand
         Workspace $workspace,
         TextEditConverter $textEditConverter,
         ClientApi $client
-    )
-    {
+    ) {
         $this->importClass = $importClass;
         $this->workspace = $workspace;
         $this->textEditConverter = $textEditConverter;

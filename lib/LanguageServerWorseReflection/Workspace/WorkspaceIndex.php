@@ -56,11 +56,6 @@ class WorkspaceIndex
             $this->byName[$className] = TextDocumentBuilder::fromTextDocument($textDocument)->text($updatedText)->build();
             return;
         }
-
-        throw new RuntimeException(sprintf(
-            'Could not find document "%s"',
-            $textDocumentUri->__toString()
-        ));
     }
 
     public function remove(TextDocumentUri $textDocumentUri): void
