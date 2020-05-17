@@ -115,7 +115,7 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
                 $completionList->items[] = new CompletionItem(
                     $name,
                     PhpactorToLspCompletionType::fromPhpactorType($suggestion->type()),
-                    $suggestion->shortDescription(),
+                    $this->formatShortDescription($suggestion),
                     $suggestion->documentation(),
                     null,
                     null,
@@ -177,5 +177,15 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
             LanguageServerCodeTransformExtension::COMMAND_IMPORT_CLASS,
             [$uri, $offset, $fqn]
         );
+    }
+
+    private function formatShortDescription(Suggestion $suggestion): string
+    {
+        $prefix = '';
+        if ($suggestion->classImport()) {
+            $prefix = '↓ ';
+        }
+
+        return $prefix . $suggestion->shortDescription();
     }
 }
