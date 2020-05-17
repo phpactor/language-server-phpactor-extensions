@@ -3,7 +3,9 @@
 namespace Phpactor\Extension\LanguageServerCodeTransform\LspCommand;
 
 use Amp\Promise;
+use Amp\Success;
 use LanguageServerProtocol\WorkspaceEdit;
+use Phpactor\CodeTransform\Domain\Exception\TransformException;
 use Phpactor\CodeTransform\Domain\Refactor\ImportClass;
 use Phpactor\CodeTransform\Domain\SourceCode;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
@@ -48,14 +50,20 @@ class ImportClassCommand
     public function __invoke(string $uri, int $offset, string $fqn): Promise
     {
         $document = $this->workspace->get($uri);
-        $textEdits = $this->importClass->importClass(
-            SourceCode::fromStringAndPath(
-                $document->text,
-                TextDocumentUri::fromString($document->uri)->path()
-            ),
-            $offset,
-            $fqn
-        );
+
+        try {
+            $textEdits = $this->importClass->importClass(
+                SourceCode::fromStringAndPath(
+                    $document->text,
+                    TextDocumentUri::fromString($document->uri)->path()
+                ),
+                $offset,
+                $fqn
+            );
+        } catch (TransformException $error) {
+            $this->client->window()->showMessage()->info($error->getMessage());
+            return new Success(null);
+        }
 
         /** @phpstan-ignore-next-line */
         return $this->client->workspace()->applyEdit(new WorkspaceEdit([
