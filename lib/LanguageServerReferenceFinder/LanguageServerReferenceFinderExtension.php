@@ -12,6 +12,7 @@ use Phpactor\Extension\LanguageServerReferenceFinder\Handler\ReferencesHandler;
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\TypeDefinitionHandler;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
+use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\MapResolver\Resolver;
 use Phpactor\ReferenceFinder\ReferenceFinder;
 
@@ -46,6 +47,7 @@ class LanguageServerReferenceFinderExtension implements Extension
                 $container->get(ReferenceFinder::class),
                 $container->get(ReferenceFinderExtension::SERVICE_DEFINITION_LOCATOR),
                 $container->get(LocationConverter::class),
+                $container->get(ClientApi::class),
                 $container->getParameter(self::PARAM_REFERENCE_TIMEOUT)
             );
         }, [ LanguageServerExtension::TAG_SESSION_HANDLER => [] ]);

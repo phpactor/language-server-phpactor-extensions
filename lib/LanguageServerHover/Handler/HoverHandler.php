@@ -158,8 +158,8 @@ class HoverHandler implements Handler, CanRegisterCapabilities
             return $this->renderer->render(new HoverInformation(
                 (string)$container.' '.$sep.' '.(string)$member->name(),
                 $this->renderer->render(
-                new MemberDocblock($member)
-            ),
+                    new MemberDocblock($member)
+                ),
                 $member
             ));
         } catch (NotFound $e) {

@@ -9,6 +9,8 @@ use LanguageServerProtocol\TextDocumentIdentifier;
 use LanguageServerProtocol\TextDocumentItem;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\ReferencesHandler;
+use Phpactor\LanguageServer\Core\Server\ClientApi;
+use Phpactor\LanguageServer\Core\Server\RpcClient\TestRpcClient;
 use Phpactor\LanguageServer\Core\Session\Workspace;
 use Phpactor\LanguageServer\Test\HandlerTester;
 use Phpactor\ReferenceFinder\DefinitionLocation;
@@ -173,7 +175,8 @@ class ReferencesHandlerTest extends TestCase
             $this->workspace,
             $this->finder->reveal(),
             $this->locator->reveal(),
-            new LocationConverter($this->workspace)
+            new LocationConverter($this->workspace),
+            new ClientApi(TestRpcClient::create())
         );
     }
 }

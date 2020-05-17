@@ -13,10 +13,6 @@ use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\Logger\LoggingExtension;
 use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
 use Phpactor\FilePathResolverExtension\FilePathResolverExtension;
-use Phpactor\LanguageServer\Core\Server\ResponseWatcher;
-use Phpactor\LanguageServer\Core\Server\ServerClient;
-use Phpactor\LanguageServer\Core\Server\Transmitter\NullMessageTransmitter;
-use Phpactor\LanguageServer\Core\Server\Transmitter\TestMessageTransmitter;
 use Phpactor\LanguageServer\LanguageServerBuilder;
 use Phpactor\LanguageServer\Test\ServerTester;
 
@@ -30,10 +26,7 @@ class LanguageServerReferenceFinderExtensionTest extends TestCase
 
         $response = $tester->dispatchAndWait(1, 'textDocument/definition', [
             'textDocument' => new TextDocumentIdentifier(__FILE__),
-            'position' => [
-            ],
-        ], [
-            new ServerClient(new NullMessageTransmitter(), new ResponseWatcher())
+            'position' => [],
         ]);
         $this->assertNull($response->result, 'Definition was not found');
     }
@@ -63,7 +56,6 @@ class LanguageServerReferenceFinderExtensionTest extends TestCase
             'position' => [
             ],
             'context' => new ReferenceContext(),
-            'client' => new ServerClient(new TestMessageTransmitter(), new ResponseWatcher())
         ]);
         $this->assertIsArray($response->result, 'Returned empty references');
     }

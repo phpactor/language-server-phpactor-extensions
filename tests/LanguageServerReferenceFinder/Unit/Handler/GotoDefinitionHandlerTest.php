@@ -8,7 +8,7 @@ use LanguageServerProtocol\TextDocumentIdentifier;
 use LanguageServerProtocol\TextDocumentItem;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\GotoDefinitionHandler;
-use Phpactor\LanguageServer\Core\Server\ServerClient;
+use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Core\Session\Workspace;
 use Phpactor\LanguageServer\Test\HandlerTester;
 use Phpactor\ReferenceFinder\DefinitionLocation;
@@ -55,7 +55,7 @@ class GotoDefinitionHandlerTest extends TestCase
     protected function setUp(): void
     {
         $this->locator = $this->prophesize(DefinitionLocator::class);
-        $this->serverClient = $this->prophesize(ServerClient::class);
+        $this->serverClient = $this->prophesize(ClientApi::class);
         $this->workspace = new Workspace();
 
         $this->document = new TextDocumentItem();

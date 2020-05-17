@@ -3,9 +3,8 @@
 namespace Phpactor\Extension\LanguageServerBridge\Converter;
 
 use LanguageServerProtocol\Location as LspLocation;
-use LanguageServerProtocol\Position;
 use LanguageServerProtocol\Range;
-use Phpactor\Extension\LanguageServerBridge\Tests\Converter\Exception\CouldNotLoadFileContents;
+use Phpactor\Extension\LanguageServerBridge\Converter\Exception\CouldNotLoadFileContents;
 use Phpactor\LanguageServer\Core\Session\Workspace;
 use Phpactor\TextDocument\Location;
 use Phpactor\TextDocument\Locations;

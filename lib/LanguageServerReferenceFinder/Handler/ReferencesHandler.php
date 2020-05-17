@@ -5,7 +5,6 @@ namespace Phpactor\Extension\LanguageServerReferenceFinder\Handler;
 use Amp\Delayed;
 use Amp\Promise;
 use LanguageServerProtocol\Location as LspLocation;
-use LanguageServerProtocol\MessageType;
 use LanguageServerProtocol\Position;
 use LanguageServerProtocol\ReferenceContext;
 use LanguageServerProtocol\ServerCapabilities;
@@ -14,7 +13,7 @@ use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerReferenceFinder\LanguageServerReferenceFinderExtension;
 use Phpactor\LanguageServer\Core\Handler\CanRegisterCapabilities;
 use Phpactor\LanguageServer\Core\Handler\Handler;
-use Phpactor\LanguageServer\Core\Server\ServerClient;
+use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Core\Session\Workspace;
 use Phpactor\ReferenceFinder\DefinitionLocator;
 use Phpactor\ReferenceFinder\Exception\CouldNotLocateDefinition;
@@ -51,11 +50,17 @@ class ReferencesHandler implements Handler, CanRegisterCapabilities
      */
     private $locationConverter;
 
+    /**
+     * @var ClientApi
+     */
+    private $clientApi;
+
     public function __construct(
         Workspace $workspace,
         ReferenceFinder $finder,
         DefinitionLocator $definitionLocator,
         LocationConverter $locationConverter,
+        ClientApi $clientApi,
         float $timeoutSeconds = 5.0
     ) {
         $this->workspace = $workspace;
@@ -63,6 +68,7 @@ class ReferencesHandler implements Handler, CanRegisterCapabilities
         $this->definitionLocator = $definitionLocator;
         $this->timeoutSeconds = $timeoutSeconds;
         $this->locationConverter = $locationConverter;
+        $this->clientApi = $clientApi;
     }
 
     /**
@@ -78,10 +84,9 @@ class ReferencesHandler implements Handler, CanRegisterCapabilities
     public function references(
         TextDocumentIdentifier $textDocument,
         Position $position,
-        ReferenceContext $context,
-        ServerClient $client
+        ReferenceContext $context
     ): Promise {
-        return \Amp\call(function () use ($textDocument, $position, $context, $client) {
+        return \Amp\call(function () use ($textDocument, $position, $context) {
             $textDocument = $this->workspace->get($textDocument->uri);
             $phpactorDocument = TextDocumentBuilder::create(
                 $textDocument->text
@@ -115,28 +120,22 @@ class ReferencesHandler implements Handler, CanRegisterCapabilities
                 }
 
                 if ($count++ % 100 === 0 && $count > 0) {
-                    $client->notification('window/showMessage', [
-                        'type' => MessageType::INFO,
-                        'message' => sprintf(
-                            '... scanned %s references confirmed %s ...',
-                            $count - 1,
-                            count($locations)
-                        )
-                    ]);
+                    $this->clientApi->window()->showMessage()->info(sprintf(
+                        '... scanned %s references confirmed %s ...',
+                        $count - 1,
+                        count($locations)
+                    ));
                 }
 
                 if (microtime(true) - $start > $this->timeoutSeconds) {
-                    $client->notification('window/showMessage', [
-                        'type' => MessageType::WARNING,
-                        'message' => sprintf(
-                            'Reference find stopped, %s/%s references confirmed but took too long (%s/%s seconds). Adjust `%s`',
-                            count($locations),
-                            $count,
-                            number_format(microtime(true) - $start, 2),
-                            $this->timeoutSeconds,
-                            LanguageServerReferenceFinderExtension::PARAM_REFERENCE_TIMEOUT
-                        )
-                    ]);
+                    $this->clientApi->window()->showMessage()->info(sprintf(
+                        'Reference find stopped, %s/%s references confirmed but took too long (%s/%s seconds). Adjust `%s`',
+                        count($locations),
+                        $count,
+                        number_format(microtime(true) - $start, 2),
+                        $this->timeoutSeconds,
+                        LanguageServerReferenceFinderExtension::PARAM_REFERENCE_TIMEOUT
+                    ));
                     return $this->toLocations($locations);
                 }
 
@@ -146,14 +145,11 @@ class ReferencesHandler implements Handler, CanRegisterCapabilities
                 }
             }
 
-            $client->notification('window/showMessage', [
-                'type' => MessageType::INFO,
-                'message' => sprintf(
-                    'Found %s reference(s)%s',
-                    count($locations),
-                    $risky ? sprintf(' %s unresolvable references excluded', $risky) : ''
-                )
-            ]);
+            $this->clientApi->window()->showMessage()->info(sprintf(
+                'Found %s reference(s)%s',
+                count($locations),
+                $risky ? sprintf(' %s unresolvable references excluded', $risky) : ''
+            ));
 
             return $this->toLocations($locations);
         });

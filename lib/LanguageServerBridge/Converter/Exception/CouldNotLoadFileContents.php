@@ -1,6 +1,6 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerBridge\Tests\Converter\Exception;
+namespace Phpactor\Extension\LanguageServerBridge\Converter\Exception;
 
 use RuntimeException;
 
