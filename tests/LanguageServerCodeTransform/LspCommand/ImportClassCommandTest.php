@@ -5,6 +5,7 @@ namespace Phpactor\Extension\LanguageServerCodeTransform\Tests\LspCommand;
 use LanguageServerProtocol\ApplyWorkspaceEditResponse;
 use LanguageServerProtocol\TextDocumentItem;
 use Phpactor\CodeTransform\Domain\Exception\TransformException;
+use Phpactor\CodeTransform\Domain\Refactor\ImportClass\ClassAlreadyImportedException;
 use Phpactor\CodeTransform\Domain\SourceCode;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportClassCommand;
@@ -97,5 +98,24 @@ class ImportClassCommandTest extends TestCase
 
         self::assertNotNull($message = $this->rpcClient->transmitter()->shiftNotification());
         self::assertEquals('Sorry', $message->params['message']);
+    }
+
+    public function testIgnoreAlreadyImported(): void
+    {
+        $this->workspace->open(new TextDocumentItem('file:///foobar.php', 'php', 1, self::EXAMPLE_CONTENT));
+
+        $this->importClass->importClass(
+            SourceCode::fromStringAndPath(self::EXAMPLE_CONTENT, self::EXAMPLE_PATH),
+            12,
+            'Foobar'
+        )->willThrow(new ClassAlreadyImportedException('Sorry', 'Goodbye'));
+
+        $promise = (new CommandDispatcher([
+            'import_class' => $this->command
+        ]))->dispatch('import_class', [
+            'file:///foobar.php', 12, 'Foobar'
+        ]);
+
+        self::assertNull($this->rpcClient->transmitter()->shiftNotification());
     }
 }

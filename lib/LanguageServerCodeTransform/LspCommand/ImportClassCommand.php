@@ -7,6 +7,7 @@ use Amp\Success;
 use LanguageServerProtocol\WorkspaceEdit;
 use Phpactor\CodeTransform\Domain\Exception\TransformException;
 use Phpactor\CodeTransform\Domain\Refactor\ImportClass;
+use Phpactor\CodeTransform\Domain\Refactor\ImportClass\ClassAlreadyImportedException;
 use Phpactor\CodeTransform\Domain\SourceCode;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
@@ -60,6 +61,8 @@ class ImportClassCommand
                 $offset,
                 $fqn
             );
+        } catch (ClassAlreadyImportedException $error) {
+            return new Success(null);
         } catch (TransformException $error) {
             $this->client->window()->showMessage()->info($error->getMessage());
             return new Success(null);
