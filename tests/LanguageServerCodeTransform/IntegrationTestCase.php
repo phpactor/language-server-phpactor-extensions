@@ -3,6 +3,7 @@
 namespace Phpactor\Extension\LanguageServerCodeTransform\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Phpactor\Container\Container;
 use Phpactor\Container\PhpactorContainer;
 use Phpactor\Extension\ClassToFile\ClassToFileExtension;
 use Phpactor\Extension\CodeTransform\CodeTransformExtension;
@@ -27,6 +28,16 @@ class IntegrationTestCase extends TestCase
 
     protected function createTester(): ServerTester
     {
+        $container = $this->container();
+        
+        $builder = $container->get(LanguageServerExtension::SERVICE_LANGUAGE_SERVER_BUILDER);
+        $this->assertInstanceOf(LanguageServerBuilder::class, $builder);
+
+        return $builder->buildServerTester();
+    }
+
+    public function container(): Container
+    {
         $container = PhpactorContainer::fromExtensions([
             LoggingExtension::class,
             LanguageServerExtension::class,
@@ -38,14 +49,11 @@ class IntegrationTestCase extends TestCase
             WorseReflectionExtension::class,
             PhpExtension::class,
             LanguageServerBridgeExtension::class,
+            TestLanguageServerSessionExtension::class,
         ], [
             FilePathResolverExtension::PARAM_APPLICATION_ROOT => __DIR__ .'/../../',
             CodeTransformExtension::PARAM_TEMPLATE_PATHS => [],
         ]);
-        
-        $builder = $container->get(LanguageServerExtension::SERVICE_LANGUAGE_SERVER_BUILDER);
-        $this->assertInstanceOf(LanguageServerBuilder::class, $builder);
-
-        return $builder->buildServerTester();
+        return $container;
     }
 }
