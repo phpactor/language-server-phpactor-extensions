@@ -68,11 +68,10 @@ class ImportClassCommand
             if ($error->existingName() === $fqn) {
                 return new Success(null);
             }
-            $fqn = FullyQualifiedName::fromString($fqn);
-
-            return $this->__invoke($uri, $offset, $fqn, 'Aliased' . $fqn->head()->__toString());
+            $this->client->window()->showMessage()->warning($error->getMessage());
+            return new Success(null);
         } catch (TransformException $error) {
-            $this->client->window()->showMessage()->info($error->getMessage());
+            $this->client->window()->showMessage()->warning($error->getMessage());
             return new Success(null);
         }
 

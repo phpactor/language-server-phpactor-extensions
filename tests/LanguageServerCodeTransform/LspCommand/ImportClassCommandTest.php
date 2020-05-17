@@ -117,34 +117,6 @@ class ImportClassCommandTest extends TestCase
         self::assertNull($this->rpcClient->transmitter()->shiftNotification());
     }
 
-    public function testUseAliasWhenNameAlreadyTaken(): void
-    {
-        $this->workspace->open(new TextDocumentItem('file:///foobar.php', 'php', 1, self::EXAMPLE_CONTENT));
-
-        $this->importClass->importClass(
-            SourceCode::fromStringAndPath(self::EXAMPLE_CONTENT, self::EXAMPLE_PATH),
-            12,
-            'Barfoo\Foobar'
-        )->willThrow(new ClassAlreadyImportedException('Barfoo\Foobar', 'Goodbye'));
-
-        $this->importClass->importClass(
-            SourceCode::fromStringAndPath(self::EXAMPLE_CONTENT, self::EXAMPLE_PATH),
-            12,
-            'Barfoo\Foobar',
-            'AliasedFoobar',
-        )->willReturn(TextEdits::one(
-            TextEdit::create(12, 12, 'some replacement')
-        ));
-
-        $promise = (new CommandDispatcher([
-            'import_class' => $this->command
-        ]))->dispatch('import_class', [
-            'file:///foobar.php', 12, 'Barfoo\Foobar'
-        ]);
-
-        $this->assertWorkspaceResponse($promise);
-    }
-
     private function assertWorkspaceResponse(Promise $promise)
     {
         $expectedResponse = new ApplyWorkspaceEditResponse(true, null);
