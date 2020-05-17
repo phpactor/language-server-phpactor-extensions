@@ -70,8 +70,12 @@ class ImportClassCommand
             }
 
             $name = FullyQualifiedName::fromString($error->existingName());
+            $prefix = 'Aliased';
+            if (isset($name->toArray()[0])) {
+                $prefix = $name->toArray()[0];
+            }
 
-            return $this->__invoke($uri, $offset, $fqn, 'Aliased' . $name->head()->__toString());
+            return $this->__invoke($uri, $offset, $fqn, $prefix . $name->head()->__toString());
         } catch (TransformException $error) {
             $this->client->window()->showMessage()->warning($error->getMessage());
             return new Success(null);
