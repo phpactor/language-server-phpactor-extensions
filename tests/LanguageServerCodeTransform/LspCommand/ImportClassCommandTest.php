@@ -6,6 +6,7 @@ use Amp\Promise;
 use LanguageServerProtocol\ApplyWorkspaceEditResponse;
 use LanguageServerProtocol\TextDocumentItem;
 use Phpactor\CodeTransform\Domain\Exception\TransformException;
+use Phpactor\CodeTransform\Domain\Refactor\ImportClass\AliasAlreadyUsedException;
 use Phpactor\CodeTransform\Domain\Refactor\ImportClass\ClassAlreadyImportedException;
 use Phpactor\CodeTransform\Domain\SourceCode;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
@@ -150,6 +151,35 @@ class ImportClassCommandTest extends TestCase
             'import_class' => $this->command
         ]))->dispatch('import_class', [
             self::EXAMPLE_PATH_URI, self::EXAMPLE_OFFSET, 'Acme\Foobar'
+        ]);
+
+        $this->assertWorkspaceResponse($promise);
+    }
+
+    public function testHandleAlreadyExistingAlias(): void
+    {
+        $this->workspace->open(new TextDocumentItem(self::EXAMPLE_PATH_URI, 'php', 1, self::EXAMPLE_CONTENT));
+
+        $this->importClass->importClass(
+            SourceCode::fromStringAndPath(self::EXAMPLE_CONTENT, self::EXAMPLE_PATH),
+            self::EXAMPLE_OFFSET,
+            'Acme\Foobar',
+            'AcmeFoobar',
+        )->willThrow(new AliasAlreadyUsedException('AcmeFoobar'));
+
+        $this->importClass->importClass(
+            SourceCode::fromStringAndPath(self::EXAMPLE_CONTENT, self::EXAMPLE_PATH),
+            self::EXAMPLE_OFFSET,
+            'Acme\Foobar',
+            'AliasedAcmeFoobar',
+        )->willReturn(TextEdits::one(
+            TextEdit::create(self::EXAMPLE_OFFSET, self::EXAMPLE_OFFSET, 'some replacement')
+        ));
+
+        $promise = (new CommandDispatcher([
+            'import_class' => $this->command
+        ]))->dispatch('import_class', [
+            self::EXAMPLE_PATH_URI, self::EXAMPLE_OFFSET, 'Acme\Foobar', 'AcmeFoobar'
         ]);
 
         $this->assertWorkspaceResponse($promise);

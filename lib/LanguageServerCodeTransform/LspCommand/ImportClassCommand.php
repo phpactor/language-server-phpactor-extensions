@@ -7,6 +7,7 @@ use Amp\Success;
 use LanguageServerProtocol\WorkspaceEdit;
 use Phpactor\CodeTransform\Domain\Exception\TransformException;
 use Phpactor\CodeTransform\Domain\Refactor\ImportClass;
+use Phpactor\CodeTransform\Domain\Refactor\ImportClass\AliasAlreadyUsedException;
 use Phpactor\CodeTransform\Domain\Refactor\ImportClass\ClassAlreadyImportedException;
 use Phpactor\CodeTransform\Domain\SourceCode;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
@@ -75,7 +76,10 @@ class ImportClassCommand
                 $prefix = $name->toArray()[0];
             }
 
-            return $this->__invoke($uri, $offset, $fqn, $prefix . $name->head()->__toString());
+            return $this->__invoke($uri, $offset, $fqn, $prefix . $error->name());
+        } catch (AliasAlreadyUsedException $error) {
+            $prefix = 'Aliased';
+            return $this->__invoke($uri, $offset, $fqn, $prefix . $error->name());
         } catch (TransformException $error) {
             $this->client->window()->showMessage()->warning($error->getMessage());
             return new Success(null);
