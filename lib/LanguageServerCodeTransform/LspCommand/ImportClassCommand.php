@@ -57,8 +57,9 @@ class ImportClassCommand
             $fqn
         );
 
-        return $this->client->workspace()->applyEdit(new WorkspaceEdit(
-            $this->textEditConverter->toLspTextEdits($textEdits, $document->text)
-        ), 'Import class');
+        /** @phpstan-ignore-next-line */
+        return $this->client->workspace()->applyEdit(new WorkspaceEdit([
+            $uri => $this->textEditConverter->toLspTextEdits($textEdits, $document->text)
+        ]), 'Import class');
     }
 }

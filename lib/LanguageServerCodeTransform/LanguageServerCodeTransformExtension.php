@@ -10,7 +10,6 @@ use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportClassCommand;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
-use Phpactor\LanguageServer\Core\Session\Workspace;
 use Phpactor\MapResolver\Resolver;
 
 class LanguageServerCodeTransformExtension implements Extension
@@ -25,7 +24,7 @@ class LanguageServerCodeTransformExtension implements Extension
         $container->register(ImportClassCommand::class, function (Container $container) {
             return new ImportClassCommand(
                 $container->get(ImportClass::class),
-                $container->get(Workspace::class),
+                $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
                 $container->get(TextEditConverter::class),
                 $container->get(ClientApi::class)
             );
