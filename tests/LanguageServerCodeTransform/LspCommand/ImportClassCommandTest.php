@@ -2,6 +2,7 @@
 
 namespace Phpactor\Extension\LanguageServerCodeTransform\Tests\LspCommand;
 
+use Amp\Promise;
 use LanguageServerProtocol\ApplyWorkspaceEditResponse;
 use LanguageServerProtocol\TextDocumentItem;
 use Phpactor\CodeTransform\Domain\Exception\TransformException;
@@ -74,10 +75,7 @@ class ImportClassCommandTest extends TestCase
         ]))->dispatch('import_class', [
             'file:///foobar.php', 12, 'Foobar'
         ]);
-        $expectedResponse = new ApplyWorkspaceEditResponse(true, null);
-        $this->rpcClient->responseWatcher()->resolveLastResponse($expectedResponse);
-        $result = \Amp\Promise\wait($promise);
-        $this->assertEquals($expectedResponse, $result);
+        $this->assertWorkspaceResponse($promise);
     }
 
     public function testNotifyOnError(): void
@@ -100,22 +98,58 @@ class ImportClassCommandTest extends TestCase
         self::assertEquals('Sorry', $message->params['message']);
     }
 
-    public function testIgnoreAlreadyImported(): void
+    public function testIgnoreSameAlreadyImported(): void
     {
         $this->workspace->open(new TextDocumentItem('file:///foobar.php', 'php', 1, self::EXAMPLE_CONTENT));
 
         $this->importClass->importClass(
             SourceCode::fromStringAndPath(self::EXAMPLE_CONTENT, self::EXAMPLE_PATH),
             12,
-            'Foobar'
-        )->willThrow(new ClassAlreadyImportedException('Sorry', 'Goodbye'));
+            'Acme\Foobar'
+        )->willThrow(new ClassAlreadyImportedException('Foobar', 'Acme\Foobar'));
 
         $promise = (new CommandDispatcher([
             'import_class' => $this->command
         ]))->dispatch('import_class', [
-            'file:///foobar.php', 12, 'Foobar'
+            'file:///foobar.php', 12, 'Acme\Foobar'
         ]);
 
         self::assertNull($this->rpcClient->transmitter()->shiftNotification());
+    }
+
+    public function testUseAliasWhenNameAlreadyTaken(): void
+    {
+        $this->workspace->open(new TextDocumentItem('file:///foobar.php', 'php', 1, self::EXAMPLE_CONTENT));
+
+        $this->importClass->importClass(
+            SourceCode::fromStringAndPath(self::EXAMPLE_CONTENT, self::EXAMPLE_PATH),
+            12,
+            'Barfoo\Foobar'
+        )->willThrow(new ClassAlreadyImportedException('Barfoo\Foobar', 'Goodbye'));
+
+        $this->importClass->importClass(
+            SourceCode::fromStringAndPath(self::EXAMPLE_CONTENT, self::EXAMPLE_PATH),
+            12,
+            'Barfoo\Foobar',
+            'AliasedFoobar',
+        )->willReturn(TextEdits::one(
+            TextEdit::create(12, 12, 'some replacement')
+        ));
+
+        $promise = (new CommandDispatcher([
+            'import_class' => $this->command
+        ]))->dispatch('import_class', [
+            'file:///foobar.php', 12, 'Barfoo\Foobar'
+        ]);
+
+        $this->assertWorkspaceResponse($promise);
+    }
+
+    private function assertWorkspaceResponse(Promise $promise)
+    {
+        $expectedResponse = new ApplyWorkspaceEditResponse(true, null);
+        $this->rpcClient->responseWatcher()->resolveLastResponse($expectedResponse);
+        $result = \Amp\Promise\wait($promise);
+        $this->assertEquals($expectedResponse, $result);
     }
 }

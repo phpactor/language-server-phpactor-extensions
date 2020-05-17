@@ -12,6 +12,7 @@ use Phpactor\CodeTransform\Domain\SourceCode;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Core\Session\Workspace;
+use Phpactor\Name\FullyQualifiedName;
 use Phpactor\TextDocument\TextDocumentUri;
 
 class ImportClassCommand
@@ -48,21 +49,28 @@ class ImportClassCommand
         $this->client = $client;
     }
 
-    public function __invoke(string $uri, int $offset, string $fqn): Promise
+    public function __invoke(string $uri, int $offset, string $fqn, ?string $alias = null): Promise
     {
         $document = $this->workspace->get($uri);
+        $sourceCode = SourceCode::fromStringAndPath(
+            $document->text,
+            TextDocumentUri::fromString($document->uri)->path()
+        );
 
         try {
-            $textEdits = $this->importClass->importClass(
-                SourceCode::fromStringAndPath(
-                    $document->text,
-                    TextDocumentUri::fromString($document->uri)->path()
-                ),
-                $offset,
-                $fqn
-            );
+            if ($alias) {
+                // alias is not nullable but it can be null...
+                $textEdits = $this->importClass->importClass($sourceCode, $offset, $fqn, $alias);
+            } else {
+                $textEdits = $this->importClass->importClass($sourceCode, $offset, $fqn);
+            }
         } catch (ClassAlreadyImportedException $error) {
-            return new Success(null);
+            if ($error->existingName() === $fqn) {
+                return new Success(null);
+            }
+            $fqn = FullyQualifiedName::fromString($fqn);
+
+            return $this->__invoke($uri, $offset, $fqn, 'Aliased' . $fqn->head()->__toString());
         } catch (TransformException $error) {
             $this->client->window()->showMessage()->info($error->getMessage());
             return new Success(null);
