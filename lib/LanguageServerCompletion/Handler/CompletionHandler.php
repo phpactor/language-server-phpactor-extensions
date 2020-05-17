@@ -20,6 +20,7 @@ use LanguageServerProtocol\TextEdit;
 use Phpactor\Completion\Core\Completor;
 use Phpactor\Completion\Core\Suggestion;
 use Phpactor\Completion\Core\TypedCompletorRegistry;
+use Phpactor\Extension\LanguageServerCodeTransform\LanguageServerCodeTransformExtension;
 use Phpactor\Extension\LanguageServerCompletion\Util\PhpactorToLspCompletionType;
 use Phpactor\Extension\LanguageServerCompletion\Util\SuggestionNameFormatter;
 use Phpactor\Extension\LanguageServer\Helper\OffsetHelper;
@@ -173,7 +174,7 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
 
         return new Command(
             'Import class',
-            'code_transform.import_class',
+            LanguageServerCodeTransformExtension::COMMAND_IMPORT_CLASS,
             [$uri, $offset, $fqn]
         );
     }

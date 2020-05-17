@@ -29,7 +29,8 @@
         "phpactor/code-transform": "^0.3.0",
         "phpactor/indexer-extension": "^0.2.2",
         "phly/phly-event-dispatcher": "^1.0",
-        "dantleech/object-renderer": "^0.1.0"
+        "dantleech/object-renderer": "^0.1.0",
+        "phpactor/code-transform-extension": "^0.2"
     },
     "require-dev": {
         "phpspec/prophecy-phpunit": "^2.0",
