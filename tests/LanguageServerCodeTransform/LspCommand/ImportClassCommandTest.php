@@ -142,10 +142,10 @@ class ImportClassCommandTest extends TestCase
             SourceCode::fromStringAndPath(self::EXAMPLE_CONTENT, self::EXAMPLE_PATH),
             self::EXAMPLE_OFFSET,
             'Acme\Foobar',
-            'NotMyClassFoobar',
+            'AcmeFoobar',
         )->willReturn(TextEdits::one(
             TextEdit::create(self::EXAMPLE_OFFSET, self::EXAMPLE_OFFSET, 'some replacement')
-        ));
+        ))->shouldBeCalled();
 
         $promise = (new CommandDispatcher([
             'import_class' => $this->command

@@ -70,7 +70,7 @@ class ImportClassCommand
                 return new Success(null);
             }
 
-            $name = FullyQualifiedName::fromString($error->existingName());
+            $name = FullyQualifiedName::fromString($fqn);
             $prefix = 'Aliased';
             if (isset($name->toArray()[0])) {
                 $prefix = $name->toArray()[0];
