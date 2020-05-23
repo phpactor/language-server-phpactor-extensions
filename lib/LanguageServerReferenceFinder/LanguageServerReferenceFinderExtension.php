@@ -69,5 +69,8 @@ class LanguageServerReferenceFinderExtension implements Extension
         $schema->setDefaults([
             self::PARAM_REFERENCE_TIMEOUT => 10
         ]);
+        $schema->setDescriptions([
+            self::PARAM_REFERENCE_TIMEOUT => 'Stop searching for references after this time (in seconds) has expired',
+        ]);
     }
 }

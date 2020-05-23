@@ -24,6 +24,9 @@ class LanguageServerCompletionExtension implements Extension
         $schema->setDefaults([
             self::PARAM_TRIM_LEADING_DOLLAR => false,
         ]);
+        $schema->setDescriptions([
+            self::PARAM_TRIM_LEADING_DOLLAR => 'If the leading dollar should be trimmed for variable completion suggestions',
+        ]);
     }
 
     /**
