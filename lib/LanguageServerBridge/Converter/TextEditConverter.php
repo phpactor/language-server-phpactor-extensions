@@ -4,7 +4,6 @@ namespace Phpactor\Extension\LanguageServerBridge\Converter;
 
 use LanguageServerProtocol\Range;
 use LanguageServerProtocol\TextEdit as LspTextEdit;
-use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextEdit;
 use Phpactor\TextDocument\TextEdits;
 
@@ -35,8 +34,8 @@ class TextEditConverter
         $edits = [];
         foreach ($textEdits as $textEdit) {
             $range = new Range(
-                $this->offsetConverter->offsetToPosition($text, ByteOffset::fromInt($textEdit->start())),
-                $this->offsetConverter->offsetToPosition($text, ByteOffset::fromInt($textEdit->end()))
+                $this->offsetConverter->offsetToPosition($text, $textEdit->start()),
+                $this->offsetConverter->offsetToPosition($text, $textEdit->end())
             );
             $edits[] = new LspTextEdit($range, $textEdit->replacement());
         }
