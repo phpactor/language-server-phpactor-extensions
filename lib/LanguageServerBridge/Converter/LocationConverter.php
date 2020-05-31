@@ -32,7 +32,12 @@ class LocationConverter
     {
         $lspLocations = [];
         foreach ($locations as $location) {
-            $lspLocations[] = $this->toLspLocation($location);
+            try {
+                $lspLocations[] = $this->toLspLocation($location);
+            } catch (CouldNotLoadFileContents $couldNotLoad) {
+                // ignore stale records
+                continue;
+            }
         }
 
         return $lspLocations;

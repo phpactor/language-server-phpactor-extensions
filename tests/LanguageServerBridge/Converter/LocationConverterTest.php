@@ -41,6 +41,27 @@ class LocationConverterTest extends IntegrationTestCase
         ;
     }
 
+    public function testIgnoresNonExistingFiles()
+    {
+        $this->workspace()->put('test.php', '12345678');
+
+        $locations = new Locations([
+            Location::fromPathAndOffset($this->workspace()->path('test.php'), 2),
+            Location::fromPathAndOffset($this->workspace()->path('test-no.php'), 2)
+        ]);
+
+        $expected = [
+            new LspLocation('file://' . $this->workspace()->path('test.php'), new Range(
+                new Position(0, 2),
+                new Position(0, 2),
+            ))
+        ];
+
+        $workspace = new Workspace();
+        $converter = new LocationConverter($workspace);
+        self::assertEquals($expected, $converter->toLspLocations($locations));
+    }
+
     /**
      * @dataProvider provideDiskLocations
      * @dataProvider provideMultibyte
