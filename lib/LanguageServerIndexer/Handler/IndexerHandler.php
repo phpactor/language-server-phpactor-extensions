@@ -9,7 +9,6 @@ use Amp\Promise;
 use Amp\Success;
 use LanguageServerProtocol\MessageType;
 use Phpactor\AmpFsWatch\Watcher;
-use Phpactor\Indexer\Model\IndexBuilder;
 use Phpactor\LanguageServer\Core\Handler\ServiceProvider;
 use Phpactor\LanguageServer\Core\Rpc\NotificationMessage;
 use Phpactor\LanguageServer\Core\Server\Transmitter\MessageTransmitter;
@@ -37,21 +36,14 @@ class IndexerHandler implements ServiceProvider
      */
     private $logger;
 
-    /**
-     * @var IndexBuilder
-     */
-    private $indexBuilder;
-
     public function __construct(
         Indexer $indexer,
-        IndexBuilder $indexBuilder,
         Watcher $watcher,
         LoggerInterface $logger
     ) {
         $this->indexer = $indexer;
         $this->watcher = $watcher;
         $this->logger = $logger;
-        $this->indexBuilder = $indexBuilder;
     }
 
     /**
@@ -121,7 +113,7 @@ class IndexerHandler implements ServiceProvider
                     break;
                 }
 
-                $this->indexBuilder->index(new SplFileInfo($file->path()));
+                $this->indexer->index(new SplFileInfo($file->path()));
                 $this->logger->debug(sprintf('Indexed file: %s', $file->path()));
                 yield new Delayed(0);
             }
