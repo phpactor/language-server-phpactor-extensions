@@ -6,12 +6,11 @@ use Amp\CancellationToken;
 use Amp\CancelledException;
 use Amp\Delayed;
 use Amp\Promise;
-use Amp\Success;
-use LanguageServerProtocol\MessageType;
+use Generator;
+use Phpactor\AmpFsWatch\Exception\WatcherDied;
 use Phpactor\AmpFsWatch\Watcher;
 use Phpactor\LanguageServer\Core\Handler\ServiceProvider;
-use Phpactor\LanguageServer\Core\Rpc\NotificationMessage;
-use Phpactor\LanguageServer\Core\Server\Transmitter\MessageTransmitter;
+use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\Indexer\Model\Indexer;
 use Phpactor\LanguageServer\Core\Service\ServiceManager;
 use Psr\Log\LoggerInterface;
@@ -36,14 +35,21 @@ class IndexerHandler implements ServiceProvider
      */
     private $logger;
 
+    /**
+     * @var ClientApi
+     */
+    private $clientApi;
+
     public function __construct(
         Indexer $indexer,
         Watcher $watcher,
+        ClientApi $clientApi,
         LoggerInterface $logger
     ) {
         $this->indexer = $indexer;
         $this->watcher = $watcher;
         $this->logger = $logger;
+        $this->clientApi = $clientApi;
     }
 
     /**
@@ -69,12 +75,12 @@ class IndexerHandler implements ServiceProvider
     /**
      * @return Promise<mixed>
      */
-    public function indexer(MessageTransmitter $transmitter, CancellationToken $cancel): Promise
+    public function indexer(CancellationToken $cancel): Promise
     {
-        return \Amp\call(function () use ($transmitter, $cancel) {
+        return \Amp\call(function () use ($cancel) {
             $job = $this->indexer->getJob();
             $size = $job->size();
-            $this->showMessage($transmitter, sprintf('Indexing "%s" PHP files', $size));
+            $this->clientApi->window()->showMessage()->info(sprintf('Indexing "%s" PHP files', $size));
 
             $start = microtime(true);
             $index = 0;
@@ -82,7 +88,7 @@ class IndexerHandler implements ServiceProvider
                 $index++;
 
                 if ($index % 500 === 0) {
-                    $this->showMessage($transmitter, sprintf(
+                    $this->clientApi->window()->showMessage()->info(sprintf(
                         'Indexed %s/%s (%s%%)',
                         $index,
                         $size,
@@ -99,26 +105,12 @@ class IndexerHandler implements ServiceProvider
                 yield new Delayed(1);
             }
 
-            $this->showMessage($transmitter, sprintf(
+            $this->clientApi->window()->showMessage()->info(sprintf(
                 'Done indexing (%ss), watching.',
                 number_format(microtime(true) - $start, 2)
             ));
 
-            $process = yield $this->watcher->watch();
-
-            while (null !== $file = yield $process->wait()) {
-                try {
-                    $cancel->throwIfRequested();
-                } catch (CancelledException $cancelled) {
-                    break;
-                }
-
-                $this->indexer->index(new SplFileInfo($file->path()));
-                $this->logger->debug(sprintf('Indexed file: %s', $file->path()));
-                yield new Delayed(0);
-            }
-
-            return new Success();
+            return yield from $this->watch($cancel);
         });
     }
 
@@ -137,11 +129,28 @@ class IndexerHandler implements ServiceProvider
         });
     }
 
-    private function showMessage(MessageTransmitter $transmitter, string $message): void
+    /**
+     * @return Generator<Promise>
+     */
+    private function watch(CancellationToken $cancel): Generator
     {
-        $transmitter->transmit(new NotificationMessage('window/showMessage', [
-            'type' => MessageType::INFO,
-            'message' => $message
-        ]));
+        try {
+            $process = yield $this->watcher->watch();
+
+            while (null !== $file = yield $process->wait()) {
+                try {
+                    $cancel->throwIfRequested();
+                } catch (CancelledException $cancelled) {
+                    break;
+                }
+
+                $this->indexer->index(new SplFileInfo($file->path()));
+                $this->logger->debug(sprintf('Indexed file: %s', $file->path()));
+                yield new Delayed(0);
+            }
+        } catch (WatcherDied $watcherDied) {
+            $this->clientApi->window()->showMessage()->error($watcherDied->getMessage());
+            $this->logger->error($watcherDied->getMessage());
+        }
     }
 }
