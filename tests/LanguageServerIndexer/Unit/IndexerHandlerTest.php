@@ -3,6 +3,7 @@
 namespace Phpactor\Extension\LanguageServerIndexer\Tests\Unit;
 
 use Amp\CancellationTokenSource;
+use Phpactor\AmpFsWatch\Exception\WatcherDied;
 use Phpactor\AmpFsWatch\ModifiedFile;
 use Phpactor\AmpFsWatch\ModifiedFileQueue;
 use Phpactor\AmpFsWatch\Watcher\TestWatcher\TestWatcher;
@@ -102,5 +103,27 @@ EOT
         ]);
 
         self::assertTrue($handlerTester->serviceManager()->isRunning(IndexerHandler::SERVICE_INDEXER));
+    }
+
+    public function testShowsMessageOnWatcherDied(): void
+    {
+        $this->workspace()->put(
+            'Foobar.php',
+            <<<'EOT'
+<?php
+EOT
+        );
+        \Amp\Promise\wait(\Amp\call(function () {
+            $indexer = $this->container()->get(Indexer::class);
+            $watcher = new TestWatcher(new ModifiedFileQueue(), 0, new WatcherDied('No'));
+            $handler = new IndexerHandler($indexer, $watcher, $this->clientApi, $this->logger->reveal());
+            $token = (new CancellationTokenSource())->getToken();
+            yield $handler->indexer($token);
+        }));
+
+        $this->client->transmitter()->shift();
+        $this->client->transmitter()->shift();
+
+        self::assertStringContainsString('File watcher died:', $this->client->transmitter()->shift()->params['message']);
     }
 }

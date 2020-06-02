@@ -149,7 +149,7 @@ class IndexerHandler implements ServiceProvider
                 yield new Delayed(0);
             }
         } catch (WatcherDied $watcherDied) {
-            $this->clientApi->window()->showMessage()->error($watcherDied->getMessage());
+            $this->clientApi->window()->showMessage()->error(sprintf('File watcher died: %s', $watcherDied->getMessage()));
             $this->logger->error($watcherDied->getMessage());
         }
     }
