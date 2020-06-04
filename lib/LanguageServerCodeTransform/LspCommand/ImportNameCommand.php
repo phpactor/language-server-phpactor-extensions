@@ -6,22 +6,24 @@ use Amp\Promise;
 use Amp\Success;
 use LanguageServerProtocol\WorkspaceEdit;
 use Phpactor\CodeTransform\Domain\Exception\TransformException;
-use Phpactor\CodeTransform\Domain\Refactor\ImportClass;
 use Phpactor\CodeTransform\Domain\Refactor\ImportClass\AliasAlreadyUsedException;
-use Phpactor\CodeTransform\Domain\Refactor\ImportClass\ClassAlreadyImportedException;
+use Phpactor\CodeTransform\Domain\Refactor\ImportClass\NameAlreadyImportedException;
+use Phpactor\CodeTransform\Domain\Refactor\ImportClass\NameImport;
+use Phpactor\CodeTransform\Domain\Refactor\ImportName;
 use Phpactor\CodeTransform\Domain\SourceCode;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Core\Session\Workspace;
 use Phpactor\Name\FullyQualifiedName;
+use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocumentUri;
 
-class ImportClassCommand
+class ImportNameCommand
 {
     /**
-     * @var ImportClass
+     * @var ImportName
      */
-    private $importClass;
+    private $importName;
 
     /**
      * @var Workspace
@@ -39,18 +41,18 @@ class ImportClassCommand
     private $client;
 
     public function __construct(
-        ImportClass $importClass,
+        ImportName $importName,
         Workspace $workspace,
         TextEditConverter $textEditConverter,
         ClientApi $client
     ) {
-        $this->importClass = $importClass;
+        $this->importName = $importName;
         $this->workspace = $workspace;
         $this->textEditConverter = $textEditConverter;
         $this->client = $client;
     }
 
-    public function __invoke(string $uri, int $offset, string $fqn, ?string $alias = null): Promise
+    public function __invoke(string $uri, int $offset, string $type, string $fqn, ?string $alias = null): Promise
     {
         $document = $this->workspace->get($uri);
         $sourceCode = SourceCode::fromStringAndPath(
@@ -58,14 +60,17 @@ class ImportClassCommand
             TextDocumentUri::fromString($document->uri)->path()
         );
 
+        $nameImport = $type === 'function' ? 
+            NameImport::forFunction($fqn, $alias) : 
+            NameImport::forClass($fqn, $alias);
+
         try {
-            if ($alias) {
-                // alias is not nullable but it can be null...
-                $textEdits = $this->importClass->importClass($sourceCode, $offset, $fqn, $alias);
-            } else {
-                $textEdits = $this->importClass->importClass($sourceCode, $offset, $fqn);
-            }
-        } catch (ClassAlreadyImportedException $error) {
+            $textEdits = $this->importName->importName(
+                $sourceCode,
+                ByteOffset::fromInt($offset),
+                $nameImport
+            );
+        } catch (NameAlreadyImportedException $error) {
             if ($error->existingName() === $fqn) {
                 return new Success(null);
             }
@@ -76,10 +81,10 @@ class ImportClassCommand
                 $prefix = $name->toArray()[0];
             }
 
-            return $this->__invoke($uri, $offset, $fqn, $prefix . $error->name());
+            return $this->__invoke($uri, $offset, $type, $fqn, $prefix . $error->name());
         } catch (AliasAlreadyUsedException $error) {
             $prefix = 'Aliased';
-            return $this->__invoke($uri, $offset, $fqn, $prefix . $error->name());
+            return $this->__invoke($uri, $offset, $type, $fqn, $prefix . $error->name());
         } catch (TransformException $error) {
             $this->client->window()->showMessage()->warning($error->getMessage());
             return new Success(null);

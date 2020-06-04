@@ -7,33 +7,34 @@ use LanguageServerProtocol\ApplyWorkspaceEditResponse;
 use LanguageServerProtocol\TextDocumentItem;
 use Phpactor\CodeTransform\Domain\Exception\TransformException;
 use Phpactor\CodeTransform\Domain\Refactor\ImportClass\AliasAlreadyUsedException;
-use Phpactor\CodeTransform\Domain\Refactor\ImportClass\ClassAlreadyImportedException;
+use Phpactor\CodeTransform\Domain\Refactor\ImportClass\NameAlreadyImportedException;
+use Phpactor\CodeTransform\Domain\Refactor\ImportClass\NameImport;
 use Phpactor\CodeTransform\Domain\SourceCode;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
-use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportClassCommand;
-use Phpactor\CodeTransform\Domain\Refactor\ImportClass;
+use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportNameCommand;
+use Phpactor\CodeTransform\Domain\Refactor\ImportName;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Core\Server\RpcClient\TestRpcClient;
 use Phpactor\LanguageServer\Core\Session\Workspace;
 use Phpactor\LanguageServer\Workspace\CommandDispatcher;
 use Phpactor\TestUtils\PHPUnit\TestCase;
+use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextEdit;
 use Phpactor\TextDocument\TextEdits;
 use Prophecy\Prophecy\ObjectProphecy;
 
-class ImportClassCommandTest extends TestCase
+class ImportNameCommandTest extends TestCase
 {
     const EXAMPLE_CONTENT = 'hello this is some text';
     const EXAMPLE_PATH = '/foobar.php';
     const EXAMPLE_OFFSET = 12;
     const EXAMPLE_PATH_URI = 'file:///foobar.php';
 
-
     /**
-     * @var ObjectProphecy<ImportClass>
+     * @var ObjectProphecy<ImportName>
      */
-    private $importClass;
+    private $importName;
 
     /**
      * @var Workspace
@@ -56,12 +57,12 @@ class ImportClassCommandTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->importClass = $this->prophesize(ImportClass::class);
+        $this->importName = $this->prophesize(ImportName::class);
         $this->workspace = new Workspace();
         $this->rpcClient = TestRpcClient::create();
         $this->converter = new TextEditConverter(new LocationConverter($this->workspace));
-        $this->command = new ImportClassCommand(
-            $this->importClass->reveal(),
+        $this->command = new ImportNameCommand(
+            $this->importName->reveal(),
             $this->workspace,
             $this->converter,
             new ClientApi($this->rpcClient)
@@ -72,10 +73,10 @@ class ImportClassCommandTest extends TestCase
     {
         $this->workspace->open(new TextDocumentItem(self::EXAMPLE_PATH_URI, 'php', 1, self::EXAMPLE_CONTENT));
 
-        $this->importClass->importClass(
+        $this->importName->importName(
             SourceCode::fromStringAndPath(self::EXAMPLE_CONTENT, self::EXAMPLE_PATH),
-            self::EXAMPLE_OFFSET,
-            'Foobar'
+            ByteOffset::fromInt(self::EXAMPLE_OFFSET),
+            NameImport::forClass('Foobar')
         )->willReturn(TextEdits::one(
             TextEdit::create(self::EXAMPLE_OFFSET, self::EXAMPLE_OFFSET, 'some replacement')
         ));
@@ -83,7 +84,34 @@ class ImportClassCommandTest extends TestCase
         $promise = (new CommandDispatcher([
             'import_class' => $this->command
         ]))->dispatch('import_class', [
-            self::EXAMPLE_PATH_URI, self::EXAMPLE_OFFSET, 'Foobar'
+            self::EXAMPLE_PATH_URI,
+            self::EXAMPLE_OFFSET,
+            'class',
+            'Foobar'
+        ]);
+
+        $this->assertWorkspaceResponse($promise);
+    }
+
+    public function testImportFunction(): void
+    {
+        $this->workspace->open(new TextDocumentItem(self::EXAMPLE_PATH_URI, 'php', 1, self::EXAMPLE_CONTENT));
+
+        $this->importName->importName(
+            SourceCode::fromStringAndPath(self::EXAMPLE_CONTENT, self::EXAMPLE_PATH),
+            ByteOffset::fromInt(self::EXAMPLE_OFFSET),
+            NameImport::forFunction('Foobar')
+        )->willReturn(TextEdits::one(
+            TextEdit::create(self::EXAMPLE_OFFSET, self::EXAMPLE_OFFSET, 'some replacement')
+        ));
+
+        $promise = (new CommandDispatcher([
+            'import_class' => $this->command
+        ]))->dispatch('import_class', [
+            self::EXAMPLE_PATH_URI,
+            self::EXAMPLE_OFFSET,
+            'function',
+            'Foobar'
         ]);
 
         $this->assertWorkspaceResponse($promise);
@@ -93,16 +121,19 @@ class ImportClassCommandTest extends TestCase
     {
         $this->workspace->open(new TextDocumentItem(self::EXAMPLE_PATH_URI, 'php', 1, self::EXAMPLE_CONTENT));
 
-        $this->importClass->importClass(
+        $this->importName->importName(
             SourceCode::fromStringAndPath(self::EXAMPLE_CONTENT, self::EXAMPLE_PATH),
-            self::EXAMPLE_OFFSET,
-            'Foobar'
+            ByteOffset::fromInt(self::EXAMPLE_OFFSET),
+            NameImport::forClass('Foobar')
         )->willThrow(new TransformException('Sorry'));
 
         $promise = (new CommandDispatcher([
             'import_class' => $this->command
         ]))->dispatch('import_class', [
-            self::EXAMPLE_PATH_URI, self::EXAMPLE_OFFSET, 'Foobar'
+            self::EXAMPLE_PATH_URI,
+            self::EXAMPLE_OFFSET,
+            'class',
+            'Foobar'
         ]);
 
         self::assertNotNull($message = $this->rpcClient->transmitter()->shiftNotification());
@@ -113,16 +144,16 @@ class ImportClassCommandTest extends TestCase
     {
         $this->workspace->open(new TextDocumentItem(self::EXAMPLE_PATH_URI, 'php', 1, self::EXAMPLE_CONTENT));
 
-        $this->importClass->importClass(
+        $this->importName->importName(
             SourceCode::fromStringAndPath(self::EXAMPLE_CONTENT, self::EXAMPLE_PATH),
-            self::EXAMPLE_OFFSET,
-            'Acme\Foobar'
-        )->willThrow(new ClassAlreadyImportedException('Foobar', 'Acme\Foobar'));
+            ByteOffset::fromInt(self::EXAMPLE_OFFSET),
+            NameImport::forClass('Acme\Foobar')
+        )->willThrow(new NameAlreadyImportedException(NameImport::forClass('Foobar'), 'Acme\Foobar'));
 
         $promise = (new CommandDispatcher([
             'import_class' => $this->command
         ]))->dispatch('import_class', [
-            self::EXAMPLE_PATH_URI, self::EXAMPLE_OFFSET, 'Acme\Foobar'
+            self::EXAMPLE_PATH_URI, self::EXAMPLE_OFFSET, 'class', 'Acme\Foobar'
         ]);
 
         self::assertNull($this->rpcClient->transmitter()->shiftNotification());
@@ -132,17 +163,16 @@ class ImportClassCommandTest extends TestCase
     {
         $this->workspace->open(new TextDocumentItem(self::EXAMPLE_PATH_URI, 'php', 1, self::EXAMPLE_CONTENT));
 
-        $this->importClass->importClass(
+        $this->importName->importName(
             SourceCode::fromStringAndPath(self::EXAMPLE_CONTENT, self::EXAMPLE_PATH),
-            self::EXAMPLE_OFFSET,
-            'Acme\Foobar'
-        )->willThrow(new ClassAlreadyImportedException('Foobar', 'NotMyClass\Foobar'));
+            ByteOffset::fromInt(self::EXAMPLE_OFFSET),
+            NameImport::forClass('Acme\Foobar')
+        )->willThrow(new NameAlreadyImportedException(NameImport::forClass('Acme\Foobar'), 'NotMyClass\Foobar'));
 
-        $this->importClass->importClass(
+        $this->importName->importName(
             SourceCode::fromStringAndPath(self::EXAMPLE_CONTENT, self::EXAMPLE_PATH),
-            self::EXAMPLE_OFFSET,
-            'Acme\Foobar',
-            'AcmeFoobar',
+            ByteOffset::fromInt(self::EXAMPLE_OFFSET),
+            NameImport::forClass('Acme\Foobar', 'AcmeFoobar'),
         )->willReturn(TextEdits::one(
             TextEdit::create(self::EXAMPLE_OFFSET, self::EXAMPLE_OFFSET, 'some replacement')
         ))->shouldBeCalled();
@@ -150,7 +180,7 @@ class ImportClassCommandTest extends TestCase
         $promise = (new CommandDispatcher([
             'import_class' => $this->command
         ]))->dispatch('import_class', [
-            self::EXAMPLE_PATH_URI, self::EXAMPLE_OFFSET, 'Acme\Foobar'
+            self::EXAMPLE_PATH_URI, self::EXAMPLE_OFFSET, 'class', 'Acme\Foobar'
         ]);
 
         $this->assertWorkspaceResponse($promise);
@@ -160,18 +190,16 @@ class ImportClassCommandTest extends TestCase
     {
         $this->workspace->open(new TextDocumentItem(self::EXAMPLE_PATH_URI, 'php', 1, self::EXAMPLE_CONTENT));
 
-        $this->importClass->importClass(
+        $this->importName->importName(
             SourceCode::fromStringAndPath(self::EXAMPLE_CONTENT, self::EXAMPLE_PATH),
-            self::EXAMPLE_OFFSET,
-            'Acme\Foobar',
-            'AcmeFoobar',
-        )->willThrow(new AliasAlreadyUsedException('AcmeFoobar'));
+            ByteOffset::fromInt(self::EXAMPLE_OFFSET),
+            NameImport::forClass('Acme\Foobar', 'AcmeFoobar'),
+        )->willThrow(new AliasAlreadyUsedException(NameImport::forClass('Acme\Foobar','AcmeFoobar')));
 
-        $this->importClass->importClass(
+        $this->importName->importName(
             SourceCode::fromStringAndPath(self::EXAMPLE_CONTENT, self::EXAMPLE_PATH),
-            self::EXAMPLE_OFFSET,
-            'Acme\Foobar',
-            'AliasedAcmeFoobar',
+            ByteOffset::fromInt(self::EXAMPLE_OFFSET),
+            NameImport::forClass('Acme\Foobar', 'AliasedAcmeFoobar'),
         )->willReturn(TextEdits::one(
             TextEdit::create(self::EXAMPLE_OFFSET, self::EXAMPLE_OFFSET, 'some replacement')
         ));
@@ -179,7 +207,7 @@ class ImportClassCommandTest extends TestCase
         $promise = (new CommandDispatcher([
             'import_class' => $this->command
         ]))->dispatch('import_class', [
-            self::EXAMPLE_PATH_URI, self::EXAMPLE_OFFSET, 'Acme\Foobar', 'AcmeFoobar'
+            self::EXAMPLE_PATH_URI, self::EXAMPLE_OFFSET, 'class', 'Acme\Foobar', 'AcmeFoobar'
         ]);
 
         $this->assertWorkspaceResponse($promise);
