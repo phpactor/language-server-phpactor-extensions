@@ -82,8 +82,8 @@ class ImportNameCommandTest extends TestCase
         ));
 
         $promise = (new CommandDispatcher([
-            'import_class' => $this->command
-        ]))->dispatch('import_class', [
+            ImportNameCommand::NAME => $this->command
+        ]))->dispatch(ImportNameCommand::NAME, [
             self::EXAMPLE_PATH_URI,
             self::EXAMPLE_OFFSET,
             'class',
@@ -106,8 +106,8 @@ class ImportNameCommandTest extends TestCase
         ));
 
         $promise = (new CommandDispatcher([
-            'import_class' => $this->command
-        ]))->dispatch('import_class', [
+            ImportNameCommand::NAME => $this->command
+        ]))->dispatch(ImportNameCommand::NAME, [
             self::EXAMPLE_PATH_URI,
             self::EXAMPLE_OFFSET,
             'function',
@@ -128,8 +128,8 @@ class ImportNameCommandTest extends TestCase
         )->willThrow(new TransformException('Sorry'));
 
         $promise = (new CommandDispatcher([
-            'import_class' => $this->command
-        ]))->dispatch('import_class', [
+            ImportNameCommand::NAME => $this->command
+        ]))->dispatch(ImportNameCommand::NAME, [
             self::EXAMPLE_PATH_URI,
             self::EXAMPLE_OFFSET,
             'class',
@@ -151,8 +151,8 @@ class ImportNameCommandTest extends TestCase
         )->willThrow(new NameAlreadyImportedException(NameImport::forClass('Foobar'), 'Acme\Foobar'));
 
         $promise = (new CommandDispatcher([
-            'import_class' => $this->command
-        ]))->dispatch('import_class', [
+            ImportNameCommand::NAME => $this->command
+        ]))->dispatch(ImportNameCommand::NAME, [
             self::EXAMPLE_PATH_URI, self::EXAMPLE_OFFSET, 'class', 'Acme\Foobar'
         ]);
 
@@ -178,8 +178,8 @@ class ImportNameCommandTest extends TestCase
         ))->shouldBeCalled();
 
         $promise = (new CommandDispatcher([
-            'import_class' => $this->command
-        ]))->dispatch('import_class', [
+            ImportNameCommand::NAME => $this->command
+        ]))->dispatch(ImportNameCommand::NAME, [
             self::EXAMPLE_PATH_URI, self::EXAMPLE_OFFSET, 'class', 'Acme\Foobar'
         ]);
 
@@ -205,8 +205,8 @@ class ImportNameCommandTest extends TestCase
         ));
 
         $promise = (new CommandDispatcher([
-            'import_class' => $this->command
-        ]))->dispatch('import_class', [
+            ImportNameCommand::NAME => $this->command
+        ]))->dispatch(ImportNameCommand::NAME, [
             self::EXAMPLE_PATH_URI, self::EXAMPLE_OFFSET, 'class', 'Acme\Foobar', 'AcmeFoobar'
         ]);
 

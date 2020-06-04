@@ -21,6 +21,7 @@ use Phpactor\Completion\Core\Completor;
 use Phpactor\Completion\Core\Suggestion;
 use Phpactor\Completion\Core\TypedCompletorRegistry;
 use Phpactor\Extension\LanguageServerCodeTransform\LanguageServerCodeTransformExtension;
+use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportNameCommand;
 use Phpactor\Extension\LanguageServerCompletion\Util\PhpactorToLspCompletionType;
 use Phpactor\Extension\LanguageServerCompletion\Util\SuggestionNameFormatter;
 use Phpactor\Extension\LanguageServer\Helper\OffsetHelper;
@@ -122,7 +123,7 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
                     $insertText,
                     $this->textEdit($suggestion, $textDocument),
                     null,
-                    $this->command($textDocument->uri, $position->toOffset($textDocument->text), $suggestion->classImport()),
+                    $this->command($textDocument->uri, $position->toOffset($textDocument->text), $suggestion),
                     null,
                     $insertTextFormat
                 );
@@ -166,16 +167,20 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
         );
     }
 
-    private function command(string $uri, int $offset, ?string $fqn): ?Command
+    private function command(string $uri, int $offset, Suggestion $suggestion): ?Command
     {
-        if (!$fqn) {
+        if (!$suggestion->nameImport()) {
+            return null;
+        }
+
+        if (!in_array($suggestion->type(), [ 'class', 'function'])) {
             return null;
         }
 
         return new Command(
             'Import class',
-            LanguageServerCodeTransformExtension::COMMAND_IMPORT_CLASS,
-            [$uri, $offset, $fqn]
+            ImportNameCommand::NAME,
+            [$uri, $offset, $suggestion->type(), $suggestion->nameImport()]
         );
     }
 

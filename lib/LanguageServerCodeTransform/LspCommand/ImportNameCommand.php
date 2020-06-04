@@ -20,6 +20,8 @@ use Phpactor\TextDocument\TextDocumentUri;
 
 class ImportNameCommand
 {
+    public const NAME = 'name_import';
+
     /**
      * @var ImportName
      */

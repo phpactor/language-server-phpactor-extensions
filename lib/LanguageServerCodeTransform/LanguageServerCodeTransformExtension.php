@@ -14,8 +14,6 @@ use Phpactor\MapResolver\Resolver;
 
 class LanguageServerCodeTransformExtension implements Extension
 {
-    public const COMMAND_IMPORT_CLASS = 'phpactor.action.import_class';
-
     /**
      * {@inheritDoc}
      */
@@ -30,7 +28,7 @@ class LanguageServerCodeTransformExtension implements Extension
             );
         }, [
             LanguageServerExtension::TAG_COMMAND => [
-                'name' => self::COMMAND_IMPORT_CLASS
+                'name' => ImportNameCommand::NAME
             ],
         ]);
     }
