@@ -39,7 +39,8 @@
         "phpactor/test-utils": "^1.1",
         "dms/phpunit-arraysubset-asserts": "dev-master",
         "friendsofphp/php-cs-fixer": "^2.13",
-        "jangregor/phpstan-prophecy": "^0.8.0"
+        "jangregor/phpstan-prophecy": "^0.8.0",
+        "symfony/var-dumper": "^5.1"
     },
     "autoload": {
         "psr-4": {

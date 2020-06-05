@@ -199,7 +199,7 @@ class ImportNameCommandTest extends TestCase
         $this->importName->importName(
             SourceCode::fromStringAndPath(self::EXAMPLE_CONTENT, self::EXAMPLE_PATH),
             ByteOffset::fromInt(self::EXAMPLE_OFFSET),
-            NameImport::forClass('Acme\Foobar', 'AliasedAcmeFoobar'),
+            NameImport::forClass('Acme\Foobar', 'AliasedFoobar'),
         )->willReturn(TextEdits::one(
             TextEdit::create(self::EXAMPLE_OFFSET, self::EXAMPLE_OFFSET, 'some replacement')
         ));
