@@ -1,5 +1,5 @@
-Language Server Extension
-=========================
+Language Server Phpactor Extensions
+===================================
 
 [![Build Status](https://travis-ci.org/phpactor/language-server-phpactor-extensions.svg?branch=master)](https://travis-ci.org/phpactor/language-server-phpactor-extensions)
 
