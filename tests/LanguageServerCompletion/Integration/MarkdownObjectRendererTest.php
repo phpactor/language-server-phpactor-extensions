@@ -193,6 +193,15 @@ EOT
             },
             'class_reflection4.md',
         ];
+
+        yield 'class that extends itself' => [
+            '',
+            function (Reflector $reflector) {
+                return $reflector->reflectClassesIn('<?php class Foobar extends Foobar {}')->first();
+            },
+            'class_reflection5.md',
+            true
+        ];
     }
 
     /**

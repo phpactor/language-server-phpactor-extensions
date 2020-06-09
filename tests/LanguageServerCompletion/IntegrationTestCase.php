@@ -13,9 +13,11 @@ use Phpactor\Extension\LanguageServerHover\LanguageServerHoverExtension;
 use Phpactor\Extension\LanguageServerWorseReflection\LanguageServerWorseReflectionExtension;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\Logger\LoggingExtension;
+use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
 use Phpactor\Extension\SourceCodeFilesystem\SourceCodeFilesystemExtension;
 use Phpactor\Extension\WorseReflection\WorseReflectionExtension;
 use Phpactor\FilePathResolverExtension\FilePathResolverExtension;
+use Phpactor\Indexer\Extension\IndexerExtension;
 use Phpactor\LanguageServer\LanguageServerBuilder;
 use Phpactor\LanguageServer\Test\ServerTester;
 use Phpactor\TestUtils\Workspace;
@@ -43,6 +45,8 @@ class IntegrationTestCase extends TestCase
             SourceCodeFilesystemExtension::class,
             LanguageServerWorseReflectionExtension::class,
             LanguageServerHoverExtension::class,
+            IndexerExtension::class,
+            ReferenceFinderExtension::class,
         ], [
             FilePathResolverExtension::PARAM_APPLICATION_ROOT => __DIR__ .'/../../'
         ]);
