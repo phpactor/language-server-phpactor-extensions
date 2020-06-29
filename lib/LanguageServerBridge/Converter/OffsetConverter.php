@@ -2,7 +2,7 @@
 
 namespace Phpactor\Extension\LanguageServerBridge\Converter;
 
-use LanguageServerProtocol\Position;
+use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\TextDocument\ByteOffset;
 
 class OffsetConverter
@@ -21,5 +21,13 @@ class OffsetConverter
         $char = mb_strlen($remainingLine);
 
         return new Position($line, $char);
+    }
+    
+    public function toOffset(Position $position, string $content): ByteOffset
+    {
+        $lines = explode("\n", $content);
+        $slice = array_slice($lines, 0, $position->line);
+
+        return ByteOffset::fromInt((int) array_sum(array_map('strlen', $slice)) + count($slice) + $position->character);
     }
 }

@@ -2,8 +2,8 @@
 
 namespace Phpactor\Extension\LanguageServerBridge\Converter;
 
-use LanguageServerProtocol\Range;
-use LanguageServerProtocol\TextEdit as LspTextEdit;
+use Phpactor\LanguageServerProtocol\Range;
+use Phpactor\LanguageServerProtocol\TextEdit as LspTextEdit;
 use Phpactor\TextDocument\TextEdit;
 use Phpactor\TextDocument\TextEdits;
 

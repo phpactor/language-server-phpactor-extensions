@@ -2,10 +2,10 @@
 
 namespace Phpactor\Extension\LanguageServerCompletion\Tests\Unit\Handler;
 
-use LanguageServerProtocol\Position;
-use LanguageServerProtocol\SignatureHelp as LspSignatureHelp;
-use LanguageServerProtocol\TextDocumentIdentifier;
-use LanguageServerProtocol\TextDocumentItem;
+use Phpactor\LanguageServerProtocol\Position;
+use Phpactor\LanguageServerProtocol\SignatureHelp as LspSignatureHelp;
+use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
+use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use PHPUnit\Framework\TestCase;
 use Phpactor\Completion\Core\SignatureHelp;
 use Phpactor\Completion\Core\SignatureHelper;

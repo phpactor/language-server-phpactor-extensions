@@ -3,11 +3,11 @@
 namespace Phpactor\Extension\LanguageServerCompletion\Handler;
 
 use Amp\Promise;
-use LanguageServerProtocol\Position;
-use LanguageServerProtocol\ServerCapabilities;
-use LanguageServerProtocol\SignatureHelp;
-use LanguageServerProtocol\SignatureHelpOptions;
-use LanguageServerProtocol\TextDocumentIdentifier;
+use Phpactor\LanguageServerProtocol\Position;
+use Phpactor\LanguageServerProtocol\ServerCapabilities;
+use Phpactor\LanguageServerProtocol\SignatureHelp;
+use Phpactor\LanguageServerProtocol\SignatureHelpOptions;
+use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
 use Phpactor\Completion\Core\Exception\CouldNotHelpWithSignature;
 use Phpactor\Completion\Core\SignatureHelper;
 use Phpactor\Extension\LanguageServerCompletion\Util\PhpactorToLspSignature;

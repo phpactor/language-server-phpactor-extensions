@@ -6,17 +6,19 @@ use Amp\CancellationToken;
 use Amp\CancelledException;
 use Amp\Delayed;
 use Amp\Promise;
-use LanguageServerProtocol\Command;
-use LanguageServerProtocol\CompletionItem;
-use LanguageServerProtocol\CompletionList;
-use LanguageServerProtocol\CompletionOptions;
-use LanguageServerProtocol\InsertTextFormat;
-use LanguageServerProtocol\Position;
-use LanguageServerProtocol\Range;
-use LanguageServerProtocol\ServerCapabilities;
-use LanguageServerProtocol\SignatureHelpOptions;
-use LanguageServerProtocol\TextDocumentItem;
-use LanguageServerProtocol\TextEdit;
+use Phpactor\Extension\LanguageServerBridge\Converter\OffsetConverter;
+use Phpactor\LanguageServerProtocol\Command;
+use Phpactor\LanguageServerProtocol\CompletionItem;
+use Phpactor\LanguageServerProtocol\CompletionList;
+use Phpactor\LanguageServerProtocol\CompletionOptions;
+use Phpactor\LanguageServerProtocol\CompletionParams;
+use Phpactor\LanguageServerProtocol\InsertTextFormat;
+use Phpactor\LanguageServerProtocol\Position;
+use Phpactor\LanguageServerProtocol\Range;
+use Phpactor\LanguageServerProtocol\ServerCapabilities;
+use Phpactor\LanguageServerProtocol\SignatureHelpOptions;
+use Phpactor\LanguageServerProtocol\TextDocumentItem;
+use Phpactor\LanguageServerProtocol\TextEdit;
 use Phpactor\Completion\Core\Completor;
 use Phpactor\Completion\Core\Suggestion;
 use Phpactor\Completion\Core\TypedCompletorRegistry;
@@ -63,10 +65,16 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
      */
     private $supportSnippets;
 
+    /**
+     * @var OffsetConverter
+     */
+    private $converter;
+
     public function __construct(
         Workspace $workspace,
         TypedCompletorRegistry $registry,
         SuggestionNameFormatter $suggestionNameFormatter,
+        OffsetConverter $converter,
         bool $supportSnippets,
         bool $provideTextEdit = false
     ) {
@@ -75,6 +83,7 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
         $this->workspace = $workspace;
         $this->suggestionNameFormatter = $suggestionNameFormatter;
         $this->supportSnippets = $supportSnippets;
+        $this->converter = $converter;
     }
 
     public function methods(): array
@@ -84,22 +93,21 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
         ];
     }
 
-    public function completion(TextDocumentItem $textDocument, Position $position, CancellationToken $token): Promise
+    public function completion(CompletionParams $params, CancellationToken $token): Promise
     {
-        return \Amp\call(function () use ($textDocument, $position, $token) {
-            $textDocument = $this->workspace->get($textDocument->uri);
+        return \Amp\call(function () use ($params, $token) {
+            $textDocument = $this->workspace->get($params->textDocument->uri);
 
             $languageId = $textDocument->languageId ?: 'php';
+            $byteOffset = $this->converter->toOffset($params->position, $textDocument->text);
             $suggestions = $this->registry->completorForType(
                 $languageId
             )->complete(
                 TextDocumentBuilder::create($textDocument->text)->language($languageId)->uri($textDocument->uri)->build(),
-                ByteOffset::fromInt($position->toOffset($textDocument->text))
+                $byteOffset
             );
 
-            $completionList = new CompletionList();
-            $completionList->isIncomplete = true;
-
+            $items = [];
             foreach ($suggestions as $suggestion) {
                 $name = $this->suggestionNameFormatter->format($suggestion);
                 $insertText = $name;
@@ -113,20 +121,16 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
                     ;
                 }
 
-                $completionList->items[] = new CompletionItem(
-                    $name,
-                    PhpactorToLspCompletionType::fromPhpactorType($suggestion->type()),
-                    $this->formatShortDescription($suggestion),
-                    $suggestion->documentation(),
-                    null,
-                    null,
-                    $insertText,
-                    $this->textEdit($suggestion, $textDocument),
-                    null,
-                    $this->command($textDocument->uri, $position->toOffset($textDocument->text), $suggestion),
-                    null,
-                    $insertTextFormat
-                );
+                $items[] = CompletionItem::fromArray([
+                    'label' => $name,
+                    'kind' => PhpactorToLspCompletionType::fromPhpactorType($suggestion->type()),
+                    'detail' => $this->formatShortDescription($suggestion),
+                    'documentation' => $suggestion->documentation(),
+                    'insertText' => $insertText,
+                    'textEdit' => $this->textEdit($suggestion, $textDocument),
+                    'command' => $this->command($textDocument->uri, $byteOffset, $suggestion),
+                    'insertTextFormat' => $insertTextFormat
+                ]);
 
                 try {
                     $token->throwIfRequested();
@@ -136,13 +140,13 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
                 yield new Delayed(0);
             }
 
-            return $completionList;
+            return new CompletionList(true, $items);
         });
     }
 
     public function registerCapabiltiies(ServerCapabilities $capabilities): void
     {
-        $capabilities->completionProvider = new CompletionOptions(false, [':', '>', '$']);
+        $capabilities->completionProvider = new CompletionOptions([':', '>', '$']);
         $capabilities->signatureHelpProvider = new SignatureHelpOptions(['(', ',']);
     }
 
@@ -167,7 +171,7 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
         );
     }
 
-    private function command(string $uri, int $offset, Suggestion $suggestion): ?Command
+    private function command(string $uri, ByteOffset $offset, Suggestion $suggestion): ?Command
     {
         if (!$suggestion->nameImport()) {
             return null;
@@ -180,7 +184,7 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
         return new Command(
             'Import class',
             ImportNameCommand::NAME,
-            [$uri, $offset, $suggestion->type(), $suggestion->nameImport()]
+            [$uri, $offset->toInt(), $suggestion->type(), $suggestion->nameImport()]
         );
     }
 

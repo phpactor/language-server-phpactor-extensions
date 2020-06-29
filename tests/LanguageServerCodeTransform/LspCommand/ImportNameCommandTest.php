@@ -3,8 +3,8 @@
 namespace Phpactor\Extension\LanguageServerCodeTransform\Tests\LspCommand;
 
 use Amp\Promise;
-use LanguageServerProtocol\ApplyWorkspaceEditResponse;
-use LanguageServerProtocol\TextDocumentItem;
+use Phpactor\LanguageServerProtocol\ApplyWorkspaceEditResponse;
+use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\CodeTransform\Domain\Exception\TransformException;
 use Phpactor\CodeTransform\Domain\Refactor\ImportClass\AliasAlreadyUsedException;
 use Phpactor\CodeTransform\Domain\Refactor\ImportClass\NameAlreadyImportedException;

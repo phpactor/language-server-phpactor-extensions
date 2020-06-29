@@ -5,12 +5,14 @@ namespace Phpactor\Extension\LanguageServerCompletion\Tests\Unit\Handler;
 use Amp\Delayed;
 use DTL\Invoke\Invoke;
 use Generator;
-use LanguageServerProtocol\CompletionItem;
-use LanguageServerProtocol\CompletionList;
-use LanguageServerProtocol\Position;
-use LanguageServerProtocol\Range;
-use LanguageServerProtocol\TextDocumentItem;
-use LanguageServerProtocol\TextEdit;
+use Phpactor\Extension\LanguageServerBridge\Converter\OffsetConverter;
+use Phpactor\LanguageServerProtocol\CompletionItem;
+use Phpactor\LanguageServerProtocol\CompletionList;
+use Phpactor\LanguageServerProtocol\Position;
+use Phpactor\LanguageServerProtocol\Range;
+use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
+use Phpactor\LanguageServerProtocol\TextDocumentItem;
+use Phpactor\LanguageServerProtocol\TextEdit;
 use PHPUnit\Framework\TestCase;
 use Phpactor\Completion\Core\Completor;
 use Phpactor\Completion\Core\Range as PhpactorRange;
@@ -26,20 +28,29 @@ use Phpactor\TextDocument\TextDocument;
 class CompletionHandlerTest extends TestCase
 {
     /**
-     * @var TextDocumentItem
-     */
-    private $document;
-
-    /**
      * @var Position
      */
     private $position;
 
+    /**
+     * @var TextDocumentIdentifier
+     */
+    private $documentIdentifier;
+
+    /**
+     * @var Workspace
+     */
+    private $workspace;
+
+    /**
+     * @var TextDocumentItem
+     */
+    private $document;
+
     public function setUp(): void
     {
-        $this->document = new TextDocumentItem();
-        $this->document->uri = '/test';
-        $this->document->text = 'hello';
+        $this->document = new TextDocumentItem('/test/', 'php', 1, 'hello');
+        $this->documentIdentifier = new TextDocumentIdentifier('/test/');
         $this->position = new Position(1, 1);
         $this->workspace = new Workspace();
 
@@ -52,7 +63,7 @@ class CompletionHandlerTest extends TestCase
         $response = $tester->dispatchAndWait(
             'textDocument/completion',
             [
-                'textDocument' => $this->document,
+                'textDocument' => $this->documentIdentifier,
                 'position' => $this->position
             ]
         );
@@ -69,7 +80,7 @@ class CompletionHandlerTest extends TestCase
         $response = $tester->dispatchAndWait(
             'textDocument/completion',
             [
-                'textDocument' => $this->document,
+                'textDocument' => $this->documentIdentifier,
                 'position' => $this->position
             ]
         );
@@ -88,7 +99,7 @@ class CompletionHandlerTest extends TestCase
         $response = $tester->dispatchAndWait(
             'textDocument/completion',
             [
-                'textDocument' => $this->document,
+                'textDocument' => $this->documentIdentifier,
                 'position' => $this->position
             ]
         );
@@ -110,7 +121,7 @@ class CompletionHandlerTest extends TestCase
         $response = $tester->dispatch(
             'textDocument/completion',
             [
-                'textDocument' => $this->document,
+                'textDocument' => $this->documentIdentifier,
                 'position' => $this->position
             ]
         );
@@ -143,7 +154,7 @@ class CompletionHandlerTest extends TestCase
         $response = $tester->dispatchAndWait(
             'textDocument/completion',
             [
-                'textDocument' => $this->document,
+                'textDocument' => $this->documentIdentifier,
                 'position' => $this->position
             ]
         );
@@ -172,7 +183,7 @@ class CompletionHandlerTest extends TestCase
         $response = $tester->dispatchAndWait(
             'textDocument/completion',
             [
-                'textDocument' => $this->document,
+                'textDocument' => $this->documentIdentifier,
                 'position' => $this->position
             ]
         );
@@ -208,6 +219,7 @@ class CompletionHandlerTest extends TestCase
             $this->workspace,
             $registry,
             new SuggestionNameFormatter(true),
+            new OffsetConverter(),
             $supportSnippets,
             true
         ));

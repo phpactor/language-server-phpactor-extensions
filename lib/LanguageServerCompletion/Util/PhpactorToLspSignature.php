@@ -2,9 +2,9 @@
 
 namespace Phpactor\Extension\LanguageServerCompletion\Util;
 
-use LanguageServerProtocol\ParameterInformation;
-use LanguageServerProtocol\SignatureHelp;
-use LanguageServerProtocol\SignatureInformation;
+use Phpactor\LanguageServerProtocol\ParameterInformation;
+use Phpactor\LanguageServerProtocol\SignatureHelp;
+use Phpactor\LanguageServerProtocol\SignatureInformation;
 use Phpactor\Completion\Core\SignatureHelp as PhpactorSignatureHelp;
 
 class PhpactorToLspSignature

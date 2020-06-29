@@ -2,9 +2,9 @@
 
 namespace Phpactor\Extension\LanguageServerHover\Tests\Unit\Handler;
 
-use LanguageServerProtocol\Hover;
-use LanguageServerProtocol\TextDocumentIdentifier;
-use LanguageServerProtocol\TextDocumentItem;
+use Phpactor\LanguageServerProtocol\Hover;
+use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
+use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\Extension\LanguageServerCompletion\Tests\IntegrationTestCase;
 use Phpactor\Extension\LanguageServer\Helper\OffsetHelper;
 use Phpactor\TestUtils\ExtractOffset;
