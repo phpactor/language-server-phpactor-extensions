@@ -6,6 +6,7 @@ use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
+use Phpactor\Extension\LanguageServerBridge\Converter\OffsetConverter;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\MapResolver\Resolver;
@@ -26,6 +27,10 @@ class LanguageServerBridgeExtension implements Extension
     {
         $container->register(LocationConverter::class, function (Container $container) {
             return new LocationConverter($container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE));
+        });
+
+        $container->register(OffsetConverter::class, function (Container $container) {
+            return new OffsetConverter();
         });
 
         $container->register(TextEditConverter::class, function (Container $container) {

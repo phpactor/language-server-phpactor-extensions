@@ -8,6 +8,7 @@ use Phpactor\Extension\ClassToFile\ClassToFileExtension;
 use Phpactor\Extension\CompletionWorse\CompletionWorseExtension;
 use Phpactor\Extension\Completion\CompletionExtension;
 use Phpactor\Extension\ComposerAutoloader\ComposerAutoloaderExtension;
+use Phpactor\Extension\LanguageServerBridge\LanguageServerBridgeExtension;
 use Phpactor\Extension\LanguageServerCompletion\LanguageServerCompletionExtension;
 use Phpactor\Extension\LanguageServerHover\LanguageServerHoverExtension;
 use Phpactor\Extension\LanguageServerWorseReflection\LanguageServerWorseReflectionExtension;
@@ -47,6 +48,8 @@ class IntegrationTestCase extends TestCase
             LanguageServerHoverExtension::class,
             IndexerExtension::class,
             ReferenceFinderExtension::class,
+
+            LanguageServerBridgeExtension::class,
         ], [
             FilePathResolverExtension::PARAM_APPLICATION_ROOT => __DIR__ .'/../../'
         ]);

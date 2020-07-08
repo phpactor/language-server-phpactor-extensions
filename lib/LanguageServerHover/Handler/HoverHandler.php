@@ -3,6 +3,7 @@
 namespace Phpactor\Extension\LanguageServerHover\Handler;
 
 use Amp\Promise;
+use Phpactor\Extension\LanguageServerBridge\Converter\OffsetConverter;
 use Phpactor\LanguageServerProtocol\Hover;
 use Phpactor\LanguageServerProtocol\MarkupContent;
 use Phpactor\LanguageServerProtocol\Position;
@@ -42,11 +43,17 @@ class HoverHandler implements Handler, CanRegisterCapabilities
      */
     private $workspace;
 
-    public function __construct(Workspace $workspace, Reflector $reflector, ObjectRenderer $renderer)
+    /**
+     * @var OffsetConverter
+     */
+    private $offsetConverter;
+
+    public function __construct(Workspace $workspace, Reflector $reflector, ObjectRenderer $renderer, OffsetConverter $offsetConverter)
     {
         $this->reflector = $reflector;
         $this->renderer = $renderer;
         $this->workspace = $workspace;
+        $this->offsetConverter = $offsetConverter;
     }
 
     public function methods(): array
@@ -62,7 +69,7 @@ class HoverHandler implements Handler, CanRegisterCapabilities
     ): Promise {
         return \Amp\call(function () use ($textDocument, $position) {
             $document = $this->workspace->get($textDocument->uri);
-            $offset = $position->toOffset($document->text);
+            $offset = $this->offsetConverter->toOffset($position,$document->text);
             $document = TextDocumentBuilder::create($document->text)
                 ->uri($document->uri)
                 ->language('php')
@@ -73,7 +80,6 @@ class HoverHandler implements Handler, CanRegisterCapabilities
             $info = $this->infoFromReflecionOffset($offsetReflection);
             $string = new MarkupContent('markdown', $info);
 
-            // @phpstan-ignore-next-line
             return new Hover($string, new Range(
                 OffsetHelper::offsetToPosition($document->__toString(), $symbolContext->symbol()->position()->start()),
                 OffsetHelper::offsetToPosition($document->__toString(), $symbolContext->symbol()->position()->end())
