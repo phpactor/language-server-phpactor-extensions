@@ -3,6 +3,8 @@
 namespace Phpactor\Extension\LanguageServerCompletion\Handler;
 
 use Amp\Promise;
+use Phpactor\Extension\LanguageServerBridge\Converter\OffsetConverter;
+use Phpactor\Extension\LanguageServer\Helper\OffsetHelper;
 use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\ServerCapabilities;
 use Phpactor\LanguageServerProtocol\SignatureHelp;
@@ -29,10 +31,16 @@ class SignatureHelpHandler implements Handler, CanRegisterCapabilities
      */
     private $helper;
 
-    public function __construct(Workspace $workspace, SignatureHelper $helper)
+    /**
+     * @var OffsetConverter
+     */
+    private $converter;
+
+    public function __construct(Workspace $workspace, SignatureHelper $helper, OffsetConverter $converter)
     {
         $this->workspace = $workspace;
         $this->helper = $helper;
+        $this->converter = $converter;
     }
 
     /**
@@ -57,10 +65,10 @@ class SignatureHelpHandler implements Handler, CanRegisterCapabilities
             try {
                 return PhpactorToLspSignature::toLspSignatureHelp($this->helper->signatureHelp(
                     TextDocumentBuilder::create($textDocument->text)->language($languageId)->uri($textDocument->uri)->build(),
-                    ByteOffset::fromInt($position->toOffset($textDocument->text))
+                    $this->converter->toOffset($position, $textDocument->text)
                 ));
             } catch (CouldNotHelpWithSignature $couldNotHelp) {
-                return new SignatureHelp();
+                return null;
             }
         });
     }

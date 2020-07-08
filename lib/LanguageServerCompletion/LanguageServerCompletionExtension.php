@@ -64,7 +64,8 @@ class LanguageServerCompletionExtension implements Extension
         $container->register('language_server_completion.handler.signature_help', function (Container $container) {
             return new SignatureHelpHandler(
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
-                $container->get(CompletionExtension::SERVICE_SIGNATURE_HELPER)
+                $container->get(CompletionExtension::SERVICE_SIGNATURE_HELPER),
+                $container->get(OffsetConverter::class)
             );
         }, [ LanguageServerExtension::TAG_SESSION_HANDLER => [] ]);
     }
