@@ -9,12 +9,15 @@ use Phpactor\AmpFsWatch\ModifiedFileQueue;
 use Phpactor\AmpFsWatch\Watcher\TestWatcher\TestWatcher;
 use Phpactor\Extension\LanguageServerIndexer\Handler\IndexerHandler;
 use Phpactor\Indexer\Model\Indexer;
+use Phpactor\LanguageServer\Adapter\DTL\DTLArgumentResolver;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Core\Server\RpcClient\TestRpcClient;
+use Phpactor\LanguageServer\Core\Server\Transmitter\TestMessageTransmitter;
 use Phpactor\LanguageServer\Core\Service\ServiceManager;
 use Phpactor\LanguageServer\Test\HandlerTester;
 use Psr\Log\LoggerInterface;
 use Phpactor\Extension\LanguageServerIndexer\Tests\IntegrationTestCase;
+use Psr\Log\NullLogger;
 
 class IndexerHandlerTest extends IntegrationTestCase
 {
@@ -24,7 +27,7 @@ class IndexerHandlerTest extends IntegrationTestCase
     private $logger;
 
     /**
-     * @var ObjectProphecy
+     * @var ServiceManager
      */
     private $serviceManager;
 
@@ -41,7 +44,7 @@ class IndexerHandlerTest extends IntegrationTestCase
     protected function setUp(): void
     {
         $this->logger = $this->prophesize(LoggerInterface::class);
-        $this->serviceManager = $this->prophesize(ServiceManager::class);
+        $this->serviceManager = new ServiceManager(new TestMessageTransmitter(), new NullLogger(), new DTLArgumentResolver());
         $this->client = TestRpcClient::create();
         $this->clientApi = new ClientApi($this->client);
     }
@@ -55,11 +58,7 @@ class IndexerHandlerTest extends IntegrationTestCase
 EOT
         );
         \Amp\Promise\wait(\Amp\call(function () {
-            $indexer = $this->container()->get(Indexer::class);
-            $watcher = new TestWatcher(new ModifiedFileQueue([
-                new ModifiedFile($this->workspace()->path('Foobar.php'), ModifiedFile::TYPE_FILE),
-            ]));
-            $handler = new IndexerHandler($indexer, $watcher, $this->clientApi, $this->logger->reveal());
+            $handler = $this->createHandler();
             $token = (new CancellationTokenSource())->getToken();
             yield $handler->indexer($token);
         }));
@@ -75,17 +74,15 @@ EOT
 
     public function testReindexNonStarted(): void
     {
-        $indexer = $this->container()->get(Indexer::class);
-        $watcher = new TestWatcher(new ModifiedFileQueue());
         $handlerTester = new HandlerTester(
-            new IndexerHandler($indexer, $watcher, $this->clientApi, $this->logger->reveal())
+            $this->createHandler()
         );
 
-        self::assertFalse($handlerTester->serviceManager()->isRunning(IndexerHandler::SERVICE_INDEXER));
+        self::assertFalse($this->serviceManager->isRunning(IndexerHandler::SERVICE_INDEXER));
 
         $handlerTester->dispatchAndWait('indexer/reindex', []);
 
-        self::assertTrue($handlerTester->serviceManager()->isRunning(IndexerHandler::SERVICE_INDEXER));
+        self::assertTrue($this->serviceManager->isRunning(IndexerHandler::SERVICE_INDEXER));
     }
 
     public function testReindexHard(): void
@@ -93,7 +90,7 @@ EOT
         $indexer = $this->container()->get(Indexer::class);
         $watcher = new TestWatcher(new ModifiedFileQueue());
         $handlerTester = new HandlerTester(
-            new IndexerHandler($indexer, $watcher, $this->clientApi, $this->logger->reveal())
+            $this->createHandler()
         );
 
         $handlerTester->serviceManager()->start(IndexerHandler::SERVICE_INDEXER);
@@ -116,7 +113,13 @@ EOT
         \Amp\Promise\wait(\Amp\call(function () {
             $indexer = $this->container()->get(Indexer::class);
             $watcher = new TestWatcher(new ModifiedFileQueue(), 0, new WatcherDied('No'));
-            $handler = new IndexerHandler($indexer, $watcher, $this->clientApi, $this->logger->reveal());
+            $handler = new IndexerHandler(
+                $indexer,
+                $watcher,
+                $this->clientApi,
+                $this->logger->reveal(),
+                $this->serviceManager
+            );
             $token = (new CancellationTokenSource())->getToken();
             yield $handler->indexer($token);
         }));
@@ -125,5 +128,16 @@ EOT
         $this->client->transmitter()->shift();
 
         self::assertStringContainsString('File watcher died:', $this->client->transmitter()->shift()->params['message']);
+    }
+
+    private function createHandler(): IndexerHandler
+    {
+        $indexer = $this->container()->get(Indexer::class);
+        $watcher = new TestWatcher(new ModifiedFileQueue([
+            new ModifiedFile($this->workspace()->path('Foobar.php'), ModifiedFile::TYPE_FILE),
+        ]));
+        $handler = new IndexerHandler($indexer, $watcher, $this->clientApi, $this->logger->reveal(), $this->serviceManager);
+        $this->serviceManager->register($handler);
+        return $handler;
     }
 }

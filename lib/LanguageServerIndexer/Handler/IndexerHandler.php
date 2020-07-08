@@ -40,16 +40,23 @@ class IndexerHandler implements ServiceProvider
      */
     private $clientApi;
 
+    /**
+     * @var ServiceManager
+     */
+    private $serviceManager;
+
     public function __construct(
         Indexer $indexer,
         Watcher $watcher,
         ClientApi $clientApi,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        ServiceManager $serviceManager
     ) {
         $this->indexer = $indexer;
         $this->watcher = $watcher;
         $this->logger = $logger;
         $this->clientApi = $clientApi;
+        $this->serviceManager = $serviceManager;
     }
 
     /**
@@ -114,18 +121,18 @@ class IndexerHandler implements ServiceProvider
         });
     }
 
-    public function reindex(ServiceManager $serviceManager, bool $soft = false): Promise
+    public function reindex(bool $soft = false): Promise
     {
-        return \Amp\call(function () use ($serviceManager, $soft) {
-            if ($serviceManager->isRunning(self::SERVICE_INDEXER)) {
-                $serviceManager->stop(self::SERVICE_INDEXER);
+        return \Amp\call(function () use ($soft) {
+            if ($this->serviceManager->isRunning(self::SERVICE_INDEXER)) {
+                $this->serviceManager->stop(self::SERVICE_INDEXER);
             }
 
             if (false === $soft) {
                 $this->indexer->reset();
             }
 
-            $serviceManager->start(self::SERVICE_INDEXER);
+            $this->serviceManager->start(self::SERVICE_INDEXER);
         });
     }
 
