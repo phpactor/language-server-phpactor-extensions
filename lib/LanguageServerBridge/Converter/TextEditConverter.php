@@ -14,15 +14,9 @@ class TextEditConverter
      */
     private $locationConverter;
 
-    /**
-     * @var OffsetConverter
-     */
-    private $offsetConverter;
-
-    public function __construct(LocationConverter $locationConverter, ?OffsetConverter $offsetConverter = null)
+    public function __construct(LocationConverter $locationConverter)
     {
         $this->locationConverter = $locationConverter;
-        $this->offsetConverter = $offsetConverter ?: new OffsetConverter();
     }
 
     /**

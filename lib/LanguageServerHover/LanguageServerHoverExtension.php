@@ -4,7 +4,7 @@ namespace Phpactor\Extension\LanguageServerHover;
 
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
-use Phpactor\Extension\LanguageServerBridge\Converter\OffsetConverter;
+use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\Logger\LoggingExtension;
 use Phpactor\Extension\WorseReflection\WorseReflectionExtension;
 use Phpactor\ObjectRenderer\ObjectRendererBuilder;
@@ -33,8 +33,7 @@ class LanguageServerHoverExtension implements Extension
             return new HoverHandler(
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
                 $container->get(WorseReflectionExtension::SERVICE_REFLECTOR),
-                $container->get(self::SERVICE_MARKDOWN_RENDERER),
-                $container->get(OffsetConverter::class)
+                $container->get(self::SERVICE_MARKDOWN_RENDERER)
             );
         }, [ LanguageServerExtension::TAG_SESSION_HANDLER => []]);
 

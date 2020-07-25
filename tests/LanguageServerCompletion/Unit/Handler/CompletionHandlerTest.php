@@ -5,7 +5,7 @@ namespace Phpactor\Extension\LanguageServerCompletion\Tests\Unit\Handler;
 use Amp\Delayed;
 use DTL\Invoke\Invoke;
 use Generator;
-use Phpactor\Extension\LanguageServerBridge\Converter\OffsetConverter;
+use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\LanguageServerProtocol\CompletionItem;
 use Phpactor\LanguageServerProtocol\CompletionList;
 use Phpactor\LanguageServerProtocol\Position;
@@ -219,7 +219,7 @@ class CompletionHandlerTest extends TestCase
             $this->workspace,
             $registry,
             new SuggestionNameFormatter(true),
-            new OffsetConverter(),
+            new PositionConverter(),
             $supportSnippets,
             true
         ));

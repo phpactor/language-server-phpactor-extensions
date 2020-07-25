@@ -6,7 +6,7 @@ use Amp\CancellationToken;
 use Amp\CancelledException;
 use Amp\Delayed;
 use Amp\Promise;
-use Phpactor\Extension\LanguageServerBridge\Converter\OffsetConverter;
+use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\LanguageServerProtocol\Command;
 use Phpactor\LanguageServerProtocol\CompletionItem;
 use Phpactor\LanguageServerProtocol\CompletionList;
@@ -65,16 +65,10 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
      */
     private $supportSnippets;
 
-    /**
-     * @var OffsetConverter
-     */
-    private $converter;
-
     public function __construct(
         Workspace $workspace,
         TypedCompletorRegistry $registry,
         SuggestionNameFormatter $suggestionNameFormatter,
-        OffsetConverter $converter,
         bool $supportSnippets,
         bool $provideTextEdit = false
     ) {
@@ -83,7 +77,6 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
         $this->workspace = $workspace;
         $this->suggestionNameFormatter = $suggestionNameFormatter;
         $this->supportSnippets = $supportSnippets;
-        $this->converter = $converter;
     }
 
     public function methods(): array
@@ -99,7 +92,7 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
             $textDocument = $this->workspace->get($params->textDocument->uri);
 
             $languageId = $textDocument->languageId ?: 'php';
-            $byteOffset = $this->converter->toOffset($params->position, $textDocument->text);
+            $byteOffset = PositionConverter::positionToByteOffset($params->position, $textDocument->text);
             $suggestions = $this->registry->completorForType(
                 $languageId
             )->complete(

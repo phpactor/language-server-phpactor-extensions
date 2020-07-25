@@ -2,7 +2,7 @@
 
 namespace Phpactor\Extension\LanguageServerCompletion\Tests\Unit\Handler;
 
-use Phpactor\Extension\LanguageServerBridge\Converter\OffsetConverter;
+use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\SignatureHelp as LspSignatureHelp;
 use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
@@ -62,8 +62,7 @@ class SignatureHelpHandlerTest extends TestCase
     {
         return new HandlerTester(new SignatureHelpHandler(
             $this->workspace,
-            $this->createHelper(),
-            new OffsetConverter()
+            $this->createHelper()
         ));
     }
 
