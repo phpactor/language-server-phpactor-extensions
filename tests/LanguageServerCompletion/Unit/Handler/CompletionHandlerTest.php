@@ -51,13 +51,13 @@ class CompletionHandlerTest extends TestCase
     {
         $this->document = new TextDocumentItem('/test/', 'php', 1, 'hello');
         $this->documentIdentifier = new TextDocumentIdentifier('/test/');
-        $this->position = new Position(1, 1);
+        $this->position = new Position(0, 0);
         $this->workspace = new Workspace();
 
         $this->workspace->open($this->document);
     }
 
-    public function testHandleNoSuggestions()
+    public function testHandleNoSuggestions(): void
     {
         $tester = $this->create([]);
         $response = $tester->dispatchAndWait(
@@ -219,7 +219,6 @@ class CompletionHandlerTest extends TestCase
             $this->workspace,
             $registry,
             new SuggestionNameFormatter(true),
-            new PositionConverter(),
             $supportSnippets,
             true
         ));

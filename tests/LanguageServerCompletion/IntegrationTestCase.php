@@ -20,6 +20,8 @@ use Phpactor\Extension\WorseReflection\WorseReflectionExtension;
 use Phpactor\FilePathResolverExtension\FilePathResolverExtension;
 use Phpactor\Indexer\Extension\IndexerExtension;
 use Phpactor\LanguageServer\LanguageServerBuilder;
+use Phpactor\LanguageServer\Test\LanguageServerTester;
+use Phpactor\LanguageServer\Test\ProtocolFactory;
 use Phpactor\LanguageServer\Test\ServerTester;
 use Phpactor\TestUtils\Workspace;
 
@@ -30,7 +32,7 @@ class IntegrationTestCase extends TestCase
         return Workspace::create(__DIR__ . '/Workspace');
     }
 
-    protected function createTester(): ServerTester
+    protected function createTester(): LanguageServerTester
     {
         $container = PhpactorContainer::fromExtensions([
             LoggingExtension::class,
@@ -54,9 +56,9 @@ class IntegrationTestCase extends TestCase
             FilePathResolverExtension::PARAM_APPLICATION_ROOT => __DIR__ .'/../../'
         ]);
         
-        $builder = $container->get(LanguageServerExtension::SERVICE_LANGUAGE_SERVER_BUILDER);
+        $builder = $container->get(LanguageServerBuilder::class);
         $this->assertInstanceOf(LanguageServerBuilder::class, $builder);
 
-        return $builder->buildServerTester();
+        return $builder->tester(ProtocolFactory::initializeParams($this->workspace()->path('/')));
     }
 }

@@ -157,8 +157,8 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
 
         return new TextEdit(
             new Range(
-                OffsetHelper::offsetToPosition($textDocument->text, $range->start()->toInt()),
-                OffsetHelper::offsetToPosition($textDocument->text, $range->end()->toInt())
+                PositionConverter::byteOffsetToPosition($range->start(), $textDocument->text),
+                PositionConverter::byteOffsetToPosition($range->end(), $textDocument->text),
             ),
             $suggestion->name()
         );

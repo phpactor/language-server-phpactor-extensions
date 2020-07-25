@@ -38,7 +38,7 @@ class SignatureHelpHandlerTest extends TestCase
     public function setUp(): void
     {
         $this->document = new TextDocumentItem(self::IDENTIFIER, 'php', 1, 'hello');
-        $this->position = new Position(1, 1);
+        $this->position = new Position(0, 0);
         $this->workspace = new Workspace();
 
         $this->workspace->open($this->document);
@@ -66,7 +66,7 @@ class SignatureHelpHandlerTest extends TestCase
         ));
     }
 
-    private function createHelper()
+    private function createHelper(): SignatureHelper
     {
         return new class() implements SignatureHelper {
             public function signatureHelp(TextDocument $textDocument, ByteOffset $offset): SignatureHelp

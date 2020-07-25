@@ -29,8 +29,9 @@ class PositionConverter
 
     public static function positionToByteOffset(Position $position, string $text): ByteOffset
     {
-        $lineCol = new LineCol($position->line, $position->character);
+        $lineCol = new LineCol($position->line + 1, 1);
+        $byteOffset = $lineCol->toByteOffset($text);
 
-        return $lineCol->toByteOffset($text);
+        return ByteOffset::fromInt($byteOffset->toInt() + $position->character);
     }
 }
