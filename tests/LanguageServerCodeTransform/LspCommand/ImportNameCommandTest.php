@@ -71,7 +71,9 @@ class ImportNameCommandTest extends TestCase
 
     public function testImportClass(): void
     {
-        $this->workspace->open(new TextDocumentItem(self::EXAMPLE_PATH_URI, 'php', 1, self::EXAMPLE_CONTENT));
+        $this->workspace->open(
+            new TextDocumentItem(self::EXAMPLE_PATH_URI, 'php', 1, self::EXAMPLE_CONTENT)
+        );
 
         $this->importName->importName(
             SourceCode::fromStringAndPath(self::EXAMPLE_CONTENT, self::EXAMPLE_PATH),
