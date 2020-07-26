@@ -15,7 +15,7 @@ class LanguageServerCompletionExtensionTest extends IntegrationTestCase
         $tester = $this->createTester();
 
         $position = new Position(0, 0);
-        $tester->openTextDocument('/test', 'hello');
+        $tester->textDocument()->open('/test', 'hello');
 
         $response = $tester->requestAndWait('textDocument/completion', [
             'textDocument' => new TextDocumentIdentifier('/test'),
@@ -32,7 +32,7 @@ class LanguageServerCompletionExtensionTest extends IntegrationTestCase
         $tester = $this->createTester();
 
         $position = new Position(0, 0);
-        $tester->openTextDocument('/test', 'hello');
+        $tester->textDocument()->open('/test', 'hello');
 
         $response = $tester->requestAndWait('textDocument/signatureHelp', [
             'textDocument' => new TextDocumentIdentifier('/test'),

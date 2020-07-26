@@ -21,7 +21,7 @@ class HoverHandlerTest extends IntegrationTestCase
         [ $text, $offset ] = ExtractOffset::fromSource($test);
 
         $tester = $this->createTester();
-        $tester->openTextDocument(self::PATH, $text);
+        $tester->textDocument()->open(self::PATH, $text);
 
         $response = $tester->requestAndWait('textDocument/hover', [
             'textDocument' => new TextDocumentIdentifier(self::PATH),

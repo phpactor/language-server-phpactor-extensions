@@ -22,7 +22,7 @@ class LanguageServerReferenceFinderExtensionTest extends TestCase
     public function testDefinition(): void
     {
         $tester = $this->createTester();
-        $tester->openTextDocument(__FILE__, file_get_contents(__FILE__));
+        $tester->textDocument()->open(__FILE__, file_get_contents(__FILE__));
 
         $response = $tester->requestAndWait('textDocument/definition', [
             'textDocument' => new TextDocumentIdentifier(__FILE__),
@@ -34,7 +34,7 @@ class LanguageServerReferenceFinderExtensionTest extends TestCase
     public function testTypeDefinition(): void
     {
         $tester = $this->createTester();
-        $tester->openTextDocument(__FILE__, file_get_contents(__FILE__));
+        $tester->textDocument()->open(__FILE__, file_get_contents(__FILE__));
 
         $response = $tester->requestAndWait('textDocument/typeDefinition', [
             'textDocument' => new TextDocumentIdentifier(__FILE__),
@@ -47,7 +47,7 @@ class LanguageServerReferenceFinderExtensionTest extends TestCase
     public function testReferenceFinder(): void
     {
         $tester = $this->createTester();
-        $tester->openTextDocument(__FILE__, file_get_contents(__FILE__));
+        $tester->textDocument()->open(__FILE__, file_get_contents(__FILE__));
 
         $response = $tester->requestAndWait('textDocument/references', [
             'textDocument' => new TextDocumentIdentifier(__FILE__),
