@@ -11,6 +11,7 @@ use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\Logger\LoggingExtension;
 use Phpactor\Indexer\Model\Indexer;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
+use Phpactor\LanguageServer\Core\Service\ServiceManager;
 use Phpactor\MapResolver\Resolver;
 
 class LanguageServerIndexerExtension implements Extension
@@ -36,6 +37,9 @@ class LanguageServerIndexerExtension implements Extension
                 $container->get(ClientApi::class),
                 $container->get(LoggingExtension::SERVICE_LOGGER)
             );
-        }, [ LanguageServerExtension::TAG_SESSION_HANDLER => []]);
+        }, [
+            LanguageServerExtension::TAG_METHOD_HANDLER => [],
+            LanguageServerExtension::TAG_SERVICE_PROVIDER => []
+        ]);
     }
 }

@@ -9,14 +9,16 @@ use Amp\Promise;
 use Generator;
 use Phpactor\AmpFsWatch\Exception\WatcherDied;
 use Phpactor\AmpFsWatch\Watcher;
-use Phpactor\LanguageServer\Core\Handler\ServiceProvider;
+use Phpactor\LanguageServer\Core\Handler\Handler;
+use Phpactor\LanguageServer\Core\Rpc\ResponseMessage;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\Indexer\Model\Indexer;
 use Phpactor\LanguageServer\Core\Service\ServiceManager;
+use Phpactor\LanguageServer\Core\Service\ServiceProvider;
 use Psr\Log\LoggerInterface;
 use SplFileInfo;
 
-class IndexerHandler implements ServiceProvider
+class IndexerHandler implements Handler, ServiceProvider
 {
     const SERVICE_INDEXER = 'indexer';
 
@@ -45,18 +47,21 @@ class IndexerHandler implements ServiceProvider
      */
     private $serviceManager;
 
+    /**
+     * @var bool
+     */
+    private $doReindex = false;
+
     public function __construct(
         Indexer $indexer,
         Watcher $watcher,
         ClientApi $clientApi,
-        LoggerInterface $logger,
-        ServiceManager $serviceManager
+        LoggerInterface $logger
     ) {
         $this->indexer = $indexer;
         $this->watcher = $watcher;
         $this->logger = $logger;
         $this->clientApi = $clientApi;
-        $this->serviceManager = $serviceManager;
     }
 
     /**
@@ -65,7 +70,7 @@ class IndexerHandler implements ServiceProvider
     public function methods(): array
     {
         return [
-            'indexer/reindex' => 'reindex',
+            'phpactor/indexer/reindex' => 'reindex',
         ];
     }
 
@@ -124,15 +129,12 @@ class IndexerHandler implements ServiceProvider
     public function reindex(bool $soft = false): Promise
     {
         return \Amp\call(function () use ($soft) {
-            if ($this->serviceManager->isRunning(self::SERVICE_INDEXER)) {
-                $this->serviceManager->stop(self::SERVICE_INDEXER);
-            }
-
             if (false === $soft) {
                 $this->indexer->reset();
             }
 
-            $this->serviceManager->start(self::SERVICE_INDEXER);
+            // TODO: need to restart the service, but cannot do so here.
+            //       dispatch event?
         });
     }
 

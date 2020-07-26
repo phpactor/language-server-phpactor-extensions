@@ -2,6 +2,8 @@
 
 namespace Phpactor\Extension\LanguageServerIndexer\Tests;
 
+use Phpactor\Extension\LanguageServerIndexer\LanguageServerIndexerExtension;
+use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
 use Phpactor\Extension\ComposerAutoloader\ComposerAutoloaderExtension;
 use Phpactor\Extension\Rpc\RpcExtension;
@@ -43,6 +45,8 @@ class IntegrationTestCase extends TestCase
             RpcExtension::class,
             ComposerAutoloaderExtension::class,
             ReferenceFinderExtension::class,
+            LanguageServerIndexerExtension::class,
+            LanguageServerExtension::class,
         ], [
             FilePathResolverExtension::PARAM_APPLICATION_ROOT => __DIR__ . '/../',
             FilePathResolverExtension::PARAM_PROJECT_ROOT => $this->workspace()->path(),
