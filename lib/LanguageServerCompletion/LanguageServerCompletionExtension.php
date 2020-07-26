@@ -50,7 +50,7 @@ class LanguageServerCompletionExtension implements Extension
                 $container->get(SuggestionNameFormatter::class),
                 $capabilities->textDocument->completion->completionItem['snippetSupport'] ?? false
             );
-        }, [ LanguageServerExtension::TAG_SESSION_HANDLER => [
+        }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [
             'methods' => [
                 'textDocument/completion'
             ]
@@ -65,6 +65,6 @@ class LanguageServerCompletionExtension implements Extension
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
                 $container->get(CompletionExtension::SERVICE_SIGNATURE_HELPER)
             );
-        }, [ LanguageServerExtension::TAG_SESSION_HANDLER => [] ]);
+        }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [] ]);
     }
 }
