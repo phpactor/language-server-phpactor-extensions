@@ -10,6 +10,7 @@ use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\GotoImplementationHandler;
 use Phpactor\LanguageServer\Core\Session\Workspace;
 use Phpactor\LanguageServer\Test\HandlerTester;
+use Phpactor\LanguageServer\Test\ProtocolFactory;
 use Phpactor\ReferenceFinder\ClassImplementationFinder;
 use Phpactor\TestUtils\PHPUnit\TestCase;
 use Phpactor\TextDocument\ByteOffset;
@@ -52,12 +53,11 @@ class GotoImplementationHandlerTest extends TestCase
         $this->finder = $this->prophesize(ClassImplementationFinder::class);
         $this->workspace = new Workspace();
 
-        $this->document = new TextDocumentItem();
-        $this->document->uri = __FILE__;
-        $this->document->text = self::EXAMPLE_TEXT;
+
+        $this->document = ProtocolFactory::textDocumentItem(__FILE__, self::EXAMPLE_TEXT);
         $this->workspace->open($this->document);
-        $this->identifier = new TextDocumentIdentifier(__FILE__);
-        $this->position = new Position(1, 1);
+        $this->identifier = ProtocolFactory::textDocumentIdentifier(__FILE__);
+        $this->position = new Position(0, 0);
     }
 
     public function testGoesToImplementation()
@@ -70,7 +70,7 @@ class GotoImplementationHandlerTest extends TestCase
 
         $this->finder->findImplementations(
             $document,
-            ByteOffset::fromInt(7)
+            ByteOffset::fromInt(0)
         )->willReturn(new Locations([
             new Location($document->uri(), ByteOffset::fromInt(2))
         ]));

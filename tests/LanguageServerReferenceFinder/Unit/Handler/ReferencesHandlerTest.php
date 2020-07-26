@@ -13,6 +13,7 @@ use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Core\Server\RpcClient\TestRpcClient;
 use Phpactor\LanguageServer\Core\Session\Workspace;
 use Phpactor\LanguageServer\Test\HandlerTester;
+use Phpactor\LanguageServer\Test\ProtocolFactory;
 use Phpactor\ReferenceFinder\DefinitionLocation;
 use Phpactor\ReferenceFinder\DefinitionLocator;
 use Phpactor\ReferenceFinder\Exception\CouldNotLocateDefinition;
@@ -64,12 +65,11 @@ class ReferencesHandlerTest extends TestCase
         $this->locator = $this->prophesize(DefinitionLocator::class);
         $this->workspace = new Workspace();
 
-        $this->document = new TextDocumentItem();
-        $this->document->uri = __FILE__;
-        $this->document->text = self::EXAMPLE_TEXT;
+        $this->document = ProtocolFactory::textDocumentItem(__FILE__, self::EXAMPLE_TEXT);
         $this->workspace->open($this->document);
+        $this->identifier = ProtocolFactory::textDocumentIdentifier(__FILE__);
         $this->identifier = new TextDocumentIdentifier(__FILE__);
-        $this->position = new Position(1, 1);
+        $this->position = new Position(0, 0);
     }
 
     public function testFindsReferences()
@@ -82,7 +82,7 @@ class ReferencesHandlerTest extends TestCase
 
         $this->finder->findReferences(
             $document,
-            ByteOffset::fromInt(7)
+            ByteOffset::fromInt(0)
         )->willYield([
             PotentialLocation::surely(new Location($document->uri(), ByteOffset::fromInt(2)))
         ])->shouldBeCalled();
@@ -92,7 +92,7 @@ class ReferencesHandlerTest extends TestCase
         $response = $tester->dispatchAndWait('textDocument/references', [
             'textDocument' => $this->identifier,
             'position' => $this->position,
-            'context' => new ReferenceContext(),
+            'context' => new ReferenceContext(false),
         ]);
         $locations = $response->result;
         $this->assertIsArray($locations);
@@ -101,7 +101,7 @@ class ReferencesHandlerTest extends TestCase
         $this->assertInstanceOf(LspLocation::class, $lspLocation);
     }
 
-    public function testFindsReferencesIncludingDeclaration()
+    public function testFindsReferencesIncludingDeclaration(): void
     {
         $document = TextDocumentBuilder::create(self::EXAMPLE_TEXT)
             ->language('php')
@@ -111,14 +111,14 @@ class ReferencesHandlerTest extends TestCase
 
         $this->finder->findReferences(
             $document,
-            ByteOffset::fromInt(7)
+            ByteOffset::fromInt(0)
         )->willYield([
             PotentialLocation::surely(new Location($document->uri(), ByteOffset::fromInt(2)))
         ])->shouldBeCalled();
 
         $this->locator->locateDefinition(
             $document,
-            ByteOffset::fromInt(7)
+            ByteOffset::fromInt(0)
         )->willReturn(new DefinitionLocation($document->uri(), ByteOffset::fromInt(2)))->shouldBeCalled();
 
         $tester = new HandlerTester($this->createReferencesHandler());
@@ -145,14 +145,14 @@ class ReferencesHandlerTest extends TestCase
 
         $this->finder->findReferences(
             $document,
-            ByteOffset::fromInt(7)
+            ByteOffset::fromInt(0)
         )->willYield([
             PotentialLocation::surely(new Location($document->uri(), ByteOffset::fromInt(2)))
         ])->shouldBeCalled();
 
         $this->locator->locateDefinition(
             $document,
-            ByteOffset::fromInt(7)
+            ByteOffset::fromInt(0)
         )->willReturn(new DefinitionLocation($document->uri(), ByteOffset::fromInt(2)))->willThrow(new CouldNotLocateDefinition('nope'));
 
         $tester = new HandlerTester($this->createReferencesHandler());

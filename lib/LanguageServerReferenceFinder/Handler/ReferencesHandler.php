@@ -4,6 +4,7 @@ namespace Phpactor\Extension\LanguageServerReferenceFinder\Handler;
 
 use Amp\Delayed;
 use Amp\Promise;
+use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\LanguageServerProtocol\Location as LspLocation;
 use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\ReferenceContext;
@@ -96,7 +97,7 @@ class ReferencesHandler implements Handler, CanRegisterCapabilities
                 $textDocument->languageId ?? 'php'
             )->build();
 
-            $offset = ByteOffset::fromInt($position->toOffset($textDocument->text));
+            $offset = PositionConverter::positionToByteOffset($position, $textDocument->text);
 
             $locations = [];
             if ($context->includeDeclaration) {
