@@ -11,6 +11,7 @@ use Phpactor\Extension\LanguageServerWorseReflection\Workspace\WorkspaceIndexLis
 use Phpactor\LanguageServer\Event\TextDocumentClosed;
 use Phpactor\LanguageServer\Event\TextDocumentOpened;
 use Phpactor\LanguageServer\Event\TextDocumentUpdated;
+use Phpactor\LanguageServer\Test\ProtocolFactory;
 use Phpactor\TestUtils\PHPUnit\TestCase;
 use Phpactor\TextDocument\TextDocumentBuilder;
 use Phpactor\TextDocument\TextDocumentUri;
@@ -39,10 +40,7 @@ class WorkspaceIndexListenerTest extends TestCase
 
     public function testOpened()
     {
-        $item = new TextDocumentItem();
-        $item->text = 'foobar';
-        $item->uri = '/barfoo';
-        $item->languageId = 'php';
+        $item = ProtocolFactory::textDocumentItem('/barfoo', 'foobar');
         $this->dispatcher->dispatch(new TextDocumentOpened(
             $item
         ));
