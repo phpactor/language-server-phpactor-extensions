@@ -41,13 +41,11 @@ class LanguageServerCompletionExtension implements Extension
     private function registerHandlers(ContainerBuilder $container): void
     {
         $container->register('language_server_completion.handler.completion', function (Container $container) {
-            $capabilities = $container->getParameter(LanguageServerExtension::PARAM_CLIENT_CAPABILITIES);
-            assert($capabilities instanceof ClientCapabilities);
             return new CompletionHandler(
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
                 $container->get(CompletionExtension::SERVICE_REGISTRY),
                 $container->get(SuggestionNameFormatter::class),
-                $capabilities->textDocument->completion->completionItem['snippetSupport'] ?? false
+                $this->clientCapabilities($container)->textDocument->completion->completionItem['snippetSupport'] ?? false
             );
         }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [
             'methods' => [
@@ -65,5 +63,10 @@ class LanguageServerCompletionExtension implements Extension
                 $container->get(CompletionExtension::SERVICE_SIGNATURE_HELPER)
             );
         }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [] ]);
+    }
+
+    private function clientCapabilities(Container $container): ClientCapabilities
+    {
+        return $container->get(ClientCapabilities::class);
     }
 }

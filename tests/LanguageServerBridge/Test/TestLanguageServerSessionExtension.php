@@ -6,6 +6,7 @@ use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
 use Phpactor\Extension\LanguageServer\LanguageServerSessionExtension;
 use Phpactor\LanguageServer\Core\Server\Transmitter\TestMessageTransmitter;
+use Phpactor\LanguageServer\Test\ProtocolFactory;
 use Phpactor\MapResolver\Resolver;
 
 class TestLanguageServerSessionExtension implements Extension
@@ -20,6 +21,7 @@ class TestLanguageServerSessionExtension implements Extension
         $transmitter = new TestMessageTransmitter();
         $this->sessionExtension = new LanguageServerSessionExtension(
             $transmitter,
+            ProtocolFactory::initializeParams()
         );
     }
     /**
