@@ -2,25 +2,10 @@
 
 namespace Phpactor\Extension\LanguageServerIndexer\Tests\Unit;
 
-use Amp\CancellationTokenSource;
-use Phpactor\AmpFsWatch\Exception\WatcherDied;
-use Phpactor\AmpFsWatch\ModifiedFile;
-use Phpactor\AmpFsWatch\ModifiedFileQueue;
-use Phpactor\AmpFsWatch\Watcher\TestWatcher\TestWatcher;
-use Phpactor\Extension\LanguageServerIndexer\Handler\IndexerHandler;
-use Phpactor\Indexer\Model\Indexer;
-use Phpactor\LanguageServer\Adapter\DTL\DTLArgumentResolver;
-use Phpactor\LanguageServer\Core\Server\ClientApi;
-use Phpactor\LanguageServer\Core\Server\RpcClient\TestRpcClient;
-use Phpactor\LanguageServer\Core\Server\Transmitter\TestMessageTransmitter;
-use Phpactor\LanguageServer\Core\Service\ServiceManager;
 use Phpactor\LanguageServer\LanguageServerBuilder;
-use Phpactor\LanguageServer\Test\HandlerTester;
 use Phpactor\LanguageServer\Test\LanguageServerTester;
 use Phpactor\LanguageServer\Test\ProtocolFactory;
-use Psr\Log\LoggerInterface;
 use Phpactor\Extension\LanguageServerIndexer\Tests\IntegrationTestCase;
-use Psr\Log\NullLogger;
 use function Amp\Promise\wait;
 use function Amp\delay;
 

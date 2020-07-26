@@ -11,7 +11,6 @@ class PhpactorToLspSignature
 {
     public static function toLspSignatureHelp(PhpactorSignatureHelp $phpactorHelp): SignatureHelp
     {
-
         $signatures = [];
         foreach ($phpactorHelp->signatures() as $phpactorSignature) {
             $parameters = [];

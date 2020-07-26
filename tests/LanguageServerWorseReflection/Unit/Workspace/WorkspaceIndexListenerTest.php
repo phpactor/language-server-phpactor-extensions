@@ -3,7 +3,6 @@
 namespace Phpactor\Extension\LanguageServerWorseReflection\Tests\Unit\Workspace;
 
 use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
-use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\LanguageServerProtocol\VersionedTextDocumentIdentifier;
 use Phly\EventDispatcher\EventDispatcher;
 use Phpactor\Extension\LanguageServerWorseReflection\Workspace\WorkspaceIndex;

@@ -62,8 +62,8 @@ class ImportNameCommand
             TextDocumentUri::fromString($document->uri)->path()
         );
 
-        $nameImport = $type === 'function' ? 
-            NameImport::forFunction($fqn, $alias) : 
+        $nameImport = $type === 'function' ?
+            NameImport::forFunction($fqn, $alias) :
             NameImport::forClass($fqn, $alias);
 
         try {

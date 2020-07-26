@@ -4,7 +4,6 @@ namespace Phpactor\Extension\LanguageServerHover;
 
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
-use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\Logger\LoggingExtension;
 use Phpactor\Extension\WorseReflection\WorseReflectionExtension;
 use Phpactor\ObjectRenderer\ObjectRendererBuilder;

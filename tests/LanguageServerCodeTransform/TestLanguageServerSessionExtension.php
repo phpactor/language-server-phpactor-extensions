@@ -5,13 +5,8 @@ namespace Phpactor\Extension\LanguageServerCodeTransform\Tests;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
 use Phpactor\Extension\LanguageServer\LanguageServerSessionExtension;
-use Phpactor\LanguageServer\Adapter\DTL\DTLArgumentResolver;
-use Phpactor\LanguageServer\Core\Server\RpcClient\TestRpcClient;
-use Phpactor\LanguageServer\Core\Server\SessionServices;
 use Phpactor\LanguageServer\Core\Server\Transmitter\TestMessageTransmitter;
-use Phpactor\LanguageServer\Core\Service\ServiceManager;
 use Phpactor\MapResolver\Resolver;
-use Psr\Log\NullLogger;
 
 class TestLanguageServerSessionExtension implements Extension
 {

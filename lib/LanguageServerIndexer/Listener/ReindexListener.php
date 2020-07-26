@@ -4,7 +4,6 @@ namespace Phpactor\Extension\LanguageServerIndexer\Listener;
 
 use Phpactor\Extension\LanguageServerIndexer\Event\IndexReset;
 use Phpactor\Extension\LanguageServerIndexer\Handler\IndexerHandler;
-use Phpactor\Indexer\Extension\Rpc\IndexHandler;
 use Phpactor\LanguageServer\Core\Service\ServiceManager;
 use Psr\EventDispatcher\ListenerProviderInterface;
 

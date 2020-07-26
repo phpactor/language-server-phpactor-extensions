@@ -196,7 +196,7 @@ class ImportNameCommandTest extends TestCase
             SourceCode::fromStringAndPath(self::EXAMPLE_CONTENT, self::EXAMPLE_PATH),
             ByteOffset::fromInt(self::EXAMPLE_OFFSET),
             NameImport::forClass('Acme\Foobar', 'AcmeFoobar'),
-        )->willThrow(new AliasAlreadyUsedException(NameImport::forClass('Acme\Foobar','AcmeFoobar')));
+        )->willThrow(new AliasAlreadyUsedException(NameImport::forClass('Acme\Foobar', 'AcmeFoobar')));
 
         $this->importName->importName(
             SourceCode::fromStringAndPath(self::EXAMPLE_CONTENT, self::EXAMPLE_PATH),

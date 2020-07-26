@@ -9,7 +9,6 @@ use Phpactor\LanguageServer\Core\Session\Workspace;
 use Phpactor\TextDocument\Location;
 use Phpactor\TextDocument\Locations;
 use Phpactor\TextDocument\TextDocumentUri;
-use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 
 class LocationConverter
 {

@@ -22,7 +22,6 @@ use Phpactor\Indexer\Extension\IndexerExtension;
 use Phpactor\LanguageServer\LanguageServerBuilder;
 use Phpactor\LanguageServer\Test\LanguageServerTester;
 use Phpactor\LanguageServer\Test\ProtocolFactory;
-use Phpactor\LanguageServer\Test\ServerTester;
 use Phpactor\TestUtils\Workspace;
 
 class IntegrationTestCase extends TestCase

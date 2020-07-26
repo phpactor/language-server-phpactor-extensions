@@ -2,7 +2,6 @@
 
 namespace Phpactor\Extension\LanguageServerIndexer\Tests;
 
-use Amp\PHPUnit\TestException;
 use Phpactor\Extension\LanguageServerIndexer\LanguageServerIndexerExtension;
 use Phpactor\Extension\LanguageServerIndexer\Tests\Extension\TestExtension;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;

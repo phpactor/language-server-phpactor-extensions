@@ -4,7 +4,6 @@ namespace Phpactor\Extension\LanguageServerBridge\Converter;
 
 use Phpactor\LanguageServerProtocol\Range;
 use Phpactor\LanguageServerProtocol\TextEdit as LspTextEdit;
-use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextEdit;
 use Phpactor\TextDocument\TextEdits;
 

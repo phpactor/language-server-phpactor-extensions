@@ -13,7 +13,6 @@ use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
 use Phpactor\Completion\Core\Exception\CouldNotFormat;
 use Phpactor\Extension\LanguageServerHover\Renderer\HoverInformation;
 use Phpactor\Extension\LanguageServerHover\Renderer\MemberDocblock;
-use Phpactor\Extension\LanguageServer\Helper\OffsetHelper;
 use Phpactor\LanguageServer\Core\Handler\CanRegisterCapabilities;
 use Phpactor\LanguageServer\Core\Handler\Handler;
 use Phpactor\LanguageServer\Core\Session\Workspace;
@@ -64,7 +63,7 @@ class HoverHandler implements Handler, CanRegisterCapabilities
     ): Promise {
         return \Amp\call(function () use ($textDocument, $position) {
             $document = $this->workspace->get($textDocument->uri);
-            $offset = PositionConverter::positionToByteOffset($position,$document->text);
+            $offset = PositionConverter::positionToByteOffset($position, $document->text);
             $document = TextDocumentBuilder::create($document->text)
                 ->uri($document->uri)
                 ->language('php')

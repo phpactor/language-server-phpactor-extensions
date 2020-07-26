@@ -4,7 +4,6 @@ namespace Phpactor\Extension\LanguageServerReferenceFinder\Tests\Unit;
 
 use Phpactor\LanguageServerProtocol\ReferenceContext;
 use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
-use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use PHPUnit\Framework\TestCase;
 use Phpactor\Container\PhpactorContainer;
 use Phpactor\Extension\LanguageServerBridge\LanguageServerBridgeExtension;
@@ -16,7 +15,6 @@ use Phpactor\FilePathResolverExtension\FilePathResolverExtension;
 use Phpactor\LanguageServer\LanguageServerBuilder;
 use Phpactor\LanguageServer\Test\LanguageServerTester;
 use Phpactor\LanguageServer\Test\ProtocolFactory;
-use Phpactor\LanguageServer\Test\ServerTester;
 use function Safe\file_get_contents;
 
 class LanguageServerReferenceFinderExtensionTest extends TestCase

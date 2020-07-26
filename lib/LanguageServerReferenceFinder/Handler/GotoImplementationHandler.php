@@ -12,7 +12,6 @@ use Phpactor\LanguageServer\Core\Handler\CanRegisterCapabilities;
 use Phpactor\LanguageServer\Core\Handler\Handler;
 use Phpactor\LanguageServer\Core\Session\Workspace;
 use Phpactor\ReferenceFinder\ClassImplementationFinder;
-use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocumentBuilder;
 
 class GotoImplementationHandler implements Handler, CanRegisterCapabilities
