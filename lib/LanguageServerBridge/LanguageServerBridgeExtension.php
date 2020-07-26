@@ -29,7 +29,7 @@ class LanguageServerBridgeExtension implements Extension
         });
 
         $container->register(TextEditConverter::class, function (Container $container) {
-            return new TextEditConverter($container->get(LocationConverter::class));
+            return new TextEditConverter();
         });
     }
 }

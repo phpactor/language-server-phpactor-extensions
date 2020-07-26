@@ -92,7 +92,6 @@ class ImportNameCommand
             return new Success(null);
         }
 
-        /** @phpstan-ignore-next-line */
         return $this->client->workspace()->applyEdit(new WorkspaceEdit([
             $uri => $this->textEditConverter->toLspTextEdits($textEdits, $document->text)
         ]), 'Import class');
