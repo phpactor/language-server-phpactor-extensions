@@ -9,12 +9,14 @@ use Amp\Promise;
 use Generator;
 use Phpactor\AmpFsWatch\Exception\WatcherDied;
 use Phpactor\AmpFsWatch\Watcher;
+use Phpactor\Extension\LanguageServerIndexer\Event\IndexReset;
 use Phpactor\LanguageServer\Core\Handler\Handler;
 use Phpactor\LanguageServer\Core\Rpc\ResponseMessage;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\Indexer\Model\Indexer;
 use Phpactor\LanguageServer\Core\Service\ServiceManager;
 use Phpactor\LanguageServer\Core\Service\ServiceProvider;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 use SplFileInfo;
 
@@ -52,16 +54,23 @@ class IndexerHandler implements Handler, ServiceProvider
      */
     private $doReindex = false;
 
+    /**
+     * @var EventDispatcherInterface
+     */
+    private $eventDispatcher;
+
     public function __construct(
         Indexer $indexer,
         Watcher $watcher,
         ClientApi $clientApi,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        EventDispatcherInterface $eventDispatcher
     ) {
         $this->indexer = $indexer;
         $this->watcher = $watcher;
         $this->logger = $logger;
         $this->clientApi = $clientApi;
+        $this->eventDispatcher = $eventDispatcher;
     }
 
     /**
@@ -133,8 +142,7 @@ class IndexerHandler implements Handler, ServiceProvider
                 $this->indexer->reset();
             }
 
-            // TODO: need to restart the service, but cannot do so here.
-            //       dispatch event?
+            $this->eventDispatcher->dispatch(new IndexReset());
         });
     }
 

@@ -82,31 +82,26 @@ EOT
 
     public function testShowsMessageOnWatcherDied(): void
     {
-        $this->markTestSkipped();
-
         $this->workspace()->put(
             'Foobar.php',
             <<<'EOT'
 <?php
 EOT
         );
-        \Amp\Promise\wait(\Amp\call(function () {
-            $indexer = $this->container()->get(Indexer::class);
-            $watcher = new TestWatcher(new ModifiedFileQueue(), 0, new WatcherDied('No'));
-            $handler = new IndexerHandler(
-                $indexer,
-                $watcher,
-                $this->clientApi,
-                $this->logger->reveal(),
-                $this->serviceManager
-            );
-            $token = (new CancellationTokenSource())->getToken();
-            yield $handler->indexer($token);
-        }));
 
-        $this->client->transmitter()->shift();
-        $this->client->transmitter()->shift();
+        $tester = $this->container([
+            'indexer.enabled_watchers' => ['will_die'],
+        ])->get(LanguageServerBuilder::class)->tester(
+            ProtocolFactory::initializeParams($this->workspace()->path())
+        );
 
-        self::assertStringContainsString('File watcher died:', $this->client->transmitter()->shift()->params['message']);
+        $tester->initialize();
+        wait(delay(10));
+
+
+        $tester->transmitter()->shift();
+        $tester->transmitter()->shift();
+
+        self::assertStringContainsString('File watcher died:', $tester->transmitter()->shift()->params['message']);
     }
 }
