@@ -4,7 +4,7 @@ namespace Phpactor\Extension\LanguageServerCodeTransform\LspCommand;
 
 use Amp\Promise;
 use Amp\Success;
-use LanguageServerProtocol\WorkspaceEdit;
+use Phpactor\LanguageServerProtocol\WorkspaceEdit;
 use Phpactor\CodeTransform\Domain\Exception\TransformException;
 use Phpactor\CodeTransform\Domain\Refactor\ImportClass\AliasAlreadyUsedException;
 use Phpactor\CodeTransform\Domain\Refactor\ImportClass\NameAlreadyImportedException;
@@ -13,7 +13,7 @@ use Phpactor\CodeTransform\Domain\Refactor\ImportName;
 use Phpactor\CodeTransform\Domain\SourceCode;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
-use Phpactor\LanguageServer\Core\Session\Workspace;
+use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\Name\FullyQualifiedName;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocumentUri;
@@ -62,8 +62,8 @@ class ImportNameCommand
             TextDocumentUri::fromString($document->uri)->path()
         );
 
-        $nameImport = $type === 'function' ? 
-            NameImport::forFunction($fqn, $alias) : 
+        $nameImport = $type === 'function' ?
+            NameImport::forFunction($fqn, $alias) :
             NameImport::forClass($fqn, $alias);
 
         try {
@@ -92,7 +92,6 @@ class ImportNameCommand
             return new Success(null);
         }
 
-        /** @phpstan-ignore-next-line */
         return $this->client->workspace()->applyEdit(new WorkspaceEdit([
             $uri => $this->textEditConverter->toLspTextEdits($textEdits, $document->text)
         ]), 'Import class');

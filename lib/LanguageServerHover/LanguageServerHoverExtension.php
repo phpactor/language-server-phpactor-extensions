@@ -34,7 +34,7 @@ class LanguageServerHoverExtension implements Extension
                 $container->get(WorseReflectionExtension::SERVICE_REFLECTOR),
                 $container->get(self::SERVICE_MARKDOWN_RENDERER)
             );
-        }, [ LanguageServerExtension::TAG_SESSION_HANDLER => []]);
+        }, [ LanguageServerExtension::TAG_METHOD_HANDLER => []]);
 
         $container->register(self::SERVICE_MARKDOWN_RENDERER, function (Container $container) {
             return ObjectRendererBuilder::create()

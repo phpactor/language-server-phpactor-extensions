@@ -4,22 +4,22 @@ namespace Phpactor\Extension\LanguageServerReferenceFinder\Handler;
 
 use Amp\Delayed;
 use Amp\Promise;
-use LanguageServerProtocol\Location as LspLocation;
-use LanguageServerProtocol\Position;
-use LanguageServerProtocol\ReferenceContext;
-use LanguageServerProtocol\ServerCapabilities;
-use LanguageServerProtocol\TextDocumentIdentifier;
+use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
+use Phpactor\LanguageServerProtocol\Location as LspLocation;
+use Phpactor\LanguageServerProtocol\Position;
+use Phpactor\LanguageServerProtocol\ReferenceContext;
+use Phpactor\LanguageServerProtocol\ServerCapabilities;
+use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerReferenceFinder\LanguageServerReferenceFinderExtension;
 use Phpactor\LanguageServer\Core\Handler\CanRegisterCapabilities;
 use Phpactor\LanguageServer\Core\Handler\Handler;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
-use Phpactor\LanguageServer\Core\Session\Workspace;
+use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\ReferenceFinder\DefinitionLocator;
 use Phpactor\ReferenceFinder\Exception\CouldNotLocateDefinition;
 use Phpactor\ReferenceFinder\ReferenceFinder;
 use Phpactor\TextDocument\Location;
-use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\Locations;
 use Phpactor\TextDocument\TextDocumentBuilder;
 
@@ -96,7 +96,7 @@ class ReferencesHandler implements Handler, CanRegisterCapabilities
                 $textDocument->languageId ?? 'php'
             )->build();
 
-            $offset = ByteOffset::fromInt($position->toOffset($textDocument->text));
+            $offset = PositionConverter::positionToByteOffset($position, $textDocument->text);
 
             $locations = [];
             if ($context->includeDeclaration) {

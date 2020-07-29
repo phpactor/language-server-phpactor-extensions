@@ -3,15 +3,15 @@
 namespace Phpactor\Extension\LanguageServer\Tests\ridge\Converter;
 
 use Generator;
-use LanguageServerProtocol\Position;
-use LanguageServerProtocol\Range;
-use LanguageServerProtocol\TextDocumentItem;
+use Phpactor\LanguageServerProtocol\Position;
+use Phpactor\LanguageServerProtocol\Range;
+use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerBridge\Tests\IntegrationTestCase;
-use Phpactor\LanguageServer\Core\Session\Workspace;
+use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\TextDocument\Location;
 use Phpactor\TextDocument\Locations;
-use LanguageServerProtocol\Location as LspLocation;
+use Phpactor\LanguageServerProtocol\Location as LspLocation;
 
 class LocationConverterTest extends IntegrationTestCase
 {
@@ -20,12 +20,15 @@ class LocationConverterTest extends IntegrationTestCase
         $this->workspace()->reset();
     }
 
-    public function testConvertsPhpactorLocationsToLspLocations()
+    public function testConvertsPhpactorLocationsToLspLocations(): void
     {
-        $this->workspace()->put('test.php', '12345678');
+        $this->workspace()->put('test.php', '012345678');
 
         $locations = new Locations([
-            Location::fromPathAndOffset($this->workspace()->path('test.php'), 2)
+            Location::fromPathAndOffset(
+                $this->workspace()->path('test.php'),
+                2
+            )
         ]);
 
         $expected = [
@@ -36,12 +39,13 @@ class LocationConverterTest extends IntegrationTestCase
         ];
 
         $workspace = new Workspace();
+
         $converter = new LocationConverter($workspace);
+
         self::assertEquals($expected, $converter->toLspLocations($locations));
-        ;
     }
 
-    public function testIgnoresNonExistingFiles()
+    public function testIgnoresNonExistingFiles(): void
     {
         $this->workspace()->put('test.php', '12345678');
 
@@ -68,7 +72,7 @@ class LocationConverterTest extends IntegrationTestCase
      * @dataProvider provideWorkspaceLocations
      * @dataProvider provideOutOfRange
      */
-    public function testLocationToLspLocation(string $text, ?string $workspaceText, int $offset, Range $expectedRange)
+    public function testLocationToLspLocation(string $text, ?string $workspaceText, int $offset, Range $expectedRange): void
     {
         $this->workspace()->put('test.php', $text);
 
@@ -98,7 +102,7 @@ class LocationConverterTest extends IntegrationTestCase
             '12345',
             null,
             10,
-            $this->createRange(0, 5, 0, 5)
+            $this->createRange(0, 4, 0, 4)
         ];
     }
 
@@ -111,21 +115,21 @@ class LocationConverterTest extends IntegrationTestCase
             '😼😼😼😼😼',
             null,
             4,
-            $this->createRange(0, 1, 0, 1)
+            $this->createRange(0, 4, 0, 4)
         ];
 
         yield '4 byte char 2nd char' => [
             '😼😼😼😼😼',
             null,
             5,
-            $this->createRange(0, 2, 0, 2)
+            $this->createRange(0, 8, 0, 8)
         ];
 
         yield '4 byte char 4th char' => [
             '😼😼😼😼😼',
             null,
             16,
-            $this->createRange(0, 4, 0, 4)
+            $this->createRange(0, 16, 0, 16)
         ];
     }
 
@@ -144,11 +148,11 @@ class LocationConverterTest extends IntegrationTestCase
         yield 'second line' => [
             "12\n345\n678",
             null,
-            7,
-            $this->createRange(2, 0, 2, 0)
+            4,
+            $this->createRange(1, 1, 1, 1)
         ];
 
-        yield 'second line first char' => [
+        yield 'third line first char' => [
             "12\n345\n678",
             null,
             8,
@@ -176,8 +180,8 @@ class LocationConverterTest extends IntegrationTestCase
         ];
     }
 
-    private function createRange($line1, $col1, $line2, $col2): Range
+    private function createRange(int $line1, int $offset1, int $line2, int $offset2): Range
     {
-        return new Range(new Position($line1, $col1), new Position($line2, $col2));
+        return new Range(new Position($line1, $offset1), new Position($line2, $offset2));
     }
 }

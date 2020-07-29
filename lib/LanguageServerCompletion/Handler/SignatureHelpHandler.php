@@ -3,18 +3,18 @@
 namespace Phpactor\Extension\LanguageServerCompletion\Handler;
 
 use Amp\Promise;
-use LanguageServerProtocol\Position;
-use LanguageServerProtocol\ServerCapabilities;
-use LanguageServerProtocol\SignatureHelp;
-use LanguageServerProtocol\SignatureHelpOptions;
-use LanguageServerProtocol\TextDocumentIdentifier;
+use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
+use Phpactor\LanguageServerProtocol\Position;
+use Phpactor\LanguageServerProtocol\ServerCapabilities;
+use Phpactor\LanguageServerProtocol\SignatureHelp;
+use Phpactor\LanguageServerProtocol\SignatureHelpOptions;
+use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
 use Phpactor\Completion\Core\Exception\CouldNotHelpWithSignature;
 use Phpactor\Completion\Core\SignatureHelper;
 use Phpactor\Extension\LanguageServerCompletion\Util\PhpactorToLspSignature;
 use Phpactor\LanguageServer\Core\Handler\CanRegisterCapabilities;
 use Phpactor\LanguageServer\Core\Handler\Handler;
-use Phpactor\LanguageServer\Core\Session\Workspace;
-use Phpactor\TextDocument\ByteOffset;
+use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\TextDocument\TextDocumentBuilder;
 
 class SignatureHelpHandler implements Handler, CanRegisterCapabilities
@@ -57,10 +57,10 @@ class SignatureHelpHandler implements Handler, CanRegisterCapabilities
             try {
                 return PhpactorToLspSignature::toLspSignatureHelp($this->helper->signatureHelp(
                     TextDocumentBuilder::create($textDocument->text)->language($languageId)->uri($textDocument->uri)->build(),
-                    ByteOffset::fromInt($position->toOffset($textDocument->text))
+                    PositionConverter::positionToByteOffset($position, $textDocument->text)
                 ));
             } catch (CouldNotHelpWithSignature $couldNotHelp) {
-                return new SignatureHelp();
+                return null;
             }
         });
     }

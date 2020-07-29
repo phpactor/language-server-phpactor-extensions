@@ -2,15 +2,15 @@
 
 namespace Phpactor\Extension\LanguageServerCompletion\Tests\Unit\Handler;
 
-use LanguageServerProtocol\Position;
-use LanguageServerProtocol\SignatureHelp as LspSignatureHelp;
-use LanguageServerProtocol\TextDocumentIdentifier;
-use LanguageServerProtocol\TextDocumentItem;
+use Phpactor\LanguageServerProtocol\Position;
+use Phpactor\LanguageServerProtocol\SignatureHelp as LspSignatureHelp;
+use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
+use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use PHPUnit\Framework\TestCase;
 use Phpactor\Completion\Core\SignatureHelp;
 use Phpactor\Completion\Core\SignatureHelper;
 use Phpactor\Extension\LanguageServerCompletion\Handler\SignatureHelpHandler;
-use Phpactor\LanguageServer\Core\Session\Workspace;
+use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\LanguageServer\Test\HandlerTester;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocument;
@@ -36,10 +36,8 @@ class SignatureHelpHandlerTest extends TestCase
 
     public function setUp(): void
     {
-        $this->document = new TextDocumentItem();
-        $this->document->uri = self::IDENTIFIER;
-        $this->document->text = 'hello';
-        $this->position = new Position(1, 1);
+        $this->document = new TextDocumentItem(self::IDENTIFIER, 'php', 1, 'hello');
+        $this->position = new Position(0, 0);
         $this->workspace = new Workspace();
 
         $this->workspace->open($this->document);
@@ -48,7 +46,7 @@ class SignatureHelpHandlerTest extends TestCase
     public function testHandleHelpers()
     {
         $tester = $this->create([]);
-        $response = $tester->dispatchAndWait(
+        $response = $tester->requestAndWait(
             'textDocument/signatureHelp',
             [
                 'textDocument' => new TextDocumentIdentifier(self::IDENTIFIER),
@@ -63,12 +61,11 @@ class SignatureHelpHandlerTest extends TestCase
     {
         return new HandlerTester(new SignatureHelpHandler(
             $this->workspace,
-            $this->createHelper(),
-            true
+            $this->createHelper()
         ));
     }
 
-    private function createHelper()
+    private function createHelper(): SignatureHelper
     {
         return new class() implements SignatureHelper {
             public function signatureHelp(TextDocument $textDocument, ByteOffset $offset): SignatureHelp

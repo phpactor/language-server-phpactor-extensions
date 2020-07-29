@@ -9,14 +9,17 @@ use Amp\Promise;
 use Generator;
 use Phpactor\AmpFsWatch\Exception\WatcherDied;
 use Phpactor\AmpFsWatch\Watcher;
-use Phpactor\LanguageServer\Core\Handler\ServiceProvider;
+use Phpactor\Extension\LanguageServerIndexer\Event\IndexReset;
+use Phpactor\LanguageServer\Core\Handler\Handler;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\Indexer\Model\Indexer;
 use Phpactor\LanguageServer\Core\Service\ServiceManager;
+use Phpactor\LanguageServer\Core\Service\ServiceProvider;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 use SplFileInfo;
 
-class IndexerHandler implements ServiceProvider
+class IndexerHandler implements Handler, ServiceProvider
 {
     const SERVICE_INDEXER = 'indexer';
 
@@ -40,16 +43,33 @@ class IndexerHandler implements ServiceProvider
      */
     private $clientApi;
 
+    /**
+     * @var ServiceManager
+     */
+    private $serviceManager;
+
+    /**
+     * @var bool
+     */
+    private $doReindex = false;
+
+    /**
+     * @var EventDispatcherInterface
+     */
+    private $eventDispatcher;
+
     public function __construct(
         Indexer $indexer,
         Watcher $watcher,
         ClientApi $clientApi,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        EventDispatcherInterface $eventDispatcher
     ) {
         $this->indexer = $indexer;
         $this->watcher = $watcher;
         $this->logger = $logger;
         $this->clientApi = $clientApi;
+        $this->eventDispatcher = $eventDispatcher;
     }
 
     /**
@@ -58,7 +78,7 @@ class IndexerHandler implements ServiceProvider
     public function methods(): array
     {
         return [
-            'indexer/reindex' => 'reindex',
+            'phpactor/indexer/reindex' => 'reindex',
         ];
     }
 
@@ -114,18 +134,14 @@ class IndexerHandler implements ServiceProvider
         });
     }
 
-    public function reindex(ServiceManager $serviceManager, bool $soft = false): Promise
+    public function reindex(bool $soft = false): Promise
     {
-        return \Amp\call(function () use ($serviceManager, $soft) {
-            if ($serviceManager->isRunning(self::SERVICE_INDEXER)) {
-                $serviceManager->stop(self::SERVICE_INDEXER);
-            }
-
+        return \Amp\call(function () use ($soft) {
             if (false === $soft) {
                 $this->indexer->reset();
             }
 
-            $serviceManager->start(self::SERVICE_INDEXER);
+            $this->eventDispatcher->dispatch(new IndexReset());
         });
     }
 

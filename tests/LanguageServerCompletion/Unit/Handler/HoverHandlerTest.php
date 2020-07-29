@@ -2,12 +2,12 @@
 
 namespace Phpactor\Extension\LanguageServerHover\Tests\Unit\Handler;
 
-use LanguageServerProtocol\Hover;
-use LanguageServerProtocol\TextDocumentIdentifier;
-use LanguageServerProtocol\TextDocumentItem;
+use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
+use Phpactor\LanguageServerProtocol\Hover;
+use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
 use Phpactor\Extension\LanguageServerCompletion\Tests\IntegrationTestCase;
-use Phpactor\Extension\LanguageServer\Helper\OffsetHelper;
 use Phpactor\TestUtils\ExtractOffset;
+use Phpactor\TextDocument\ByteOffset;
 
 class HoverHandlerTest extends IntegrationTestCase
 {
@@ -21,12 +21,11 @@ class HoverHandlerTest extends IntegrationTestCase
         [ $text, $offset ] = ExtractOffset::fromSource($test);
 
         $tester = $this->createTester();
-        $tester->initialize();
-        $item = new TextDocumentItem(self::PATH, 'php', 1, $text);
-        $tester->openDocument($item);
-        $response = $tester->dispatchAndWait(1, 'textDocument/hover', [
+        $tester->textDocument()->open(self::PATH, $text);
+
+        $response = $tester->requestAndWait('textDocument/hover', [
             'textDocument' => new TextDocumentIdentifier(self::PATH),
-            'position' => OffsetHelper::offsetToPosition($text, $offset)
+            'position' => PositionConverter::byteOffsetToPosition(ByteOffset::fromInt((int)$offset), $text)
         ]);
         $tester->assertSuccess($response);
         $result = $response->result;

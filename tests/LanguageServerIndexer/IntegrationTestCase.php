@@ -2,6 +2,9 @@
 
 namespace Phpactor\Extension\LanguageServerIndexer\Tests;
 
+use Phpactor\Extension\LanguageServerIndexer\LanguageServerIndexerExtension;
+use Phpactor\Extension\LanguageServerIndexer\Tests\Extension\TestExtension;
+use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
 use Phpactor\Extension\ComposerAutoloader\ComposerAutoloaderExtension;
 use Phpactor\Extension\Rpc\RpcExtension;
@@ -24,14 +27,8 @@ class IntegrationTestCase extends TestCase
         return Workspace::create(__DIR__ . '/Workspace');
     }
 
-    protected function container(): Container
+    protected function container(array $config = []): Container
     {
-        static $container = null;
-        
-        if ($container) {
-            return $container;
-        }
-
         $container = PhpactorContainer::fromExtensions([
             ConsoleExtension::class,
             IndexerExtension::class,
@@ -43,14 +40,17 @@ class IntegrationTestCase extends TestCase
             RpcExtension::class,
             ComposerAutoloaderExtension::class,
             ReferenceFinderExtension::class,
-        ], [
+            LanguageServerIndexerExtension::class,
+            LanguageServerExtension::class,
+            TestExtension::class,
+        ], array_merge([
             FilePathResolverExtension::PARAM_APPLICATION_ROOT => __DIR__ . '/../',
             FilePathResolverExtension::PARAM_PROJECT_ROOT => $this->workspace()->path(),
             IndexerExtension::PARAM_INDEX_PATH => $this->workspace()->path('/cache'),
             LoggingExtension::PARAM_ENABLED=> true,
             LoggingExtension::PARAM_PATH=> 'php://stderr',
             WorseReflectionExtension::PARAM_ENABLE_CACHE=> false,
-        ]);
+        ], $config));
 
         return $container;
     }

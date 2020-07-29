@@ -2,7 +2,7 @@
 
 namespace Phpactor\Extension\LanguageServerCompletion\Util;
 
-use LanguageServerProtocol\CompletionItemKind;
+use Phpactor\LanguageServerProtocol\CompletionItemKind;
 use Phpactor\Completion\Core\Suggestion;
 
 class PhpactorToLspCompletionType

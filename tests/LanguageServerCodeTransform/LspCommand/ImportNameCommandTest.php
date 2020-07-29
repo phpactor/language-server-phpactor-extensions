@@ -3,8 +3,8 @@
 namespace Phpactor\Extension\LanguageServerCodeTransform\Tests\LspCommand;
 
 use Amp\Promise;
-use LanguageServerProtocol\ApplyWorkspaceEditResponse;
-use LanguageServerProtocol\TextDocumentItem;
+use Phpactor\LanguageServerProtocol\ApplyWorkspaceEditResponse;
+use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\CodeTransform\Domain\Exception\TransformException;
 use Phpactor\CodeTransform\Domain\Refactor\ImportClass\AliasAlreadyUsedException;
 use Phpactor\CodeTransform\Domain\Refactor\ImportClass\NameAlreadyImportedException;
@@ -16,7 +16,7 @@ use Phpactor\CodeTransform\Domain\Refactor\ImportName;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Core\Server\RpcClient\TestRpcClient;
-use Phpactor\LanguageServer\Core\Session\Workspace;
+use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\LanguageServer\Workspace\CommandDispatcher;
 use Phpactor\TestUtils\PHPUnit\TestCase;
 use Phpactor\TextDocument\ByteOffset;
@@ -71,7 +71,9 @@ class ImportNameCommandTest extends TestCase
 
     public function testImportClass(): void
     {
-        $this->workspace->open(new TextDocumentItem(self::EXAMPLE_PATH_URI, 'php', 1, self::EXAMPLE_CONTENT));
+        $this->workspace->open(
+            new TextDocumentItem(self::EXAMPLE_PATH_URI, 'php', 1, self::EXAMPLE_CONTENT)
+        );
 
         $this->importName->importName(
             SourceCode::fromStringAndPath(self::EXAMPLE_CONTENT, self::EXAMPLE_PATH),
@@ -194,7 +196,7 @@ class ImportNameCommandTest extends TestCase
             SourceCode::fromStringAndPath(self::EXAMPLE_CONTENT, self::EXAMPLE_PATH),
             ByteOffset::fromInt(self::EXAMPLE_OFFSET),
             NameImport::forClass('Acme\Foobar', 'AcmeFoobar'),
-        )->willThrow(new AliasAlreadyUsedException(NameImport::forClass('Acme\Foobar','AcmeFoobar')));
+        )->willThrow(new AliasAlreadyUsedException(NameImport::forClass('Acme\Foobar', 'AcmeFoobar')));
 
         $this->importName->importName(
             SourceCode::fromStringAndPath(self::EXAMPLE_CONTENT, self::EXAMPLE_PATH),

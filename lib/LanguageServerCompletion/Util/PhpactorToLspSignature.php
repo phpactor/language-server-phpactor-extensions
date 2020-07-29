@@ -2,19 +2,15 @@
 
 namespace Phpactor\Extension\LanguageServerCompletion\Util;
 
-use LanguageServerProtocol\ParameterInformation;
-use LanguageServerProtocol\SignatureHelp;
-use LanguageServerProtocol\SignatureInformation;
+use Phpactor\LanguageServerProtocol\ParameterInformation;
+use Phpactor\LanguageServerProtocol\SignatureHelp;
+use Phpactor\LanguageServerProtocol\SignatureInformation;
 use Phpactor\Completion\Core\SignatureHelp as PhpactorSignatureHelp;
 
 class PhpactorToLspSignature
 {
     public static function toLspSignatureHelp(PhpactorSignatureHelp $phpactorHelp): SignatureHelp
     {
-        $help = new SignatureHelp();
-        $help->activeParameter = $phpactorHelp->activeParameter();
-        $help->activeSignature = $phpactorHelp->activeSignature();
-
         $signatures = [];
         foreach ($phpactorHelp->signatures() as $phpactorSignature) {
             $parameters = [];
@@ -27,13 +23,11 @@ class PhpactorToLspSignature
 
             $signatures[] = new SignatureInformation(
                 $phpactorSignature->label(),
-                $parameters,
-                $phpactorSignature->documentation()
+                $phpactorSignature->documentation(),
+                $parameters
             );
         }
 
-        $help->signatures = $signatures;
-
-        return $help;
+        return new SignatureHelp($signatures, $phpactorHelp->activeSignature(), $phpactorHelp->activeParameter());
     }
 }

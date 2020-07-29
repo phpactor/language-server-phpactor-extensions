@@ -10,6 +10,7 @@ use Phpactor\Extension\LanguageServerCompletion\Handler\SignatureHelpHandler;
 use Phpactor\Extension\LanguageServerCompletion\Util\SuggestionNameFormatter;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\LanguageServerCompletion\Handler\CompletionHandler;
+use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\MapResolver\Resolver;
 
 class LanguageServerCompletionExtension implements Extension
@@ -40,14 +41,13 @@ class LanguageServerCompletionExtension implements Extension
     private function registerHandlers(ContainerBuilder $container): void
     {
         $container->register('language_server_completion.handler.completion', function (Container $container) {
-            $capabilities = $container->getParameter(LanguageServerExtension::PARAM_CLIENT_CAPABILITIES);
             return new CompletionHandler(
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
                 $container->get(CompletionExtension::SERVICE_REGISTRY),
                 $container->get(SuggestionNameFormatter::class),
-                $capabilities['textDocument']['completion']['completionItem']['snippetSupport'] ?? false
+                $this->clientCapabilities($container)->textDocument->completion->completionItem['snippetSupport'] ?? false
             );
-        }, [ LanguageServerExtension::TAG_SESSION_HANDLER => [
+        }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [
             'methods' => [
                 'textDocument/completion'
             ]
@@ -62,6 +62,11 @@ class LanguageServerCompletionExtension implements Extension
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
                 $container->get(CompletionExtension::SERVICE_SIGNATURE_HELPER)
             );
-        }, [ LanguageServerExtension::TAG_SESSION_HANDLER => [] ]);
+        }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [] ]);
+    }
+
+    private function clientCapabilities(Container $container): ClientCapabilities
+    {
+        return $container->get(ClientCapabilities::class);
     }
 }

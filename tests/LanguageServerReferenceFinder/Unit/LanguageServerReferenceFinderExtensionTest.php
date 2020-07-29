@@ -2,9 +2,8 @@
 
 namespace Phpactor\Extension\LanguageServerReferenceFinder\Tests\Unit;
 
-use LanguageServerProtocol\ReferenceContext;
-use LanguageServerProtocol\TextDocumentIdentifier;
-use LanguageServerProtocol\TextDocumentItem;
+use Phpactor\LanguageServerProtocol\ReferenceContext;
+use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
 use PHPUnit\Framework\TestCase;
 use Phpactor\Container\PhpactorContainer;
 use Phpactor\Extension\LanguageServerBridge\LanguageServerBridgeExtension;
@@ -14,30 +13,30 @@ use Phpactor\Extension\Logger\LoggingExtension;
 use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
 use Phpactor\FilePathResolverExtension\FilePathResolverExtension;
 use Phpactor\LanguageServer\LanguageServerBuilder;
-use Phpactor\LanguageServer\Test\ServerTester;
+use Phpactor\LanguageServer\Test\LanguageServerTester;
+use Phpactor\LanguageServer\Test\ProtocolFactory;
+use function Safe\file_get_contents;
 
 class LanguageServerReferenceFinderExtensionTest extends TestCase
 {
-    public function testDefinition()
+    public function testDefinition(): void
     {
         $tester = $this->createTester();
-        $tester->initialize();
-        $tester->openDocument(new TextDocumentItem(__FILE__, 'php', 84, file_get_contents(__FILE__)));
+        $tester->textDocument()->open(__FILE__, file_get_contents(__FILE__));
 
-        $response = $tester->dispatchAndWait(1, 'textDocument/definition', [
+        $response = $tester->requestAndWait('textDocument/definition', [
             'textDocument' => new TextDocumentIdentifier(__FILE__),
             'position' => [],
         ]);
         $this->assertNull($response->result, 'Definition was not found');
     }
 
-    public function testTypeDefinition()
+    public function testTypeDefinition(): void
     {
         $tester = $this->createTester();
-        $tester->initialize();
-        $tester->openDocument(new TextDocumentItem(__FILE__, 'php', 1, file_get_contents(__FILE__)));
+        $tester->textDocument()->open(__FILE__, file_get_contents(__FILE__));
 
-        $response = $tester->dispatchAndWait(1, 'textDocument/typeDefinition', [
+        $response = $tester->requestAndWait('textDocument/typeDefinition', [
             'textDocument' => new TextDocumentIdentifier(__FILE__),
             'position' => [
             ],
@@ -48,19 +47,21 @@ class LanguageServerReferenceFinderExtensionTest extends TestCase
     public function testReferenceFinder(): void
     {
         $tester = $this->createTester();
-        $tester->initialize();
-        $tester->openDocument(new TextDocumentItem(__FILE__, 'php', 1, file_get_contents(__FILE__)));
+        $tester->textDocument()->open(__FILE__, file_get_contents(__FILE__));
 
-        $response = $tester->dispatchAndWait(1, 'textDocument/references', [
+        $response = $tester->requestAndWait('textDocument/references', [
             'textDocument' => new TextDocumentIdentifier(__FILE__),
             'position' => [
+                'line' => 0,
+                'character' => 0,
             ],
-            'context' => new ReferenceContext(),
+            'context' => new ReferenceContext(false),
         ]);
+        $tester->assertSuccess($response);
         $this->assertIsArray($response->result, 'Returned empty references');
     }
 
-    private function createTester(): ServerTester
+    private function createTester(): LanguageServerTester
     {
         $container = PhpactorContainer::fromExtensions([
             LoggingExtension::class,
@@ -71,9 +72,9 @@ class LanguageServerReferenceFinderExtensionTest extends TestCase
             LanguageServerBridgeExtension::class,
         ]);
         
-        $builder = $container->get(LanguageServerExtension::SERVICE_LANGUAGE_SERVER_BUILDER);
+        $builder = $container->get(LanguageServerBuilder::class);
         $this->assertInstanceOf(LanguageServerBuilder::class, $builder);
 
-        return $builder->buildServerTester();
+        return $builder->tester(ProtocolFactory::initializeParams(__DIR__));
     }
 }

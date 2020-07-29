@@ -3,20 +3,21 @@
 namespace Phpactor\Extension\LanguageServerHover\Handler;
 
 use Amp\Promise;
-use LanguageServerProtocol\Hover;
-use LanguageServerProtocol\MarkupContent;
-use LanguageServerProtocol\Position;
-use LanguageServerProtocol\Range;
-use LanguageServerProtocol\ServerCapabilities;
-use LanguageServerProtocol\TextDocumentIdentifier;
+use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
+use Phpactor\LanguageServerProtocol\Hover;
+use Phpactor\LanguageServerProtocol\MarkupContent;
+use Phpactor\LanguageServerProtocol\Position;
+use Phpactor\LanguageServerProtocol\Range;
+use Phpactor\LanguageServerProtocol\ServerCapabilities;
+use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
 use Phpactor\Completion\Core\Exception\CouldNotFormat;
 use Phpactor\Extension\LanguageServerHover\Renderer\HoverInformation;
 use Phpactor\Extension\LanguageServerHover\Renderer\MemberDocblock;
-use Phpactor\Extension\LanguageServer\Helper\OffsetHelper;
 use Phpactor\LanguageServer\Core\Handler\CanRegisterCapabilities;
 use Phpactor\LanguageServer\Core\Handler\Handler;
-use Phpactor\LanguageServer\Core\Session\Workspace;
+use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\ObjectRenderer\Model\ObjectRenderer;
+use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocumentBuilder;
 use Phpactor\WorseReflection\Core\Exception\NotFound;
 use Phpactor\WorseReflection\Core\Inference\Symbol;
@@ -62,7 +63,7 @@ class HoverHandler implements Handler, CanRegisterCapabilities
     ): Promise {
         return \Amp\call(function () use ($textDocument, $position) {
             $document = $this->workspace->get($textDocument->uri);
-            $offset = $position->toOffset($document->text);
+            $offset = PositionConverter::positionToByteOffset($position, $document->text);
             $document = TextDocumentBuilder::create($document->text)
                 ->uri($document->uri)
                 ->language('php')
@@ -73,10 +74,15 @@ class HoverHandler implements Handler, CanRegisterCapabilities
             $info = $this->infoFromReflecionOffset($offsetReflection);
             $string = new MarkupContent('markdown', $info);
 
-            // @phpstan-ignore-next-line
             return new Hover($string, new Range(
-                OffsetHelper::offsetToPosition($document->__toString(), $symbolContext->symbol()->position()->start()),
-                OffsetHelper::offsetToPosition($document->__toString(), $symbolContext->symbol()->position()->end())
+                PositionConverter::byteOffsetToPosition(
+                    ByteOffset::fromInt($symbolContext->symbol()->position()->start()),
+                    $document->__toString()
+                ),
+                PositionConverter::byteOffsetToPosition(
+                    ByteOffset::fromInt($symbolContext->symbol()->position()->end()),
+                    $document->__toString()
+                )
             ));
         });
     }

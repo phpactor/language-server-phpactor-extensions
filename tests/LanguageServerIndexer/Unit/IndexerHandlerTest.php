@@ -2,48 +2,26 @@
 
 namespace Phpactor\Extension\LanguageServerIndexer\Tests\Unit;
 
-use Amp\CancellationTokenSource;
-use Phpactor\AmpFsWatch\Exception\WatcherDied;
-use Phpactor\AmpFsWatch\ModifiedFile;
-use Phpactor\AmpFsWatch\ModifiedFileQueue;
-use Phpactor\AmpFsWatch\Watcher\TestWatcher\TestWatcher;
-use Phpactor\Extension\LanguageServerIndexer\Handler\IndexerHandler;
-use Phpactor\Indexer\Model\Indexer;
-use Phpactor\LanguageServer\Core\Server\ClientApi;
-use Phpactor\LanguageServer\Core\Server\RpcClient\TestRpcClient;
-use Phpactor\LanguageServer\Core\Service\ServiceManager;
-use Phpactor\LanguageServer\Test\HandlerTester;
-use Psr\Log\LoggerInterface;
+use Phpactor\LanguageServer\LanguageServerBuilder;
+use Phpactor\LanguageServer\Test\LanguageServerTester;
+use Phpactor\LanguageServer\Test\ProtocolFactory;
 use Phpactor\Extension\LanguageServerIndexer\Tests\IntegrationTestCase;
+use function Amp\Promise\wait;
+use function Amp\delay;
 
 class IndexerHandlerTest extends IntegrationTestCase
 {
     /**
-     * @var ObjectProphecy|LoggerInterface
+     * @var LanguageServerTester
      */
-    private $logger;
-
-    /**
-     * @var ObjectProphecy
-     */
-    private $serviceManager;
-
-    /**
-     * @var TestRpcClient
-     */
-    private $client;
-
-    /**
-     * @var ClientApi
-     */
-    private $clientApi;
+    private $tester;
 
     protected function setUp(): void
     {
-        $this->logger = $this->prophesize(LoggerInterface::class);
-        $this->serviceManager = $this->prophesize(ServiceManager::class);
-        $this->client = TestRpcClient::create();
-        $this->clientApi = new ClientApi($this->client);
+        $container = $this->container();
+        $this->tester = $container->get(LanguageServerBuilder::class)->tester(
+            ProtocolFactory::initializeParams($this->workspace()->path())
+        );
     }
 
     public function testIndexer(): void
@@ -54,55 +32,37 @@ class IndexerHandlerTest extends IntegrationTestCase
 <?php
 EOT
         );
-        \Amp\Promise\wait(\Amp\call(function () {
-            $indexer = $this->container()->get(Indexer::class);
-            $watcher = new TestWatcher(new ModifiedFileQueue([
-                new ModifiedFile($this->workspace()->path('Foobar.php'), ModifiedFile::TYPE_FILE),
-            ]));
-            $handler = new IndexerHandler($indexer, $watcher, $this->clientApi, $this->logger->reveal());
-            $token = (new CancellationTokenSource())->getToken();
-            yield $handler->indexer($token);
-        }));
 
-        $this->logger->debug(sprintf(
-            'Indexed file: %s',
-            $this->workspace()->path('Foobar.php')
-        ))->shouldHaveBeenCalled();
+        $this->tester->initialize();
+        wait(delay(10));
 
-        self::assertStringContainsString('Indexing', $this->client->transmitter()->shift()->params['message']);
-        self::assertStringContainsString('Done indexing', $this->client->transmitter()->shift()->params['message']);
+        self::assertGreaterThanOrEqual(2, $this->tester->transmitter()->count());
+        self::assertStringContainsString('Indexing', $this->tester->transmitter()->shift()->params['message']);
+        self::assertStringContainsString('Done indexing', $this->tester->transmitter()->shift()->params['message']);
     }
 
     public function testReindexNonStarted(): void
     {
-        $indexer = $this->container()->get(Indexer::class);
-        $watcher = new TestWatcher(new ModifiedFileQueue());
-        $handlerTester = new HandlerTester(
-            new IndexerHandler($indexer, $watcher, $this->clientApi, $this->logger->reveal())
-        );
+        $this->tester->initialize();
 
-        self::assertFalse($handlerTester->serviceManager()->isRunning(IndexerHandler::SERVICE_INDEXER));
+        wait(delay(10));
 
-        $handlerTester->dispatchAndWait('indexer/reindex', []);
+        self::assertContains('indexer', $this->tester->services()->listRunning());
+        $this->tester->services()->stop('indexer');
+        self::assertNotContains('indexer', $this->tester->services()->listRunning());
 
-        self::assertTrue($handlerTester->serviceManager()->isRunning(IndexerHandler::SERVICE_INDEXER));
+        $this->tester->notifyAndWait('phpactor/indexer/reindex', []);
+
+        self::assertContains('indexer', $this->tester->services()->listRunning());
     }
 
     public function testReindexHard(): void
     {
-        $indexer = $this->container()->get(Indexer::class);
-        $watcher = new TestWatcher(new ModifiedFileQueue());
-        $handlerTester = new HandlerTester(
-            new IndexerHandler($indexer, $watcher, $this->clientApi, $this->logger->reveal())
-        );
-
-        $handlerTester->serviceManager()->start(IndexerHandler::SERVICE_INDEXER);
-
-        $handlerTester->dispatchAndWait('indexer/reindex', [
+        $this->tester->notifyAndWait('phpactor/indexer/reindex', [
             'soft' => false,
         ]);
 
-        self::assertTrue($handlerTester->serviceManager()->isRunning(IndexerHandler::SERVICE_INDEXER));
+        self::assertContains('indexer', $this->tester->services()->listRunning());
     }
 
     public function testShowsMessageOnWatcherDied(): void
@@ -113,17 +73,20 @@ EOT
 <?php
 EOT
         );
-        \Amp\Promise\wait(\Amp\call(function () {
-            $indexer = $this->container()->get(Indexer::class);
-            $watcher = new TestWatcher(new ModifiedFileQueue(), 0, new WatcherDied('No'));
-            $handler = new IndexerHandler($indexer, $watcher, $this->clientApi, $this->logger->reveal());
-            $token = (new CancellationTokenSource())->getToken();
-            yield $handler->indexer($token);
-        }));
 
-        $this->client->transmitter()->shift();
-        $this->client->transmitter()->shift();
+        $tester = $this->container([
+            'indexer.enabled_watchers' => ['will_die'],
+        ])->get(LanguageServerBuilder::class)->tester(
+            ProtocolFactory::initializeParams($this->workspace()->path())
+        );
 
-        self::assertStringContainsString('File watcher died:', $this->client->transmitter()->shift()->params['message']);
+        $tester->initialize();
+        wait(delay(10));
+
+
+        $tester->transmitter()->shift();
+        $tester->transmitter()->shift();
+
+        self::assertStringContainsString('File watcher died:', $tester->transmitter()->shift()->params['message']);
     }
 }

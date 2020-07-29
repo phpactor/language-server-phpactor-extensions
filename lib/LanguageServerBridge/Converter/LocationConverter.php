@@ -2,10 +2,10 @@
 
 namespace Phpactor\Extension\LanguageServerBridge\Converter;
 
-use LanguageServerProtocol\Location as LspLocation;
-use LanguageServerProtocol\Range;
+use Phpactor\LanguageServerProtocol\Location as LspLocation;
+use Phpactor\LanguageServerProtocol\Range;
 use Phpactor\Extension\LanguageServerBridge\Converter\Exception\CouldNotLoadFileContents;
-use Phpactor\LanguageServer\Core\Session\Workspace;
+use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\TextDocument\Location;
 use Phpactor\TextDocument\Locations;
 use Phpactor\TextDocument\TextDocumentUri;
@@ -17,15 +17,9 @@ class LocationConverter
      */
     private $workspace;
 
-    /**
-     * @var OffsetConverter
-     */
-    private $offsetConverter;
-
-    public function __construct(Workspace $workspace, ?OffsetConverter $offsetConverter = null)
+    public function __construct(Workspace $workspace)
     {
         $this->workspace = $workspace;
-        $this->offsetConverter = $offsetConverter ?: new OffsetConverter();
     }
 
     public function toLspLocations(Locations $locations): array
@@ -46,7 +40,7 @@ class LocationConverter
     public function toLspLocation(Location $location): LspLocation
     {
         $text = $this->loadText($location->uri());
-        $position = $this->offsetConverter->offsetToPosition($text, $location->offset());
+        $position = PositionConverter::byteOffsetToPosition($location->offset(), $text);
 
         return new LspLocation($location->uri()->__toString(), new Range($position, $position));
     }

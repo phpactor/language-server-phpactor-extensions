@@ -3,16 +3,16 @@
 namespace Phpactor\Extension\LanguageServerReferenceFinder\Handler;
 
 use Amp\Promise;
-use LanguageServerProtocol\Position;
-use LanguageServerProtocol\ServerCapabilities;
-use LanguageServerProtocol\TextDocumentIdentifier;
+use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
+use Phpactor\LanguageServerProtocol\Position;
+use Phpactor\LanguageServerProtocol\ServerCapabilities;
+use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\LanguageServer\Core\Handler\CanRegisterCapabilities;
 use Phpactor\LanguageServer\Core\Handler\Handler;
-use Phpactor\LanguageServer\Core\Session\Workspace;
+use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\ReferenceFinder\Exception\CouldNotLocateType;
 use Phpactor\ReferenceFinder\TypeLocator;
-use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocumentBuilder;
 
 class TypeDefinitionHandler implements Handler, CanRegisterCapabilities
@@ -53,12 +53,12 @@ class TypeDefinitionHandler implements Handler, CanRegisterCapabilities
         return \Amp\call(function () use ($textDocument, $position) {
             $textDocument = $this->workspace->get($textDocument->uri);
 
-            $offset = $position->toOffset($textDocument->text);
+            $offset = PositionConverter::positionToByteOffset($position, $textDocument->text);
 
             try {
                 $location = $this->typeLocator->locateType(
                     TextDocumentBuilder::create($textDocument->text)->uri($textDocument->uri)->language('php')->build(),
-                    ByteOffset::fromInt($offset)
+                    $offset
                 );
             } catch (CouldNotLocateType $type) {
                 return null;

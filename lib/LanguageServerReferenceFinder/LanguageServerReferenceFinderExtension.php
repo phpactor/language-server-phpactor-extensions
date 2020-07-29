@@ -31,7 +31,7 @@ class LanguageServerReferenceFinderExtension implements Extension
                 $container->get(ReferenceFinderExtension::SERVICE_DEFINITION_LOCATOR),
                 $container->get(LocationConverter::class)
             );
-        }, [ LanguageServerExtension::TAG_SESSION_HANDLER => [] ]);
+        }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [] ]);
 
         $container->register(TypeDefinitionHandler::class, function (Container $container) {
             return new TypeDefinitionHandler(
@@ -39,7 +39,7 @@ class LanguageServerReferenceFinderExtension implements Extension
                 $container->get(ReferenceFinderExtension::SERVICE_TYPE_LOCATOR),
                 $container->get(LocationConverter::class)
             );
-        }, [ LanguageServerExtension::TAG_SESSION_HANDLER => [] ]);
+        }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [] ]);
 
         $container->register(ReferencesHandler::class, function (Container $container) {
             return new ReferencesHandler(
@@ -50,7 +50,7 @@ class LanguageServerReferenceFinderExtension implements Extension
                 $container->get(ClientApi::class),
                 $container->getParameter(self::PARAM_REFERENCE_TIMEOUT)
             );
-        }, [ LanguageServerExtension::TAG_SESSION_HANDLER => [] ]);
+        }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [] ]);
 
         $container->register(GotoImplementationHandler::class, function (Container $container) {
             return new GotoImplementationHandler(
@@ -58,7 +58,7 @@ class LanguageServerReferenceFinderExtension implements Extension
                 $container->get(ReferenceFinderExtension::SERVICE_IMPLEMENTATION_FINDER),
                 $container->get(LocationConverter::class)
             );
-        }, [ LanguageServerExtension::TAG_SESSION_HANDLER => [] ]);
+        }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [] ]);
     }
 
     /**

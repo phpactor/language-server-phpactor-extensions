@@ -5,12 +5,13 @@ namespace Phpactor\Extension\LanguageServerCompletion\Tests\Unit\Handler;
 use Amp\Delayed;
 use DTL\Invoke\Invoke;
 use Generator;
-use LanguageServerProtocol\CompletionItem;
-use LanguageServerProtocol\CompletionList;
-use LanguageServerProtocol\Position;
-use LanguageServerProtocol\Range;
-use LanguageServerProtocol\TextDocumentItem;
-use LanguageServerProtocol\TextEdit;
+use Phpactor\LanguageServerProtocol\CompletionItem;
+use Phpactor\LanguageServerProtocol\CompletionList;
+use Phpactor\LanguageServerProtocol\Position;
+use Phpactor\LanguageServerProtocol\Range;
+use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
+use Phpactor\LanguageServerProtocol\TextDocumentItem;
+use Phpactor\LanguageServerProtocol\TextEdit;
 use PHPUnit\Framework\TestCase;
 use Phpactor\Completion\Core\Completor;
 use Phpactor\Completion\Core\Range as PhpactorRange;
@@ -18,7 +19,7 @@ use Phpactor\Completion\Core\Suggestion;
 use Phpactor\Completion\Core\TypedCompletorRegistry;
 use Phpactor\Extension\LanguageServerCompletion\Handler\CompletionHandler;
 use Phpactor\Extension\LanguageServerCompletion\Util\SuggestionNameFormatter;
-use Phpactor\LanguageServer\Core\Session\Workspace;
+use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\LanguageServer\Test\HandlerTester;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocument;
@@ -26,33 +27,42 @@ use Phpactor\TextDocument\TextDocument;
 class CompletionHandlerTest extends TestCase
 {
     /**
-     * @var TextDocumentItem
-     */
-    private $document;
-
-    /**
      * @var Position
      */
     private $position;
 
+    /**
+     * @var TextDocumentIdentifier
+     */
+    private $documentIdentifier;
+
+    /**
+     * @var Workspace
+     */
+    private $workspace;
+
+    /**
+     * @var TextDocumentItem
+     */
+    private $document;
+
     public function setUp(): void
     {
-        $this->document = new TextDocumentItem();
-        $this->document->uri = '/test';
-        $this->document->text = 'hello';
-        $this->position = new Position(1, 1);
+        $this->document = new TextDocumentItem('/test/', 'php', 1, 'hello');
+        $this->documentIdentifier = new TextDocumentIdentifier('/test/');
+        $this->position = new Position(0, 0);
         $this->workspace = new Workspace();
 
         $this->workspace->open($this->document);
     }
 
-    public function testHandleNoSuggestions()
+    public function testHandleNoSuggestions(): void
     {
         $tester = $this->create([]);
-        $response = $tester->dispatchAndWait(
+        $response = $tester->requestAndWait(
             'textDocument/completion',
             [
-                'textDocument' => $this->document,
+                'textDocument' => $this->documentIdentifier,
                 'position' => $this->position
             ]
         );
@@ -66,10 +76,10 @@ class CompletionHandlerTest extends TestCase
             Suggestion::create('hello'),
             Suggestion::create('goodbye'),
         ]);
-        $response = $tester->dispatchAndWait(
+        $response = $tester->requestAndWait(
             'textDocument/completion',
             [
-                'textDocument' => $this->document,
+                'textDocument' => $this->documentIdentifier,
                 'position' => $this->position
             ]
         );
@@ -85,10 +95,10 @@ class CompletionHandlerTest extends TestCase
         $tester = $this->create([
             Suggestion::createWithOptions('hello', [ 'range' => PhpactorRange::fromStartAndEnd(1, 2)]),
         ]);
-        $response = $tester->dispatchAndWait(
+        $response = $tester->requestAndWait(
             'textDocument/completion',
             [
-                'textDocument' => $this->document,
+                'textDocument' => $this->documentIdentifier,
                 'position' => $this->position
             ]
         );
@@ -107,10 +117,10 @@ class CompletionHandlerTest extends TestCase
                 return Suggestion::createWithOptions('hello', [ 'range' => PhpactorRange::fromStartAndEnd(1, 2)]);
             }, range(0, 10000))
         );
-        $response = $tester->dispatch(
+        $response = $tester->request(
             'textDocument/completion',
             [
-                'textDocument' => $this->document,
+                'textDocument' => $this->documentIdentifier,
                 'position' => $this->position
             ]
         );
@@ -140,10 +150,10 @@ class CompletionHandlerTest extends TestCase
                 'type' => Suggestion::TYPE_VARIABLE,
             ]),
         ]);
-        $response = $tester->dispatchAndWait(
+        $response = $tester->requestAndWait(
             'textDocument/completion',
             [
-                'textDocument' => $this->document,
+                'textDocument' => $this->documentIdentifier,
                 'position' => $this->position
             ]
         );
@@ -169,10 +179,10 @@ class CompletionHandlerTest extends TestCase
                 'type' => Suggestion::TYPE_VARIABLE,
             ]),
         ], false);
-        $response = $tester->dispatchAndWait(
+        $response = $tester->requestAndWait(
             'textDocument/completion',
             [
-                'textDocument' => $this->document,
+                'textDocument' => $this->documentIdentifier,
                 'position' => $this->position
             ]
         );

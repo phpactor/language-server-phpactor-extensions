@@ -49,6 +49,7 @@ $container = PhpactorContainer::fromExtensions([
     FilePathResolverExtension::PARAM_APPLICATION_ROOT => realpath(__DIR__ .'/..'),
     IndexerExtension::PARAM_INDEX_PATH => realpath(__DIR__ . '/..') . '/cache',
     LoggingExtension::PARAM_FORMATTER => 'pretty',
+    LoggingExtension::PARAM_LEVEL => 'debug',
 ]);
 
 $handler = new StreamHandler(STDERR);

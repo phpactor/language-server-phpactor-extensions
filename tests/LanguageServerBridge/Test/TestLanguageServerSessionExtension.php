@@ -1,6 +1,6 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerCodeTransform\Tests;
+namespace Phpactor\Extension\LanguageServerBridge\Tests\Test;
 
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;

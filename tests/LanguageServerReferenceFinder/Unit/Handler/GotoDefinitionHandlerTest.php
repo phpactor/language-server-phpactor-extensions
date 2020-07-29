@@ -2,15 +2,17 @@
 
 namespace Phpactor\Extension\LanguageServerReferenceFinder\Tests\Unit\Handler;
 
-use LanguageServerProtocol\Location;
-use LanguageServerProtocol\Position;
-use LanguageServerProtocol\TextDocumentIdentifier;
-use LanguageServerProtocol\TextDocumentItem;
+use Phpactor\LanguageServerProtocol\Location;
+use Phpactor\LanguageServerProtocol\Position;
+use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
+use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\GotoDefinitionHandler;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
-use Phpactor\LanguageServer\Core\Session\Workspace;
+use Phpactor\LanguageServer\Core\Server\RpcClient\TestRpcClient;
+use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\LanguageServer\Test\HandlerTester;
+use Phpactor\LanguageServer\Test\ProtocolFactory;
 use Phpactor\ReferenceFinder\DefinitionLocation;
 use Phpactor\ReferenceFinder\DefinitionLocator;
 use Phpactor\TestUtils\PHPUnit\TestCase;
@@ -55,15 +57,13 @@ class GotoDefinitionHandlerTest extends TestCase
     protected function setUp(): void
     {
         $this->locator = $this->prophesize(DefinitionLocator::class);
-        $this->serverClient = $this->prophesize(ClientApi::class);
+        $this->serverClient = new ClientApi(TestRpcClient::create());
         $this->workspace = new Workspace();
 
-        $this->document = new TextDocumentItem();
-        $this->document->uri = __FILE__;
-        $this->document->text = self::EXAMPLE_TEXT;
+        $this->document = ProtocolFactory::textDocumentItem(__FILE__, self::EXAMPLE_TEXT);
         $this->workspace->open($this->document);
-        $this->identifier = new TextDocumentIdentifier(__FILE__);
-        $this->position = new Position(1, 1);
+        $this->identifier = ProtocolFactory::textDocumentIdentifier(__FILE__);
+        $this->position = new Position(0, 0);
     }
 
     public function testGoesToDefinition()
@@ -76,7 +76,7 @@ class GotoDefinitionHandlerTest extends TestCase
 
         $this->locator->locateDefinition(
             $document,
-            ByteOffset::fromInt(7)
+            ByteOffset::fromInt(0)
         )->willReturn(
             new DefinitionLocation($document->uri(), ByteOffset::fromInt(2))
         );
@@ -86,10 +86,10 @@ class GotoDefinitionHandlerTest extends TestCase
             $this->locator->reveal(),
             new LocationConverter($this->workspace)
         ));
-        $response = $tester->dispatchAndWait('textDocument/definition', [
+        $response = $tester->requestAndWait('textDocument/definition', [
             'textDocument' => $this->identifier,
             'position' => $this->position,
-            'client' => $this->serverClient->reveal()
+            'client' => $this->serverClient
         ]);
         $location = $response->result;
         $this->assertInstanceOf(Location::class, $location);
