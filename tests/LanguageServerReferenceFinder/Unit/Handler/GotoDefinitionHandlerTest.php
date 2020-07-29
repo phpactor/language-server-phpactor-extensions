@@ -9,7 +9,8 @@ use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\GotoDefinitionHandler;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
-use Phpactor\LanguageServer\Core\Session\Workspace;
+use Phpactor\LanguageServer\Core\Server\RpcClient\TestRpcClient;
+use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\LanguageServer\Test\HandlerTester;
 use Phpactor\LanguageServer\Test\ProtocolFactory;
 use Phpactor\ReferenceFinder\DefinitionLocation;
@@ -56,7 +57,7 @@ class GotoDefinitionHandlerTest extends TestCase
     protected function setUp(): void
     {
         $this->locator = $this->prophesize(DefinitionLocator::class);
-        $this->serverClient = $this->prophesize(ClientApi::class);
+        $this->serverClient = new ClientApi(TestRpcClient::create());
         $this->workspace = new Workspace();
 
         $this->document = ProtocolFactory::textDocumentItem(__FILE__, self::EXAMPLE_TEXT);
@@ -85,10 +86,10 @@ class GotoDefinitionHandlerTest extends TestCase
             $this->locator->reveal(),
             new LocationConverter($this->workspace)
         ));
-        $response = $tester->dispatchAndWait('textDocument/definition', [
+        $response = $tester->requestAndWait('textDocument/definition', [
             'textDocument' => $this->identifier,
             'position' => $this->position,
-            'client' => $this->serverClient->reveal()
+            'client' => $this->serverClient
         ]);
         $location = $response->result;
         $this->assertInstanceOf(Location::class, $location);

@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 use Phpactor\Completion\Core\SignatureHelp;
 use Phpactor\Completion\Core\SignatureHelper;
 use Phpactor\Extension\LanguageServerCompletion\Handler\SignatureHelpHandler;
-use Phpactor\LanguageServer\Core\Session\Workspace;
+use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\LanguageServer\Test\HandlerTester;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocument;
@@ -46,7 +46,7 @@ class SignatureHelpHandlerTest extends TestCase
     public function testHandleHelpers()
     {
         $tester = $this->create([]);
-        $response = $tester->dispatchAndWait(
+        $response = $tester->requestAndWait(
             'textDocument/signatureHelp',
             [
                 'textDocument' => new TextDocumentIdentifier(self::IDENTIFIER),

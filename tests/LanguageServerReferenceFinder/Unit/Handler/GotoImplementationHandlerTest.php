@@ -8,7 +8,7 @@ use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
 use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\GotoImplementationHandler;
-use Phpactor\LanguageServer\Core\Session\Workspace;
+use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\LanguageServer\Test\HandlerTester;
 use Phpactor\LanguageServer\Test\ProtocolFactory;
 use Phpactor\ReferenceFinder\ClassImplementationFinder;
@@ -81,7 +81,7 @@ class GotoImplementationHandlerTest extends TestCase
             new LocationConverter($this->workspace)
         ));
 
-        $response = $tester->dispatchAndWait('textDocument/implementation', [
+        $response = $tester->requestAndWait('textDocument/implementation', [
             'textDocument' => $this->identifier,
             'position' => $this->position,
         ]);

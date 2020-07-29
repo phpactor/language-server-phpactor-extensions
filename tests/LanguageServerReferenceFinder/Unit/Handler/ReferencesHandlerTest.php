@@ -11,7 +11,7 @@ use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\ReferencesHandler;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Core\Server\RpcClient\TestRpcClient;
-use Phpactor\LanguageServer\Core\Session\Workspace;
+use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\LanguageServer\Test\HandlerTester;
 use Phpactor\LanguageServer\Test\ProtocolFactory;
 use Phpactor\ReferenceFinder\DefinitionLocation;
@@ -89,7 +89,7 @@ class ReferencesHandlerTest extends TestCase
 
         $tester = new HandlerTester($this->createReferencesHandler());
 
-        $response = $tester->dispatchAndWait('textDocument/references', [
+        $response = $tester->requestAndWait('textDocument/references', [
             'textDocument' => $this->identifier,
             'position' => $this->position,
             'context' => new ReferenceContext(false),
@@ -123,7 +123,7 @@ class ReferencesHandlerTest extends TestCase
 
         $tester = new HandlerTester($this->createReferencesHandler());
 
-        $response = $tester->dispatchAndWait('textDocument/references', [
+        $response = $tester->requestAndWait('textDocument/references', [
             'textDocument' => $this->identifier,
             'position' => $this->position,
             'context' => new ReferenceContext(true),
@@ -157,7 +157,7 @@ class ReferencesHandlerTest extends TestCase
 
         $tester = new HandlerTester($this->createReferencesHandler());
 
-        $response = $tester->dispatchAndWait('textDocument/references', [
+        $response = $tester->requestAndWait('textDocument/references', [
             'textDocument' => $this->identifier,
             'position' => $this->position,
             'context' => new ReferenceContext(true),

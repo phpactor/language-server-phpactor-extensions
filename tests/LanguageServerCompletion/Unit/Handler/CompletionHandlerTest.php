@@ -19,7 +19,7 @@ use Phpactor\Completion\Core\Suggestion;
 use Phpactor\Completion\Core\TypedCompletorRegistry;
 use Phpactor\Extension\LanguageServerCompletion\Handler\CompletionHandler;
 use Phpactor\Extension\LanguageServerCompletion\Util\SuggestionNameFormatter;
-use Phpactor\LanguageServer\Core\Session\Workspace;
+use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\LanguageServer\Test\HandlerTester;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocument;
@@ -59,7 +59,7 @@ class CompletionHandlerTest extends TestCase
     public function testHandleNoSuggestions(): void
     {
         $tester = $this->create([]);
-        $response = $tester->dispatchAndWait(
+        $response = $tester->requestAndWait(
             'textDocument/completion',
             [
                 'textDocument' => $this->documentIdentifier,
@@ -76,7 +76,7 @@ class CompletionHandlerTest extends TestCase
             Suggestion::create('hello'),
             Suggestion::create('goodbye'),
         ]);
-        $response = $tester->dispatchAndWait(
+        $response = $tester->requestAndWait(
             'textDocument/completion',
             [
                 'textDocument' => $this->documentIdentifier,
@@ -95,7 +95,7 @@ class CompletionHandlerTest extends TestCase
         $tester = $this->create([
             Suggestion::createWithOptions('hello', [ 'range' => PhpactorRange::fromStartAndEnd(1, 2)]),
         ]);
-        $response = $tester->dispatchAndWait(
+        $response = $tester->requestAndWait(
             'textDocument/completion',
             [
                 'textDocument' => $this->documentIdentifier,
@@ -117,7 +117,7 @@ class CompletionHandlerTest extends TestCase
                 return Suggestion::createWithOptions('hello', [ 'range' => PhpactorRange::fromStartAndEnd(1, 2)]);
             }, range(0, 10000))
         );
-        $response = $tester->dispatch(
+        $response = $tester->request(
             'textDocument/completion',
             [
                 'textDocument' => $this->documentIdentifier,
@@ -150,7 +150,7 @@ class CompletionHandlerTest extends TestCase
                 'type' => Suggestion::TYPE_VARIABLE,
             ]),
         ]);
-        $response = $tester->dispatchAndWait(
+        $response = $tester->requestAndWait(
             'textDocument/completion',
             [
                 'textDocument' => $this->documentIdentifier,
@@ -179,7 +179,7 @@ class CompletionHandlerTest extends TestCase
                 'type' => Suggestion::TYPE_VARIABLE,
             ]),
         ], false);
-        $response = $tester->dispatchAndWait(
+        $response = $tester->requestAndWait(
             'textDocument/completion',
             [
                 'textDocument' => $this->documentIdentifier,
