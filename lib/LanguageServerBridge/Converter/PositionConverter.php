@@ -9,6 +9,11 @@ use Phpactor\TextDocument\Util\LineAtOffset;
 
 class PositionConverter
 {
+    public static function intByteOffsetToPosition(int $offset, string $text): Position
+    {
+        return self::byteOffsetToPosition(ByteOffset::fromInt($offset), $text);
+    }
+
     public static function byteOffsetToPosition(ByteOffset $offset, string $text): Position
     {
         if ($offset->toInt() > strlen($text)) {
