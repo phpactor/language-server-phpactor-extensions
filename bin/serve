@@ -15,6 +15,7 @@ use Phpactor\Extension\LanguageServerCompletion\LanguageServerCompletionExtensio
 use Phpactor\Extension\LanguageServerHover\LanguageServerHoverExtension;
 use Phpactor\Extension\LanguageServerIndexer\LanguageServerIndexerExtension;
 use Phpactor\Extension\LanguageServerReferenceFinder\LanguageServerReferenceFinderExtension;
+use Phpactor\Extension\LanguageServerSymbolProvider\LanguageServerSymbolProviderExtension;
 use Phpactor\Extension\LanguageServerWorseReflection\LanguageServerWorseReflectionExtension;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\Logger\Formatter\PrettyFormatter;
@@ -36,6 +37,7 @@ $container = PhpactorContainer::fromExtensions([
     LanguageServerWorseReflectionExtension::class,
     LanguageServerIndexerExtension::class,
     LanguageServerHoverExtension::class,
+    LanguageServerSymbolProviderExtension::class,
     CompletionExtension::class,
     WorseReflectionExtension::class,
     ClassToFileExtension::class,
