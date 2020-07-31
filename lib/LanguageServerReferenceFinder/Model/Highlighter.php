@@ -130,7 +130,7 @@ class Highlighter
     private function properties(Node $rootNode, string $name): Generator
     {
         foreach ($rootNode->getDescendantNodes() as $node) {
-            if ($node instanceof Variable && $node->getFirstAncestor(PropertyDeclaration::class)) {
+            if ($node instanceof Variable && $node->getFirstAncestor(PropertyDeclaration::class) && (string)$node->getName() === $name) {
                 yield new DocumentHighlight(
                     new Range(
                         PositionConverter::intByteOffsetToPosition($node->getStart(), $node->getFileContents()),

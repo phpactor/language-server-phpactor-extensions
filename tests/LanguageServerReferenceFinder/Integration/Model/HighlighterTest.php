@@ -86,6 +86,13 @@ class HighlighterTest extends TestCase
                 self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
             }
         ];
+        yield 'property declaration 2' => [
+            '<?php class Foobar { private $f<>oobar; private $barfoo;}',
+            function (Highlights $highlights) {
+                self::assertCount(1, $highlights);
+                self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
+            }
+        ];
         yield 'property read' => [
             '<?php class Foobar { private $f<>oobar; function bar() { return $this->foobar; }',
             function (Highlights $highlights) {
