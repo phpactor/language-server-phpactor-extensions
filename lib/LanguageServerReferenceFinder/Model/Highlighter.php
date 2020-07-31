@@ -7,18 +7,21 @@ use Microsoft\PhpParser\Node;
 use Microsoft\PhpParser\Node\Expression\AssignmentExpression;
 use Microsoft\PhpParser\Node\Expression\CallExpression;
 use Microsoft\PhpParser\Node\Expression\MemberAccessExpression;
+use Microsoft\PhpParser\Node\Expression\ScopedPropertyAccessExpression;
 use Microsoft\PhpParser\Node\Expression\Variable;
+use Microsoft\PhpParser\Node\MethodDeclaration;
 use Microsoft\PhpParser\Node\Parameter;
 use Microsoft\PhpParser\Node\PropertyDeclaration;
+use Microsoft\PhpParser\Node\QualifiedName;
 use Microsoft\PhpParser\Node\SourceFileNode;
-use Microsoft\PhpParser\Node\Statement\ExpressionStatement;
+use Microsoft\PhpParser\Node\Statement\ClassDeclaration;
 use Microsoft\PhpParser\Parser;
+use Microsoft\PhpParser\Token;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\LanguageServerProtocol\DocumentHighlight;
 use Phpactor\LanguageServerProtocol\DocumentHighlightKind;
 use Phpactor\LanguageServerProtocol\Range;
 use Phpactor\TextDocument\ByteOffset;
-use Phpactor\WorseReflection\Core\Inference\Variable as PhpactorVariable;
 
 class Highlighter
 {
@@ -38,15 +41,39 @@ class Highlighter
         $node = $rootNode->getDescendantNodeAtPosition($offset->toInt());
 
         if ($node instanceof Variable && $node->getFirstAncestor(PropertyDeclaration::class)) {
-            return Highlights::fromIterator($this->properties($rootNode, $node->getName()),);
+            return Highlights::fromIterator($this->properties($rootNode, $node->getName()), );
+        }
+
+        if ($node instanceof Parameter) {
+            return Highlights::fromIterator($this->variables($rootNode, (string)$node->getName()));
         }
 
         if ($node instanceof Variable) {
-            return Highlights::fromIterator($this->variables($rootNode, $node));
+            return Highlights::fromIterator($this->variables($rootNode, (string)$node->getName()));
+        }
+
+        if ($node instanceof MethodDeclaration) {
+            return Highlights::fromIterator($this->methods($rootNode, $node->getName()));
+        }
+
+        if ($node instanceof ClassDeclaration) {
+            return Highlights::fromIterator($this->namespacedNames($rootNode, (string)$node->getNamespacedName()));
+        }
+
+        if ($node instanceof QualifiedName) {
+            return Highlights::fromIterator($this->namespacedNames($rootNode, (string)$node->getResolvedName() ?: (string)$node->getNamespacedName()));
+        }
+
+        if ($node instanceof ScopedPropertyAccessExpression) {
+            $memberName = $node->memberName;
+            if (!$memberName instanceof Token) {
+                return Highlights::empty();
+            }
+            return Highlights::fromIterator($this->memberAccess($rootNode, $node, (string)$memberName->getText($rootNode->getFileContents())));
         }
 
         if ($node instanceof MemberAccessExpression) {
-            return Highlights::fromIterator($this->memberAccess($rootNode, $node));
+            return Highlights::fromIterator($this->memberAccess($rootNode, $node, (string)$node->memberName->getText($rootNode->getFileContents())));
         }
 
         return Highlights::empty();
@@ -55,26 +82,25 @@ class Highlighter
     /**
      * @return Generator<DocumentHighlight>
      */
-    private function variables(SourceFileNode $rootNode, Variable $node): Generator
+    private function variables(SourceFileNode $rootNode, string $name): Generator
     {
-        $name = $node->getName();
-
-        foreach ($rootNode->getDescendantNodes() as $node) {
-            if ($node instanceof Variable) {
+        $name = $this->normalizeVarName($name);
+        foreach ($rootNode->getDescendantNodes() as $childNode) {
+            if ($childNode instanceof Variable && $childNode->getName() === $name) {
                 yield new DocumentHighlight(
                     new Range(
-                        PositionConverter::intByteOffsetToPosition($node->getStart(), $node->getFileContents()),
-                        PositionConverter::intByteOffsetToPosition($node->getEndPosition(), $node->getFileContents())
+                        PositionConverter::intByteOffsetToPosition($childNode->getStart(), $childNode->getFileContents()),
+                        PositionConverter::intByteOffsetToPosition($childNode->getEndPosition(), $childNode->getFileContents())
                     ),
-                    $this->variableKind($node)
+                    $this->variableKind($childNode)
                 );
             }
 
-            if ($node instanceof Parameter) {
+            if ($childNode instanceof Parameter && $this->normalizeVarName((string)$childNode->variableName->getText($childNode->getFileContents())) === $name) {
                 yield new DocumentHighlight(
                     new Range(
-                        PositionConverter::intByteOffsetToPosition($node->variableName->getStartPosition(), $node->getFileContents()),
-                        PositionConverter::intByteOffsetToPosition($node->variableName->getEndPosition(), $node->getFileContents()),
+                        PositionConverter::intByteOffsetToPosition($childNode->variableName->getStartPosition(), $childNode->getFileContents()),
+                        PositionConverter::intByteOffsetToPosition($childNode->variableName->getEndPosition(), $childNode->getFileContents()),
                     ),
                     DocumentHighlightKind::READ
                 );
@@ -84,7 +110,7 @@ class Highlighter
 
     /**
      * @return DocumentHighlightKind::*
-     * @phpstan-ignore-next-line 
+     * @phpstan-ignore-next-line
      */
     private function variableKind(Node $node): int
     {
@@ -130,13 +156,87 @@ class Highlighter
     /**
      * @return Generator<DocumentHighlight>
      */
-    private function memberAccess(SourceFileNode $rootNode, MemberAccessExpression $node): Generator
+    private function memberAccess(SourceFileNode $rootNode, Node $node, string $memberName): Generator
     {
         if ($node->parent instanceof CallExpression) {
-            // method
-            return;
+            return yield from $this->methods($rootNode, $memberName);
         }
 
-        return yield from $this->properties($rootNode, (string)$node->memberName->getText($rootNode->getFileContents()));
+        return yield from $this->properties($rootNode, $memberName);
+    }
+
+    private function methods(SourceFileNode $rootNode, string $name): Generator
+    {
+        foreach ($rootNode->getDescendantNodes() as $node) {
+            if ($node instanceof MethodDeclaration && $node->getName() === $name) {
+                yield new DocumentHighlight(
+                    new Range(
+                        PositionConverter::intByteOffsetToPosition($node->name->getStartPosition(), $node->getFileContents()),
+                        PositionConverter::intByteOffsetToPosition($node->name->getEndPosition(), $node->getFileContents())
+                    ),
+                    DocumentHighlightKind::TEXT
+                );
+            }
+            if ($node instanceof MemberAccessExpression) {
+                if ($name === $node->memberName->getText($rootNode->getFileContents())) {
+                    yield new DocumentHighlight(
+                        new Range(
+                            PositionConverter::intByteOffsetToPosition($node->memberName->getStartPosition(), $node->getFileContents()),
+                            PositionConverter::intByteOffsetToPosition($node->memberName->getEndPosition(), $node->getFileContents())
+                        ),
+                        $this->variableKind($node)
+                    );
+                }
+            }
+            if ($node instanceof ScopedPropertyAccessExpression) {
+                $memberName = $node->memberName;
+                if (!$memberName instanceof Token) {
+                    return;
+                }
+                if ($name === $memberName->getText($rootNode->getFileContents())) {
+                    yield new DocumentHighlight(
+                        new Range(
+                            PositionConverter::intByteOffsetToPosition($memberName->getStartPosition(), $node->getFileContents()),
+                            PositionConverter::intByteOffsetToPosition($memberName->getEndPosition(), $node->getFileContents())
+                        ),
+                        $this->variableKind($node)
+                    );
+                }
+            }
+        }
+    }
+
+    /**
+     * @return Generator<DocumentHighlight>
+     */
+    private function namespacedNames(Node $rootNode, string $fullyQualfiiedName): Generator
+    {
+        foreach ($rootNode->getDescendantNodes() as $node) {
+            if ($node instanceof ClassDeclaration && (string)$node->getNamespacedName() === $fullyQualfiiedName) {
+                yield new DocumentHighlight(
+                    new Range(
+                        PositionConverter::intByteOffsetToPosition($node->name->getStartPosition(), $node->getFileContents()),
+                        PositionConverter::intByteOffsetToPosition($node->name->getEndPosition(), $node->getFileContents())
+                    ),
+                    DocumentHighlightKind::TEXT
+                );
+            }
+            if ($node instanceof QualifiedName) {
+                if ($fullyQualfiiedName === (string)$node->getResolvedName()) {
+                    yield new DocumentHighlight(
+                        new Range(
+                            PositionConverter::intByteOffsetToPosition($node->getStart(), $node->getFileContents()),
+                            PositionConverter::intByteOffsetToPosition($node->getEndPosition(), $node->getFileContents())
+                        ),
+                        $this->variableKind($node)
+                    );
+                }
+            }
+        }
+    }
+
+    private function normalizeVarName(string $varName): string
+    {
+        return ltrim($varName, '$');
     }
 }

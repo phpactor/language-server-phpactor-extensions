@@ -4,16 +4,10 @@ namespace Phpactor\Extension\LanguageServerReferenceFinder\Model;
 
 use ArrayIterator;
 use Countable;
-use Generator;
 use Iterator;
 use IteratorAggregate;
 use Phpactor\LanguageServerProtocol\DocumentHighlight;
 use RuntimeException;
-use phpDocumentor\Reflection\Types\Iterable_;
-
-
-
-
 
 /**
  * @implements IteratorAggregate<DocumentHighlight>
@@ -45,7 +39,8 @@ class Highlights implements IteratorAggregate, Countable
     {
         if (!isset($this->highlights[$index])) {
             throw new RuntimeException(sprintf(
-                'No highlight at offset "%s"', $index
+                'No highlight at offset "%s"',
+                $index
             ));
         }
 

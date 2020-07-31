@@ -17,8 +17,10 @@ class HighlighterTest extends TestCase
     /**
      * @dataProvider provideVariables
      * @dataProvider provideProperties
+     * @dataProvider provideMethods
+     * @dataProvider provideNames
      */
-    public function testHighlight(string $source, Closure $assertion)
+    public function testHighlight(string $source, Closure $assertion): void
     {
         [$source, $offset] = ExtractOffset::fromSource($source);
         $assertion(
@@ -53,6 +55,13 @@ class HighlighterTest extends TestCase
             '<?php function foobar ($var) { $v<>ar; }',
             function (Highlights $highlights) {
                 self::assertCount(2, $highlights);
+            }
+        ];
+
+        yield 'only method var' => [
+            '<?php function foobar ($v<>ar) {}',
+            function (Highlights $highlights) {
+                self::assertCount(1, $highlights);
             }
         ];
 
@@ -101,6 +110,60 @@ class HighlighterTest extends TestCase
                 self::assertCount(2, $highlights);
                 self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
                 self::assertEquals(DocumentHighlightKind::WRITE, $highlights->at(1)->kind);
+            }
+        ];
+    }
+
+    /**
+     * @return Generator<mixed>
+     */
+    public function provideMethods(): Generator
+    {
+        yield 'method declaration' => [
+            '<?php class Foobar { public function f<>oobar() {} }',
+            function (Highlights $highlights) {
+                self::assertCount(1, $highlights);
+                self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
+            }
+        ];
+
+        yield 'method read' => [
+            '<?php class Foobar { function bar() { return $this->b<>ar(); }',
+            function (Highlights $highlights) {
+                self::assertCount(2, $highlights);
+                self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
+                self::assertEquals(DocumentHighlightKind::READ, $highlights->at(1)->kind);
+            }
+        ];
+
+        yield 'static method read' => [
+            '<?php class Foobar { static function bar() { return self::b<>ar(); }',
+            function (Highlights $highlights) {
+                self::assertCount(2, $highlights);
+                self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
+                self::assertEquals(DocumentHighlightKind::READ, $highlights->at(1)->kind);
+            }
+        ];
+    }
+
+    /**
+     * @return Generator<mixed>
+     */
+    public function provideNames(): Generator
+    {
+        yield 'class name' => [
+            '<?php class Foo<>bar {}',
+            function (Highlights $highlights) {
+                self::assertCount(1, $highlights);
+                self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
+            }
+        ];
+
+        yield 'class name with fqn' => [
+            '<?php class Foo<>bar {const BAR=1;} Foobar::BAR;',
+            function (Highlights $highlights) {
+                self::assertCount(2, $highlights);
+                self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
             }
         ];
     }
