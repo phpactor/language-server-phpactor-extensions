@@ -51,7 +51,7 @@ class HighlightHandler implements Handler, CanRegisterCapabilities
         $textDocument = $this->workspace->get($params->textDocument->uri);
         $offset = PositionConverter::positionToByteOffset($params->position, $textDocument->text);
 
-        return new Success($this->highlighter->highlightsFor($textDocument->text, $offset));
+        return new Success($this->highlighter->highlightsFor($textDocument->text, $offset)->toArray());
     }
 
     public function registerCapabiltiies(ServerCapabilities $capabilities): void

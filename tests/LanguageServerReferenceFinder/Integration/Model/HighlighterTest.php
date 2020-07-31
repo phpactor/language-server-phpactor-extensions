@@ -16,6 +16,7 @@ class HighlighterTest extends TestCase
 {
     /**
      * @dataProvider provideVariables
+     * @dataProvider provideProperties
      */
     public function testHighlight(string $source, Closure $assertion)
     {
@@ -52,6 +53,54 @@ class HighlighterTest extends TestCase
             '<?php function foobar ($var) { $v<>ar; }',
             function (Highlights $highlights) {
                 self::assertCount(2, $highlights);
+            }
+        ];
+
+        yield 'write var including method var' => [
+            '<?php $var = "foo"; $v<>ar;}',
+            function (Highlights $highlights) {
+                self::assertCount(2, $highlights);
+                self::assertEquals(DocumentHighlightKind::WRITE, $highlights->first()->kind);
+            }
+        ];
+    }
+
+    /**
+     * @return Generator<mixed>
+     */
+    public function provideProperties(): Generator
+    {
+        yield 'property declaration' => [
+            '<?php class Foobar { private $f<>oobar; }',
+            function (Highlights $highlights) {
+                self::assertCount(1, $highlights);
+                self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
+            }
+        ];
+        yield 'property read' => [
+            '<?php class Foobar { private $f<>oobar; function bar() { return $this->foobar; }',
+            function (Highlights $highlights) {
+                self::assertCount(2, $highlights);
+                self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
+                self::assertEquals(DocumentHighlightKind::READ, $highlights->at(1)->kind);
+            }
+        ];
+
+        yield 'property access' => [
+            '<?php class Foobar { private $foobar; function bar() { return $this->foo<>bar->barfoo; }',
+            function (Highlights $highlights) {
+                self::assertCount(2, $highlights);
+                self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
+                self::assertEquals(DocumentHighlightKind::READ, $highlights->at(1)->kind);
+            }
+        ];
+
+        yield 'property write' => [
+            '<?php class Foobar { private $f<>oobar; function bar() { return $this->foobar = "barfoo"; }',
+            function (Highlights $highlights) {
+                self::assertCount(2, $highlights);
+                self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
+                self::assertEquals(DocumentHighlightKind::WRITE, $highlights->at(1)->kind);
             }
         ];
     }

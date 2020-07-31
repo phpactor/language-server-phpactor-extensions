@@ -41,6 +41,17 @@ class Highlights implements IteratorAggregate, Countable
         return $this->highlights[0];
     }
 
+    public function at(int $index): DocumentHighlight
+    {
+        if (!isset($this->highlights[$index])) {
+            throw new RuntimeException(sprintf(
+                'No highlight at offset "%s"', $index
+            ));
+        }
+
+        return $this->highlights[$index];
+    }
+
     /**
      * @return ArrayIterator<int,DocumentHighlight>
      */
@@ -60,6 +71,14 @@ class Highlights implements IteratorAggregate, Countable
     public function count(): int
     {
         return count($this->highlights);
+    }
+
+    /**
+     * @return array<DocumentHighlight>
+     */
+    public function toArray(): array
+    {
+        return $this->highlights;
     }
 
     public static function empty(): self
