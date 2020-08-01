@@ -19,6 +19,7 @@ class HighlighterTest extends TestCase
      * @dataProvider provideProperties
      * @dataProvider provideMethods
      * @dataProvider provideNames
+     * @dataProvider provideConstants
      */
     public function testHighlight(string $source, Closure $assertion): void
     {
@@ -168,6 +169,36 @@ class HighlighterTest extends TestCase
 
         yield 'class name with fqn' => [
             '<?php class Foo<>bar {const BAR=1;} Foobar::BAR;',
+            function (Highlights $highlights) {
+                self::assertCount(2, $highlights);
+                self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
+            }
+        ];
+    }
+
+    /**
+     * @return Generator<mixed>
+     */
+    public function provideConstants(): Generator
+    {
+        yield 'class constant' => [
+            '<?php class Foo { const B<>AR = "";}',
+            function (Highlights $highlights) {
+                self::assertCount(1, $highlights);
+                self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
+            }
+        ];
+
+        yield 'class constants' => [
+            '<?php class Foo<>bar {const BAR=1;} Foobar::BAR;',
+            function (Highlights $highlights) {
+                self::assertCount(2, $highlights);
+                self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
+            }
+        ];
+
+        yield 'class constants on reference' => [
+            '<?php class Foobar {const BAR=1;} Foobar::B<>AR;',
             function (Highlights $highlights) {
                 self::assertCount(2, $highlights);
                 self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);

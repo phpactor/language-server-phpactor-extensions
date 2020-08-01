@@ -4,6 +4,8 @@ namespace Phpactor\Extension\LanguageServerReferenceFinder\Model;
 
 use Generator;
 use Microsoft\PhpParser\Node;
+use Microsoft\PhpParser\Node\ClassConstDeclaration;
+use Microsoft\PhpParser\Node\ConstElement;
 use Microsoft\PhpParser\Node\Expression\AssignmentExpression;
 use Microsoft\PhpParser\Node\Expression\CallExpression;
 use Microsoft\PhpParser\Node\Expression\MemberAccessExpression;
@@ -58,6 +60,10 @@ class Highlighter
 
         if ($node instanceof ClassDeclaration) {
             return Highlights::fromIterator($this->namespacedNames($rootNode, (string)$node->getNamespacedName()));
+        }
+
+        if ($node instanceof ConstElement) {
+            return Highlights::fromIterator($this->constants($rootNode, (string)$node->getNamespacedName()));
         }
 
         if ($node instanceof QualifiedName) {
@@ -139,6 +145,7 @@ class Highlighter
                     DocumentHighlightKind::TEXT
                 );
             }
+
             if ($node instanceof MemberAccessExpression) {
                 if ($name === $node->memberName->getText($rootNode->getFileContents())) {
                     yield new DocumentHighlight(
@@ -162,9 +169,16 @@ class Highlighter
             return yield from $this->methods($rootNode, $memberName);
         }
 
-        return yield from $this->properties($rootNode, $memberName);
+        if (false !== strpos($node->getText(), '$')) {
+            return yield from $this->properties($rootNode, $memberName);
+        }
+
+        return yield from $this->constants($rootNode, $memberName);
     }
 
+    /**
+     * @return Generator<DocumentHighlight>
+     */
     private function methods(SourceFileNode $rootNode, string $name): Generator
     {
         foreach ($rootNode->getDescendantNodes() as $node) {
@@ -187,6 +201,39 @@ class Highlighter
                         $this->variableKind($node)
                     );
                 }
+            }
+            if ($node instanceof ScopedPropertyAccessExpression) {
+                $memberName = $node->memberName;
+                if (!$memberName instanceof Token) {
+                    return;
+                }
+                if ($name === $memberName->getText($rootNode->getFileContents())) {
+                    yield new DocumentHighlight(
+                        new Range(
+                            PositionConverter::intByteOffsetToPosition($memberName->getStartPosition(), $node->getFileContents()),
+                            PositionConverter::intByteOffsetToPosition($memberName->getEndPosition(), $node->getFileContents())
+                        ),
+                        $this->variableKind($node)
+                    );
+                }
+            }
+        }
+    }
+
+    /**
+     * @return Generator<DocumentHighlight>
+     */
+    private function constants(SourceFileNode $rootNode, string $name): Generator
+    {
+        foreach ($rootNode->getDescendantNodes() as $node) {
+            if ($node instanceof ConstElement && (string)$node->getNamespacedName() === $name) {
+                yield new DocumentHighlight(
+                    new Range(
+                        PositionConverter::intByteOffsetToPosition($node->name->getStartPosition(), $node->getFileContents()),
+                        PositionConverter::intByteOffsetToPosition($node->name->getEndPosition(), $node->getFileContents())
+                    ),
+                    DocumentHighlightKind::TEXT
+                );
             }
             if ($node instanceof ScopedPropertyAccessExpression) {
                 $memberName = $node->memberName;
