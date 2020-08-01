@@ -2,6 +2,7 @@
 
 namespace Phpactor\Extension\LanguageServerSelectionRange\Model;
 
+use Microsoft\PhpParser\Node;
 use Microsoft\PhpParser\Parser;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\LanguageServerProtocol\Range;
@@ -32,20 +33,29 @@ class RangeProvider
         $selectionRanges = [];
         foreach ($offsets as $byteOffset) {
             $node = $rootNode->getDescendantNodeAtPosition($byteOffset->toInt());
-            $selectionRanges[] = new SelectionRange(
-                new Range(
-                    PositionConverter::intByteOffsetToPosition(
-                        $node->getStart(),
-                        $source
-                    ),
-                    PositionConverter::intByteOffsetToPosition(
-                        $node->getEndPosition(),
-                        $source
-                    )
-                )
-            );
+            $range = $this->buildRange($node, $source);
+            if ($range->parent) {
+                $range->parent = $this->buildRange($node->parent, $source);
+            }
+            $selectionRanges[] = $range;
         }
 
         return $selectionRanges;
+    }
+
+    private function buildRange(Node $node, string $source): SelectionRange
+    {
+        return new SelectionRange(
+            new Range(
+                PositionConverter::intByteOffsetToPosition(
+                    $node->getStart(),
+                    $source
+                ),
+                PositionConverter::intByteOffsetToPosition(
+                    $node->getEndPosition(),
+                    $source
+                )
+            )
+        );
     }
 }
