@@ -9,8 +9,6 @@ use Phpactor\LanguageServerProtocol\CompletionItem;
 use Phpactor\LanguageServerProtocol\CompletionList;
 use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\Range;
-use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
-use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\LanguageServerProtocol\TextEdit;
 use PHPUnit\Framework\TestCase;
 use Phpactor\Completion\Core\Completor;
@@ -19,43 +17,16 @@ use Phpactor\Completion\Core\Suggestion;
 use Phpactor\Completion\Core\TypedCompletorRegistry;
 use Phpactor\Extension\LanguageServerCompletion\Handler\CompletionHandler;
 use Phpactor\Extension\LanguageServerCompletion\Util\SuggestionNameFormatter;
-use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\LanguageServer\LanguageServerTesterBuilder;
 use Phpactor\LanguageServer\Test\LanguageServerTester;
+use Phpactor\LanguageServer\Test\ProtocolFactory;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocument;
 
 class CompletionHandlerTest extends TestCase
 {
-    /**
-     * @var Position
-     */
-    private $position;
-
-    /**
-     * @var TextDocumentIdentifier
-     */
-    private $documentIdentifier;
-
-    /**
-     * @var Workspace
-     */
-    private $workspace;
-
-    /**
-     * @var TextDocumentItem
-     */
-    private $document;
-
-    public function setUp(): void
-    {
-        $this->document = new TextDocumentItem('/test/', 'php', 1, 'hello');
-        $this->documentIdentifier = new TextDocumentIdentifier('/test/');
-        $this->position = new Position(0, 0);
-        $this->workspace = new Workspace();
-
-        $this->workspace->open($this->document);
-    }
+    const EXAMPLE_URI = 'file:///test';
+    const EXAMPLE_TEXT = 'hello';
 
     public function testHandleNoSuggestions(): void
     {
@@ -63,15 +34,15 @@ class CompletionHandlerTest extends TestCase
         $response = $tester->requestAndWait(
             'textDocument/completion',
             [
-                'textDocument' => $this->documentIdentifier,
-                'position' => $this->position
+                'textDocument' => ProtocolFactory::textDocumentIdentifier(self::EXAMPLE_URI),
+                'position' => ProtocolFactory::position(0, 0)
             ]
         );
         $this->assertInstanceOf(CompletionList::class, $response->result);
         $this->assertEquals([], $response->result->items);
     }
 
-    public function testHandleSuggestions()
+    public function testHandleSuggestions(): void
     {
         $tester = $this->create([
             Suggestion::create('hello'),
@@ -80,8 +51,8 @@ class CompletionHandlerTest extends TestCase
         $response = $tester->requestAndWait(
             'textDocument/completion',
             [
-                'textDocument' => $this->documentIdentifier,
-                'position' => $this->position
+                'textDocument' => ProtocolFactory::textDocumentIdentifier(self::EXAMPLE_URI),
+                'position' => ProtocolFactory::position(0, 0)
             ]
         );
         $this->assertInstanceOf(CompletionList::class, $response->result);
@@ -99,8 +70,8 @@ class CompletionHandlerTest extends TestCase
         $response = $tester->requestAndWait(
             'textDocument/completion',
             [
-                'textDocument' => $this->documentIdentifier,
-                'position' => $this->position
+                'textDocument' => ProtocolFactory::textDocumentIdentifier(self::EXAMPLE_URI),
+                'position' => ProtocolFactory::position(0, 0)
             ]
         );
         $this->assertEquals([
@@ -121,8 +92,8 @@ class CompletionHandlerTest extends TestCase
         $response = $tester->request(
             'textDocument/completion',
             [
-                'textDocument' => $this->documentIdentifier,
-                'position' => $this->position
+                'textDocument' => ProtocolFactory::textDocumentIdentifier(self::EXAMPLE_URI),
+                'position' => ProtocolFactory::position(0, 0)
             ],
             1
         );
@@ -155,8 +126,8 @@ class CompletionHandlerTest extends TestCase
         $response = $tester->requestAndWait(
             'textDocument/completion',
             [
-                'textDocument' => $this->documentIdentifier,
-                'position' => $this->position
+                'textDocument' => ProtocolFactory::textDocumentIdentifier(self::EXAMPLE_URI),
+                'position' => ProtocolFactory::position(0, 0)
             ]
         );
         $this->assertEquals([
@@ -184,8 +155,8 @@ class CompletionHandlerTest extends TestCase
         $response = $tester->requestAndWait(
             'textDocument/completion',
             [
-                'textDocument' => $this->documentIdentifier,
-                'position' => $this->position
+                'textDocument' => ProtocolFactory::textDocumentIdentifier(self::EXAMPLE_URI),
+                'position' => ProtocolFactory::position(0, 0)
             ]
         );
         $this->assertEquals([
@@ -216,13 +187,17 @@ class CompletionHandlerTest extends TestCase
         $registry = new TypedCompletorRegistry([
             'php' => $completor,
         ]);
-        return LanguageServerTesterBuilder::create()->addHandler(new CompletionHandler(
-            $this->workspace,
+        $builder = LanguageServerTesterBuilder::create();
+        $tester = $builder->addHandler(new CompletionHandler(
+            $builder->workspace(),
             $registry,
             new SuggestionNameFormatter(true),
             $supportSnippets,
             true
         ))->build();
+        $tester->textDocument()->open(self::EXAMPLE_URI, self::EXAMPLE_TEXT);
+
+        return $tester;
     }
 
     private function createCompletor(array $suggestions): Completor

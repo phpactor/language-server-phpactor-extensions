@@ -3,16 +3,12 @@
 namespace Phpactor\Extension\LanguageServerReferenceFinder\Tests\Unit\Handler;
 
 use Phpactor\LanguageServerProtocol\Location as LspLocation;
-use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\ReferenceContext;
 use Phpactor\LanguageServerProtocol\ReferencesRequest;
-use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
-use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\ReferencesHandler;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Core\Server\RpcClient\TestRpcClient;
-use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\LanguageServer\LanguageServerTesterBuilder;
 use Phpactor\LanguageServer\Test\LanguageServerTester;
 use Phpactor\LanguageServer\Test\ProtocolFactory;
@@ -30,26 +26,6 @@ class ReferencesHandlerTest extends TestCase
 {
     const EXAMPLE_URI = 'file:///test';
     const EXAMPLE_TEXT = 'hello';
-
-    /**
-     * @var TextDocumentItem
-     */
-    private $document;
-
-    /**
-     * @var Position
-     */
-    private $position;
-
-    /**
-     * @var TextDocumentIdentifier
-     */
-    private $identifier;
-
-    /**
-     * @var Workspace
-     */
-    private $workspace;
 
     /**
      * @var ObjectProphecy|ReferenceFinder
