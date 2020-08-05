@@ -4,6 +4,7 @@ namespace Phpactor\Extension\LanguageServerReferenceFinder\Handler;
 
 use Amp\Promise;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
+use Phpactor\LanguageServerProtocol\ImplementationParams;
 use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\ServerCapabilities;
 use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
@@ -48,12 +49,10 @@ class GotoImplementationHandler implements Handler, CanRegisterCapabilities
         ];
     }
 
-    public function gotoImplementation(
-        TextDocumentIdentifier $textDocument,
-        Position $position
-    ): Promise {
-        return \Amp\call(function () use ($textDocument, $position) {
-            $textDocument = $this->workspace->get($textDocument->uri);
+    public function gotoImplementation(ImplementationParams $params): Promise
+    {
+        return \Amp\call(function () use ($params) {
+            $textDocument = $this->workspace->get($params->textDocument->uri);
             $phpactorDocument = TextDocumentBuilder::create(
                 $textDocument->text
             )->uri(
@@ -62,7 +61,7 @@ class GotoImplementationHandler implements Handler, CanRegisterCapabilities
                 $textDocument->languageId ?? 'php'
             )->build();
 
-            $offset = PositionConverter::positionToByteOffset($position, $textDocument->text);
+            $offset = PositionConverter::positionToByteOffset($params->position, $textDocument->text);
             $locations = $this->finder->findImplementations($phpactorDocument, $offset);
 
             return $this->locationConverter->toLspLocations($locations);
