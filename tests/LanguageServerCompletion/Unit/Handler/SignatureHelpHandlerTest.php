@@ -11,7 +11,10 @@ use Phpactor\Completion\Core\SignatureHelp;
 use Phpactor\Completion\Core\SignatureHelper;
 use Phpactor\Extension\LanguageServerCompletion\Handler\SignatureHelpHandler;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
+use Phpactor\LanguageServer\LanguageServerTesterBuilder;
 use Phpactor\LanguageServer\Test\HandlerTester;
+use Phpactor\LanguageServer\Test\LanguageServerTester;
+use Phpactor\LanguageServer\Test\ProtocolFactory;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocument;
 
@@ -19,50 +22,28 @@ class SignatureHelpHandlerTest extends TestCase
 {
     const IDENTIFIER = '/test';
 
-    /**
-     * @var TextDocumentItem
-     */
-    private $document;
-
-    /**
-     * @var Position
-     */
-    private $position;
-
-    /**
-     * @var Workspace
-     */
-    private $workspace;
-
-    public function setUp(): void
-    {
-        $this->document = new TextDocumentItem(self::IDENTIFIER, 'php', 1, 'hello');
-        $this->position = new Position(0, 0);
-        $this->workspace = new Workspace();
-
-        $this->workspace->open($this->document);
-    }
-
-    public function testHandleHelpers()
+    public function testHandleHelpers(): void
     {
         $tester = $this->create([]);
+        $tester->textDocument()->open(self::IDENTIFIER, 'hello');
         $response = $tester->requestAndWait(
             'textDocument/signatureHelp',
             [
                 'textDocument' => new TextDocumentIdentifier(self::IDENTIFIER),
-                'position' => $this->position
+                'position' => ProtocolFactory::position(0, 0)
             ]
         );
         $list = $response->result;
         $this->assertInstanceOf(LspSignatureHelp::class, $list);
     }
 
-    private function create(array $suggestions): HandlerTester
+    private function create(array $suggestions): LanguageServerTester
     {
-        return new HandlerTester(new SignatureHelpHandler(
-            $this->workspace,
+        $builder = LanguageServerTesterBuilder::create();
+        return $builder->addHandler(new SignatureHelpHandler(
+            $builder->workspace(),
             $this->createHelper()
-        ));
+        ))->build();
     }
 
     private function createHelper(): SignatureHelper

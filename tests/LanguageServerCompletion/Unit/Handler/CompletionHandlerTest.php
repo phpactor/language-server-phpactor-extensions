@@ -20,7 +20,9 @@ use Phpactor\Completion\Core\TypedCompletorRegistry;
 use Phpactor\Extension\LanguageServerCompletion\Handler\CompletionHandler;
 use Phpactor\Extension\LanguageServerCompletion\Util\SuggestionNameFormatter;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
+use Phpactor\LanguageServer\LanguageServerTesterBuilder;
 use Phpactor\LanguageServer\Test\HandlerTester;
+use Phpactor\LanguageServer\Test\LanguageServerTester;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocument;
 
@@ -122,13 +124,14 @@ class CompletionHandlerTest extends TestCase
             [
                 'textDocument' => $this->documentIdentifier,
                 'position' => $this->position
-            ]
+            ],
+            1
         );
         $responses =\Amp\Promise\wait(\Amp\Promise\all([
             $response,
             \Amp\call(function () use ($tester) {
                 yield new Delayed(10);
-                $tester->cancel();
+                $tester->cancel(1);
             })
         ]));
 
@@ -208,19 +211,19 @@ class CompletionHandlerTest extends TestCase
         ], $data));
     }
 
-    private function create(array $suggestions, bool $supportSnippets = true): HandlerTester
+    private function create(array $suggestions, bool $supportSnippets = true): LanguageServerTester
     {
         $completor = $this->createCompletor($suggestions);
         $registry = new TypedCompletorRegistry([
             'php' => $completor,
         ]);
-        return new HandlerTester(new CompletionHandler(
+        return LanguageServerTesterBuilder::create()->addHandler(new CompletionHandler(
             $this->workspace,
             $registry,
             new SuggestionNameFormatter(true),
             $supportSnippets,
             true
-        ));
+        ))->build();
     }
 
     private function createCompletor(array $suggestions): Completor
