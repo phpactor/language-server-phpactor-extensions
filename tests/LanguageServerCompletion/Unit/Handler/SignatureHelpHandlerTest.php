@@ -2,17 +2,13 @@
 
 namespace Phpactor\Extension\LanguageServerCompletion\Tests\Unit\Handler;
 
-use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\SignatureHelp as LspSignatureHelp;
 use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
-use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use PHPUnit\Framework\TestCase;
 use Phpactor\Completion\Core\SignatureHelp;
 use Phpactor\Completion\Core\SignatureHelper;
 use Phpactor\Extension\LanguageServerCompletion\Handler\SignatureHelpHandler;
-use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\LanguageServer\LanguageServerTesterBuilder;
-use Phpactor\LanguageServer\Test\HandlerTester;
 use Phpactor\LanguageServer\Test\LanguageServerTester;
 use Phpactor\LanguageServer\Test\ProtocolFactory;
 use Phpactor\TextDocument\ByteOffset;

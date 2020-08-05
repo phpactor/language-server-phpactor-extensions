@@ -21,7 +21,6 @@ use Phpactor\Extension\LanguageServerCompletion\Handler\CompletionHandler;
 use Phpactor\Extension\LanguageServerCompletion\Util\SuggestionNameFormatter;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\LanguageServer\LanguageServerTesterBuilder;
-use Phpactor\LanguageServer\Test\HandlerTester;
 use Phpactor\LanguageServer\Test\LanguageServerTester;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocument;

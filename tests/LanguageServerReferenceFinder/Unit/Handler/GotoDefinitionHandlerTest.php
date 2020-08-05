@@ -4,16 +4,9 @@ namespace Phpactor\Extension\LanguageServerReferenceFinder\Tests\Unit\Handler;
 
 use Phpactor\LanguageServerProtocol\DefinitionRequest;
 use Phpactor\LanguageServerProtocol\Location;
-use Phpactor\LanguageServerProtocol\Position;
-use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
-use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\GotoDefinitionHandler;
-use Phpactor\LanguageServer\Core\Server\ClientApi;
-use Phpactor\LanguageServer\Core\Server\RpcClient\TestRpcClient;
-use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\LanguageServer\LanguageServerTesterBuilder;
-use Phpactor\LanguageServer\Test\HandlerTester;
 use Phpactor\LanguageServer\Test\ProtocolFactory;
 use Phpactor\ReferenceFinder\DefinitionLocation;
 use Phpactor\ReferenceFinder\DefinitionLocator;

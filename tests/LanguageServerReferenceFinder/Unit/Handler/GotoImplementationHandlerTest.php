@@ -3,14 +3,9 @@
 namespace Phpactor\Extension\LanguageServerReferenceFinder\Tests\Unit\Handler;
 
 use Phpactor\LanguageServerProtocol\Location as LspLocation;
-use Phpactor\LanguageServerProtocol\Position;
-use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
-use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\GotoImplementationHandler;
-use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\LanguageServer\LanguageServerTesterBuilder;
-use Phpactor\LanguageServer\Test\HandlerTester;
 use Phpactor\LanguageServer\Test\ProtocolFactory;
 use Phpactor\ReferenceFinder\ClassImplementationFinder;
 use Phpactor\TestUtils\PHPUnit\TestCase;

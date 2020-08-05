@@ -5,6 +5,7 @@ namespace Phpactor\Extension\LanguageServerReferenceFinder\Tests\Unit\Handler;
 use Phpactor\LanguageServerProtocol\Location as LspLocation;
 use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\ReferenceContext;
+use Phpactor\LanguageServerProtocol\ReferencesRequest;
 use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
 use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
@@ -12,7 +13,8 @@ use Phpactor\Extension\LanguageServerReferenceFinder\Handler\ReferencesHandler;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Core\Server\RpcClient\TestRpcClient;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
-use Phpactor\LanguageServer\Test\HandlerTester;
+use Phpactor\LanguageServer\LanguageServerTesterBuilder;
+use Phpactor\LanguageServer\Test\LanguageServerTester;
 use Phpactor\LanguageServer\Test\ProtocolFactory;
 use Phpactor\ReferenceFinder\DefinitionLocation;
 use Phpactor\ReferenceFinder\DefinitionLocator;
@@ -26,7 +28,7 @@ use Phpactor\TextDocument\TextDocumentBuilder;
 
 class ReferencesHandlerTest extends TestCase
 {
-    const EXAMPLE_URI = '/test';
+    const EXAMPLE_URI = 'file:///test';
     const EXAMPLE_TEXT = 'hello';
 
     /**
@@ -63,20 +65,13 @@ class ReferencesHandlerTest extends TestCase
     {
         $this->finder = $this->prophesize(ReferenceFinder::class);
         $this->locator = $this->prophesize(DefinitionLocator::class);
-        $this->workspace = new Workspace();
-
-        $this->document = ProtocolFactory::textDocumentItem(__FILE__, self::EXAMPLE_TEXT);
-        $this->workspace->open($this->document);
-        $this->identifier = ProtocolFactory::textDocumentIdentifier(__FILE__);
-        $this->identifier = new TextDocumentIdentifier(__FILE__);
-        $this->position = new Position(0, 0);
     }
 
-    public function testFindsReferences()
+    public function testFindsReferences(): void
     {
         $document = TextDocumentBuilder::create(self::EXAMPLE_TEXT)
             ->language('php')
-            ->uri(__FILE__)
+            ->uri(self::EXAMPLE_URI)
             ->build()
         ;
 
@@ -87,13 +82,14 @@ class ReferencesHandlerTest extends TestCase
             PotentialLocation::surely(new Location($document->uri(), ByteOffset::fromInt(2)))
         ])->shouldBeCalled();
 
-        $tester = new HandlerTester($this->createReferencesHandler());
+        $tester = $this->createTester();
 
-        $response = $tester->requestAndWait('textDocument/references', [
-            'textDocument' => $this->identifier,
-            'position' => $this->position,
+        $response = $tester->requestAndWait(ReferencesRequest::METHOD, [
+            'textDocument' => ProtocolFactory::textDocumentIdentifier(self::EXAMPLE_URI),
+            'position' => ProtocolFactory::position(0, 0),
             'context' => new ReferenceContext(false),
         ]);
+
         $locations = $response->result;
         $this->assertIsArray($locations);
         $this->assertCount(1, $locations);
@@ -104,8 +100,8 @@ class ReferencesHandlerTest extends TestCase
     public function testFindsReferencesIncludingDeclaration(): void
     {
         $document = TextDocumentBuilder::create(self::EXAMPLE_TEXT)
+            ->uri(self::EXAMPLE_URI)
             ->language('php')
-            ->uri(__FILE__)
             ->build()
         ;
 
@@ -121,11 +117,9 @@ class ReferencesHandlerTest extends TestCase
             ByteOffset::fromInt(0)
         )->willReturn(new DefinitionLocation($document->uri(), ByteOffset::fromInt(2)))->shouldBeCalled();
 
-        $tester = new HandlerTester($this->createReferencesHandler());
-
-        $response = $tester->requestAndWait('textDocument/references', [
-            'textDocument' => $this->identifier,
-            'position' => $this->position,
+        $response = $this->createTester(true)->requestAndWait(ReferencesRequest::METHOD, [
+            'textDocument' => ProtocolFactory::textDocumentIdentifier(self::EXAMPLE_URI),
+            'position' => ProtocolFactory::position(0, 0),
             'context' => new ReferenceContext(true),
         ]);
         $locations = $response->result;
@@ -139,7 +133,7 @@ class ReferencesHandlerTest extends TestCase
     {
         $document = TextDocumentBuilder::create(self::EXAMPLE_TEXT)
             ->language('php')
-            ->uri(__FILE__)
+            ->uri(self::EXAMPLE_URI)
             ->build()
         ;
 
@@ -155,11 +149,11 @@ class ReferencesHandlerTest extends TestCase
             ByteOffset::fromInt(0)
         )->willReturn(new DefinitionLocation($document->uri(), ByteOffset::fromInt(2)))->willThrow(new CouldNotLocateDefinition('nope'));
 
-        $tester = new HandlerTester($this->createReferencesHandler());
+        $tester = $this->createTester();
 
         $response = $tester->requestAndWait('textDocument/references', [
-            'textDocument' => $this->identifier,
-            'position' => $this->position,
+            'textDocument' => ProtocolFactory::textDocumentIdentifier(self::EXAMPLE_URI),
+            'position' => ProtocolFactory::position(0, 0),
             'context' => new ReferenceContext(true),
         ]);
         $locations = $response->result;
@@ -169,14 +163,20 @@ class ReferencesHandlerTest extends TestCase
         $this->assertInstanceOf(LspLocation::class, $lspLocation);
     }
 
-    private function createReferencesHandler(): ReferencesHandler
+    private function createTester(): LanguageServerTester
     {
-        return new ReferencesHandler(
-            $this->workspace,
-            $this->finder->reveal(),
-            $this->locator->reveal(),
-            new LocationConverter($this->workspace),
-            new ClientApi(TestRpcClient::create())
+        $builder = LanguageServerTesterBuilder::create();
+        $builder->addHandler(
+            new ReferencesHandler(
+                $builder->workspace(),
+                $this->finder->reveal(),
+                $this->locator->reveal(),
+                new LocationConverter($builder->workspace()),
+                new ClientApi(TestRpcClient::create())
+            )
         );
+        $tester = $builder->build();
+        $tester->textDocument()->open(self::EXAMPLE_URI, self::EXAMPLE_TEXT);
+        return $tester;
     }
 }
