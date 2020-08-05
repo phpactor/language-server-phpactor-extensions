@@ -4,6 +4,7 @@ namespace Phpactor\Extension\LanguageServerReferenceFinder\Handler;
 
 use Amp\Promise;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
+use Phpactor\LanguageServerProtocol\DefinitionParams;
 use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\ServerCapabilities;
 use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
@@ -47,17 +48,18 @@ class GotoDefinitionHandler implements Handler, CanRegisterCapabilities
     }
 
     public function definition(
-        TextDocumentIdentifier $textDocument,
-        Position $position
+        DefinitionParams $params
     ): Promise {
-        return \Amp\call(function () use ($textDocument, $position) {
-            $textDocument = $this->workspace->get($textDocument->uri);
+        return \Amp\call(function () use ($params) {
+            $textDocument = $this->workspace->get($params->textDocument->uri);
 
-            $offset = PositionConverter::positionToByteOffset($position, $textDocument->text);
+            $offset = PositionConverter::positionToByteOffset($params->position, $textDocument->text);
 
             try {
                 $location = $this->definitionLocator->locateDefinition(
-                    TextDocumentBuilder::create($textDocument->text)->uri($textDocument->uri)->language('php')->build(),
+                    TextDocumentBuilder::create(
+                        $textDocument->text
+                    )->uri($textDocument->uri)->language('php')->build(),
                     $offset
                 );
             } catch (CouldNotLocateDefinition $couldNotLocateDefinition) {
