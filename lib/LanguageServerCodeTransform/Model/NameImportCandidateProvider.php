@@ -8,8 +8,6 @@ use Microsoft\PhpParser\Node\QualifiedName;
 use Microsoft\PhpParser\Parser;
 use Phpactor\Indexer\Model\Record\ClassRecord;
 use Phpactor\Indexer\Model\SearchClient;
-use Phpactor\LanguageServerProtocol\Position;
-use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\Name\FullyQualifiedName;
 use Phpactor\TextDocument\ByteOffset;
 

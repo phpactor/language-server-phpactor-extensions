@@ -2,20 +2,11 @@
 
 namespace Phpactor\Extension\LanguageServerCodeTransform\Tests\Unit\CodeAction;
 
-use PHPUnit\Framework\TestCase;
-use Phpactor\CodeTransform\Domain\Helper\UnresolvableClassNameFinder;
-use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\ImportClassProvider;
-use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImportCandidateProvider;
 use Phpactor\Extension\LanguageServerCodeTransform\Tests\IntegrationTestCase;
-use Phpactor\Indexer\Adapter\Php\InMemory\InMemoryIndex;
-use Phpactor\Indexer\Adapter\Php\InMemory\InMemorySearchIndex;
-use Phpactor\Indexer\Model\Record\ClassRecord;
 use Phpactor\LanguageServerProtocol\CodeActionContext;
 use Phpactor\LanguageServerProtocol\CodeActionParams;
 use Phpactor\LanguageServerProtocol\CodeActionRequest;
-use Phpactor\LanguageServer\Handler\TextDocument\CodeActionHandler;
 use Phpactor\LanguageServer\LanguageServerBuilder;
-use Phpactor\LanguageServer\LanguageServerTesterBuilder;
 use Phpactor\LanguageServer\Test\LanguageServerTester;
 use Phpactor\LanguageServer\Test\ProtocolFactory;
 

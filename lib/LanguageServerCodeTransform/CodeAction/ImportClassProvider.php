@@ -5,10 +5,8 @@ namespace Phpactor\Extension\LanguageServerCodeTransform\CodeAction;
 use Generator;
 use Phpactor\CodeTransform\Domain\Helper\UnresolvableClassNameFinder;
 use Phpactor\CodeTransform\Domain\NameWithByteOffset;
-use Phpactor\CodeTransform\Domain\NameWithByteOffsets;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportNameCommand;
-use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImportCandidateProvider;
 use Phpactor\LanguageServerProtocol\CodeAction;
 use Phpactor\LanguageServerProtocol\Command;
 use Phpactor\LanguageServerProtocol\Diagnostic;
@@ -16,12 +14,7 @@ use Phpactor\LanguageServerProtocol\DiagnosticSeverity;
 use Phpactor\LanguageServerProtocol\Range;
 use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\LanguageServer\Core\CodeAction\CodeActionProvider;
-use Phpactor\LanguageServer\Core\Workspace\Workspace;
-use Phpactor\LanguageServer\Test\ProtocolFactory;
-use Phpactor\ReferenceFinder\NameSearcher;
 use Phpactor\TextDocument\TextDocumentBuilder;
-use Phpactor\TextDocument\Util\WordAtOffset;
-use function Amp\call;
 
 class ImportClassProvider implements CodeActionProvider
 {

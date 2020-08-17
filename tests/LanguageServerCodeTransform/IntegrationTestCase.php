@@ -13,7 +13,6 @@ use Phpactor\Extension\LanguageServerCodeTransform\LanguageServerCodeTransformEx
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\Logger\LoggingExtension;
 use Phpactor\Extension\Php\PhpExtension;
-use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
 use Phpactor\Extension\WorseReflection\WorseReflectionExtension;
 use Phpactor\FilePathResolverExtension\FilePathResolverExtension;
 use Phpactor\Indexer\Extension\IndexerExtension;

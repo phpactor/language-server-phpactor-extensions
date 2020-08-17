@@ -61,8 +61,7 @@ class ImportNameCommand implements Command
         string $type,
         string $fqn,
         ?string $alias = null
-    ): Promise
-    {
+    ): Promise {
         $document = $this->workspace->get($uri);
         $sourceCode = SourceCode::fromStringAndPath(
             $document->text,
