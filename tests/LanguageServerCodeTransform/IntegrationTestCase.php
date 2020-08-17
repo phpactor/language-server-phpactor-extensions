@@ -13,8 +13,10 @@ use Phpactor\Extension\LanguageServerCodeTransform\LanguageServerCodeTransformEx
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\Logger\LoggingExtension;
 use Phpactor\Extension\Php\PhpExtension;
+use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
 use Phpactor\Extension\WorseReflection\WorseReflectionExtension;
 use Phpactor\FilePathResolverExtension\FilePathResolverExtension;
+use Phpactor\Indexer\Extension\IndexerExtension;
 use Phpactor\LanguageServer\LanguageServerBuilder;
 use Phpactor\LanguageServer\Test\ServerTester;
 use Phpactor\TestUtils\Workspace;
@@ -47,6 +49,7 @@ class IntegrationTestCase extends TestCase
             CodeTransformExtension::class,
             LanguageServerCodeTransformExtension::class,
             WorseReflectionExtension::class,
+            IndexerExtension::class,
             PhpExtension::class,
             LanguageServerBridgeExtension::class,
             TestLanguageServerSessionExtension::class,

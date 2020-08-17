@@ -55,7 +55,13 @@ class ImportNameCommand implements Command
         $this->client = $client;
     }
 
-    public function __invoke(string $uri, int $offset, string $type, string $fqn, ?string $alias = null): Promise
+    public function __invoke(
+        string $uri,
+        int $offset,
+        string $type,
+        string $fqn,
+        ?string $alias = null
+    ): Promise
     {
         $document = $this->workspace->get($uri);
         $sourceCode = SourceCode::fromStringAndPath(
