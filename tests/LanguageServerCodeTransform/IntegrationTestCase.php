@@ -10,6 +10,8 @@ use Phpactor\Extension\CodeTransform\CodeTransformExtension;
 use Phpactor\Extension\ComposerAutoloader\ComposerAutoloaderExtension;
 use Phpactor\Extension\LanguageServerBridge\LanguageServerBridgeExtension;
 use Phpactor\Extension\LanguageServerCodeTransform\LanguageServerCodeTransformExtension;
+use Phpactor\Extension\LanguageServerIndexer\LanguageServerIndexerExtension;
+use Phpactor\Extension\LanguageServerWorseReflection\LanguageServerWorseReflectionExtension;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\Logger\LoggingExtension;
 use Phpactor\Extension\Php\PhpExtension;
@@ -49,6 +51,8 @@ class IntegrationTestCase extends TestCase
             LanguageServerCodeTransformExtension::class,
             WorseReflectionExtension::class,
             IndexerExtension::class,
+            LanguageServerIndexerExtension::class,
+            LanguageServerWorseReflectionExtension::class,
             PhpExtension::class,
             LanguageServerBridgeExtension::class,
             TestLanguageServerSessionExtension::class,

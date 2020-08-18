@@ -2,7 +2,6 @@
 
 namespace Phpactor\Extension\LanguageServerCodeTransform;
 
-use Microsoft\PhpParser\Parser;
 use Phpactor\CodeTransform\Domain\Helper\UnresolvableClassNameFinder;
 use Phpactor\CodeTransform\Domain\Refactor\ImportName;
 use Phpactor\Container\Container;
