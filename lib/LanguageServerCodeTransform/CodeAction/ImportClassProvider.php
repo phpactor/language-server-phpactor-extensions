@@ -68,9 +68,7 @@ class ImportClassProvider implements CodeActionProvider, DiagnosticsProvider
                     ),
                     'kind' => 'quickfix.import_class',
                     'isPreferred' => true,
-                    'diagnostics' => [
-                        $this->diagnosticsFromUnresolvedName($unresolvedName, $item)
-                    ],
+                    'diagnostics' => $this->diagnosticsFromUnresolvedName($unresolvedName, $item),
                     'command' => new Command(
                         'Import name',
                         ImportNameCommand::NAME,

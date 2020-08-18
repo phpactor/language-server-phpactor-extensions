@@ -15,9 +15,11 @@ class ImportClassProviderTest extends IntegrationTestCase
     public function testImportProvider(): void
     {
         $this->workspace()->reset();
+        $this->workspace()->put('Foobar/MissingName.php', '<?php namespace Foobar; class MissingName {}');
         $tester = $this->container()->get(LanguageServerBuilder::class)->tester(
             ProtocolFactory::initializeParams($this->workspace()->path())
         );
+        $tester->initialize();
         assert($tester instanceof LanguageServerTester);
         $tester->textDocument()->open('file:///foobar', '<?php new MissingName();');
         $result = $tester->requestAndWait(CodeActionRequest::METHOD, new CodeActionParams(
@@ -28,7 +30,6 @@ class ImportClassProviderTest extends IntegrationTestCase
 
         $tester->assertSuccess($result);
 
-        // TODO: this requires the index to be built
-        self::assertCount(0, $result->result);
+        self::assertCount(1, $result->result);
     }
 }
