@@ -17,6 +17,8 @@ use Phpactor\MapResolver\Resolver;
 
 class LanguageServerCodeTransformExtension implements Extension
 {
+    const PARAM_IMPORT_GLOBALS = 'code_transform.import_globals';
+
     /**
      * {@inheritDoc}
      */
@@ -31,6 +33,12 @@ class LanguageServerCodeTransformExtension implements Extension
      */
     public function configure(Resolver $schema)
     {
+        $schema->setDefaults([
+            self::PARAM_IMPORT_GLOBALS => false,
+        ]);
+        $schema->setDescriptions([
+            self::PARAM_IMPORT_GLOBALS => 'Show hints for non-imported global classes and functions'
+        ]);
     }
 
     private function registerCommands(ContainerBuilder $container): void
@@ -54,7 +62,8 @@ class LanguageServerCodeTransformExtension implements Extension
         $container->register(ImportClassProvider::class, function (Container $container) {
             return new ImportClassProvider(
                 $container->get(UnresolvableClassNameFinder::class),
-                $container->get(SearchClient::class)
+                $container->get(SearchClient::class),
+                $container->getParameter(self::PARAM_IMPORT_GLOBALS)
             );
         }, [
             LanguageServerExtension::TAG_CODE_ACTION_PROVIDER => [],

@@ -34,10 +34,16 @@ class ImportClassProvider implements CodeActionProvider, DiagnosticsProvider
      */
     private $client;
 
-    public function __construct(UnresolvableClassNameFinder $finder, SearchClient $client)
+    /**
+     * @var bool
+     */
+    private $importGlobals;
+
+    public function __construct(UnresolvableClassNameFinder $finder, SearchClient $client, bool $importGlobals = false)
     {
         $this->finder = $finder;
         $this->client = $client;
+        $this->importGlobals = $importGlobals;
     }
 
     public function provideActionsFor(TextDocumentItem $item, Range $range): Generator
@@ -49,12 +55,11 @@ class ImportClassProvider implements CodeActionProvider, DiagnosticsProvider
         foreach ($unresolvedNames as $unresolvedName) {
             assert($unresolvedName instanceof NameWithByteOffset);
 
-            $candidates = $this->client->search(
-                Criteria::exactShortName($unresolvedName->name()->head()->__toString())
-            );
+            $candidates = $this->findCandidates($unresolvedName);
 
             foreach ($candidates as $candidate) {
                 assert($candidate instanceof HasFullyQualifiedName);
+
                 yield CodeAction::fromArray([
                     'title' => sprintf(
                         'Import %s "%s"',
@@ -64,7 +69,7 @@ class ImportClassProvider implements CodeActionProvider, DiagnosticsProvider
                     'kind' => 'quickfix.import_class',
                     'isPreferred' => true,
                     'diagnostics' => [
-                        $this->diagnosticFromUnresolvedName($unresolvedName, $item)
+                        $this->diagnosticsFromUnresolvedName($unresolvedName, $item)
                     ],
                     'command' => new Command(
                         'Import name',
@@ -103,14 +108,14 @@ class ImportClassProvider implements CodeActionProvider, DiagnosticsProvider
             );
 
             foreach ($unresolvedNames as $unresolvedName) {
-                $diagnostics[] = $this->diagnosticFromUnresolvedName($unresolvedName, $textDocument);
+                $diagnostics = array_merge($diagnostics, $this->diagnosticsFromUnresolvedName($unresolvedName, $textDocument));
             }
 
             return $diagnostics;
         });
     }
 
-    private function diagnosticFromUnresolvedName(NameWithByteOffset $unresolvedName, TextDocumentItem $item): Diagnostic
+    private function diagnosticsFromUnresolvedName(NameWithByteOffset $unresolvedName, TextDocumentItem $item): array
     {
         $range = new Range(
             PositionConverter::byteOffsetToPosition($unresolvedName->byteOffset(), $item->text),
@@ -120,34 +125,67 @@ class ImportClassProvider implements CodeActionProvider, DiagnosticsProvider
             )
         );
 
-        $candidates = $this->client->search(
-            Criteria::exactShortName($unresolvedName->name()->head()->__toString())
-        );
+        $candidates = $this->findCandidates($unresolvedName);
 
-        if (count(iterator_to_array($candidates)) === 0) {
-            return new Diagnostic(
+        if (count($candidates) === 0) {
+            return [
+                new Diagnostic(
+                    $range,
+                    sprintf(
+                        '%s "%s" does not exist',
+                        ucfirst($unresolvedName->type()),
+                        $unresolvedName->name()->head()->__toString()
+                    ),
+                    DiagnosticSeverity::ERROR,
+                    null,
+                    'phpactor'
+                )
+            ];
+        }
+
+        if ($this->hasGlobalCandidate($candidates)) {
+            return [];
+        }
+
+        return [
+            new Diagnostic(
                 $range,
                 sprintf(
-                    '%s "%s" does not exist',
+                    '%s "%s" has not been imported',
                     ucfirst($unresolvedName->type()),
                     $unresolvedName->name()->head()->__toString()
                 ),
-                DiagnosticSeverity::ERROR,
+                DiagnosticSeverity::HINT,
                 null,
                 'phpactor'
-            );
+            )
+        ];
+    }
+
+    private function findCandidates(NameWithByteOffset $unresolvedName): array
+    {
+        $candidates = [];
+        foreach ($this->client->search(Criteria::and(
+            Criteria::or(
+                Criteria::isClass(),
+                Criteria::isFunction()
+            ),
+            Criteria::exactShortName($unresolvedName->name()->head()->__toString())
+        )) as $candidate) {
+            $candidates[] = $candidate;
         }
 
-        return new Diagnostic(
-            $range,
-            sprintf(
-                '%s "%s" has not been imported',
-                ucfirst($unresolvedName->type()),
-                $unresolvedName->name()->head()->__toString()
-            ),
-            DiagnosticSeverity::HINT,
-            null,
-            'phpactor'
-        );
+        return $candidates;
+    }
+
+    private function hasGlobalCandidate(array $candidates): bool
+    {
+        foreach ($candidates as $candidate) {
+            if (false === strpos($candidate->fqn()->__toString(), '\\')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
