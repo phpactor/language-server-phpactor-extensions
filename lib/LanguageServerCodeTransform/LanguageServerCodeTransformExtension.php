@@ -11,7 +11,6 @@ use Phpactor\Container\Extension;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
 use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\ImportClassProvider;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportNameCommand;
-use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImportCandidateProvider;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Indexer\Model\SearchClient;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
@@ -26,7 +25,6 @@ class LanguageServerCodeTransformExtension implements Extension
     {
         $this->registerCommands($container);
         $this->registerCodeActions($container);
-        $this->registerModel($container);
     }
 
     /**
@@ -56,20 +54,12 @@ class LanguageServerCodeTransformExtension implements Extension
     {
         $container->register(ImportClassProvider::class, function (Container $container) {
             return new ImportClassProvider(
-                $container->get(UnresolvableClassNameFinder::class)
+                $container->get(UnresolvableClassNameFinder::class),
+                $container->get(SearchClient::class)
             );
         }, [
-            LanguageServerExtension::TAG_CODE_ACTION_PROVIDER => []
+            LanguageServerExtension::TAG_CODE_ACTION_PROVIDER => [],
+            LanguageServerExtension::TAG_DIAGNOSTICS_PROVIDER => []
         ]);
-    }
-
-    private function registerModel(ContainerBuilder $container): void
-    {
-        $container->register(NameImportCandidateProvider::class, function (Container $container) {
-            return new NameImportCandidateProvider(
-                $container->get(SearchClient::class),
-                new Parser()
-            );
-        });
     }
 }

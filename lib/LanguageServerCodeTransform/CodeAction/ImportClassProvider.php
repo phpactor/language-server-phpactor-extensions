@@ -2,11 +2,15 @@
 
 namespace Phpactor\Extension\LanguageServerCodeTransform\CodeAction;
 
+use Amp\Promise;
 use Generator;
 use Phpactor\CodeTransform\Domain\Helper\UnresolvableClassNameFinder;
 use Phpactor\CodeTransform\Domain\NameWithByteOffset;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportNameCommand;
+use Phpactor\Indexer\Model\Query\Criteria;
+use Phpactor\Indexer\Model\Record\HasFullyQualifiedName;
+use Phpactor\Indexer\Model\SearchClient;
 use Phpactor\LanguageServerProtocol\CodeAction;
 use Phpactor\LanguageServerProtocol\Command;
 use Phpactor\LanguageServerProtocol\Diagnostic;
@@ -14,18 +18,26 @@ use Phpactor\LanguageServerProtocol\DiagnosticSeverity;
 use Phpactor\LanguageServerProtocol\Range;
 use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\LanguageServer\Core\CodeAction\CodeActionProvider;
+use Phpactor\LanguageServer\Core\Diagnostics\DiagnosticsProvider;
 use Phpactor\TextDocument\TextDocumentBuilder;
+use function Amp\call;
 
-class ImportClassProvider implements CodeActionProvider
+class ImportClassProvider implements CodeActionProvider, DiagnosticsProvider
 {
     /**
      * @var UnresolvableClassNameFinder
      */
     private $finder;
 
-    public function __construct(UnresolvableClassNameFinder $finder)
+    /**
+     * @var SearchClient
+     */
+    private $client;
+
+    public function __construct(UnresolvableClassNameFinder $finder, SearchClient $client)
     {
         $this->finder = $finder;
+        $this->client = $client;
     }
 
     public function provideActionsFor(TextDocumentItem $item, Range $range): Generator
@@ -33,45 +45,37 @@ class ImportClassProvider implements CodeActionProvider
         $unresolvedNames = $this->finder->find(
             TextDocumentBuilder::create($item->text)->uri($item->uri)->language('php')->build()
         );
-
+        
         foreach ($unresolvedNames as $unresolvedName) {
             assert($unresolvedName instanceof NameWithByteOffset);
 
-            $range = new Range(
-                PositionConverter::byteOffsetToPosition($unresolvedName->byteOffset(), $item->text),
-                PositionConverter::intByteOffsetToPosition(
-                    $unresolvedName->byteOffset()->toInt() + strlen($unresolvedName->name()->__toString()),
-                    $item->text
-                )
+            $candidates = $this->client->search(
+                Criteria::exactShortName($unresolvedName->name()->head()->__toString())
             );
 
-            yield CodeAction::fromArray([
-                'title' => sprintf('Import "%s"', $unresolvedName->name()->__toString()),
-                'kind' => 'quickfix.import_class',
-                'diagnostics' => [
-                    new Diagnostic(
-                        $range,
-                        sprintf('Class "%s" has not been imported', $unresolvedName->name()->__toString()),
-                        DiagnosticSeverity::ERROR
+            foreach ($candidates as $candidate) {
+                assert($candidate instanceof HasFullyQualifiedName);
+                yield CodeAction::fromArray([
+                    'title' => sprintf('Import "%s"', $candidate->fqn()->__toString()),
+                    'kind' => 'quickfix.import_class',
+                    'isPreferred' => true,
+                    'diagnostics' => [
+                        $this->diagnosticFromUnresolvedName($unresolvedName, $item)
+                    ],
+                    'command' => new Command(
+                        'Import name',
+                        ImportNameCommand::NAME,
+                        [
+                            $item->uri,
+                            $unresolvedName->byteOffset()->toInt(),
+                            'class',
+                            $candidate->fqn()->__toString()
+                        ]
                     )
-                ],
-                'command' => new Command(
-                    'Import name',
-                    ImportNameCommand::NAME,
-                    [
-                        $item->uri,
-                        $unresolvedName->byteOffset()->toInt(),
-                        'class',
-                        $unresolvedName->name()->__toString()
-                    ]
-                )
-            ]);
+                ]);
+            }
         }
     }
-
-    /**
-     * {@inheritDoc}
-     */
 
     /**
      * {@inheritDoc}
@@ -79,7 +83,59 @@ class ImportClassProvider implements CodeActionProvider
     public function kinds(): array
     {
         return [
-            'fix.import'
+            'quickfix.import_class'
         ];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function provideDiagnostics(TextDocumentItem $textDocument): Promise
+    {
+        return call(function () use ($textDocument) {
+            $diagnostics = [];
+            $unresolvedNames = $this->finder->find(
+                TextDocumentBuilder::create($textDocument->text)->uri($textDocument->uri)->language('php')->build()
+            );
+
+            foreach ($unresolvedNames as $unresolvedName) {
+                $diagnostics[] = $this->diagnosticFromUnresolvedName($unresolvedName, $textDocument);
+            }
+
+            return $diagnostics;
+        });
+    }
+
+    private function diagnosticFromUnresolvedName(NameWithByteOffset $unresolvedName, TextDocumentItem $item): Diagnostic
+    {
+        $range = new Range(
+            PositionConverter::byteOffsetToPosition($unresolvedName->byteOffset(), $item->text),
+            PositionConverter::intByteOffsetToPosition(
+                $unresolvedName->byteOffset()->toInt() + strlen($unresolvedName->name()->head()->__toString()),
+                $item->text
+            )
+        );
+
+        $candidates = $this->client->search(
+            Criteria::exactShortName($unresolvedName->name()->head()->__toString())
+        );
+
+        if (count(iterator_to_array($candidates)) === 0) {
+            return new Diagnostic(
+                $range,
+                sprintf('Class "%s" does not exist', $unresolvedName->name()->head()->__toString()),
+                DiagnosticSeverity::ERROR,
+                null,
+                'phpactor'
+            );
+        }
+
+        return new Diagnostic(
+            $range,
+            sprintf('Class "%s" has not been imported', $unresolvedName->name()->head()->__toString()),
+            DiagnosticSeverity::HINT,
+            null,
+            'phpactor'
+        );
     }
 }
