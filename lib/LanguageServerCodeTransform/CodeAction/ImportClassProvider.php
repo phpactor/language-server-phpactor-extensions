@@ -141,7 +141,7 @@ class ImportClassProvider implements CodeActionProvider, DiagnosticsProvider
             ];
         }
 
-        if ($this->hasGlobalCandidate($candidates)) {
+        if (false === $this->importGlobals && $this->hasGlobalCandidate($candidates)) {
             return [];
         }
 
