@@ -45,7 +45,7 @@ class ImportClassProvider implements CodeActionProvider, DiagnosticsProvider
         $unresolvedNames = $this->finder->find(
             TextDocumentBuilder::create($item->text)->uri($item->uri)->language('php')->build()
         );
-        
+
         foreach ($unresolvedNames as $unresolvedName) {
             assert($unresolvedName instanceof NameWithByteOffset);
 
@@ -56,7 +56,11 @@ class ImportClassProvider implements CodeActionProvider, DiagnosticsProvider
             foreach ($candidates as $candidate) {
                 assert($candidate instanceof HasFullyQualifiedName);
                 yield CodeAction::fromArray([
-                    'title' => sprintf('Import "%s"', $candidate->fqn()->__toString()),
+                    'title' => sprintf(
+                        'Import %s "%s"',
+                        $unresolvedName->type(),
+                        $candidate->fqn()->__toString()
+                    ),
                     'kind' => 'quickfix.import_class',
                     'isPreferred' => true,
                     'diagnostics' => [
@@ -68,7 +72,7 @@ class ImportClassProvider implements CodeActionProvider, DiagnosticsProvider
                         [
                             $item->uri,
                             $unresolvedName->byteOffset()->toInt(),
-                            'class',
+                            $unresolvedName->type(),
                             $candidate->fqn()->__toString()
                         ]
                     )
@@ -123,7 +127,11 @@ class ImportClassProvider implements CodeActionProvider, DiagnosticsProvider
         if (count(iterator_to_array($candidates)) === 0) {
             return new Diagnostic(
                 $range,
-                sprintf('Class "%s" does not exist', $unresolvedName->name()->head()->__toString()),
+                sprintf(
+                    '%s "%s" does not exist',
+                    ucfirst($unresolvedName->type()),
+                    $unresolvedName->name()->head()->__toString()
+                ),
                 DiagnosticSeverity::ERROR,
                 null,
                 'phpactor'
@@ -132,7 +140,11 @@ class ImportClassProvider implements CodeActionProvider, DiagnosticsProvider
 
         return new Diagnostic(
             $range,
-            sprintf('Class "%s" has not been imported', $unresolvedName->name()->head()->__toString()),
+            sprintf(
+                '%s "%s" has not been imported',
+                ucfirst($unresolvedName->type()),
+                $unresolvedName->name()->head()->__toString()
+            ),
             DiagnosticSeverity::HINT,
             null,
             'phpactor'
