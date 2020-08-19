@@ -3,15 +3,11 @@
 namespace Phpactor\Extension\LanguageServerCodeTransform\CodeAction;
 
 use Amp\Promise;
-use Generator;
 use Phpactor\CodeTransform\Domain\SourceCode;
 use Phpactor\CodeTransform\Domain\Transformer;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextDocumentConverter;
 use Phpactor\Extension\LanguageServerCodeTransform\Converter\DiagnosticsConverter;
-use Phpactor\LanguageServerProtocol\CodeAction;
-use Phpactor\LanguageServerProtocol\Range;
 use Phpactor\LanguageServerProtocol\TextDocumentItem;
-use Phpactor\LanguageServer\Core\CodeAction\CodeActionProvider;
 use Phpactor\LanguageServer\Core\Diagnostics\DiagnosticsProvider;
 use function Amp\call;
 

@@ -13,7 +13,7 @@ class TextEditConverter
      * @param TextEdits<TextEdit> $textEdits
      * @return array<LspTextEdit>
      */
-    public function toLspTextEdits(TextEdits $textEdits, string $text): array
+    public static function toLspTextEdits(TextEdits $textEdits, string $text): array
     {
         $edits = [];
         foreach ($textEdits as $textEdit) {
