@@ -2,16 +2,22 @@
 
 namespace Phpactor\Extension\LanguageServerCodeTransform;
 
+use Phpactor\CodeTransform\Adapter\WorseReflection\Transformer\CompleteConstructor;
+use Phpactor\CodeTransform\Adapter\WorseReflection\Transformer\ImplementContracts;
 use Phpactor\CodeTransform\Domain\Helper\UnresolvableClassNameFinder;
 use Phpactor\CodeTransform\Domain\Refactor\ImportName;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
+use Phpactor\Extension\CodeTransform\CodeTransformExtension;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
 use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\ImportClassProvider;
+use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\TransformerCodeAction;
+use Phpactor\Extension\LanguageServerCodeTransform\Converter\DiagnosticsConverter;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportNameCommand;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Indexer\Model\SearchClient;
+use Phpactor\LanguageServer\Core\Diagnostics\AggregateDiagnosticsProvider;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\MapResolver\Resolver;
 
@@ -67,6 +73,21 @@ class LanguageServerCodeTransformExtension implements Extension
             );
         }, [
             LanguageServerExtension::TAG_CODE_ACTION_PROVIDER => [],
+            LanguageServerExtension::TAG_DIAGNOSTICS_PROVIDER => []
+        ]);
+
+        $container->register(TransformerCodeAction::class, function (Container $container) {
+            $diagnosticProviders = [];
+            foreach ($container->getServiceIdsForTag(CodeTransformExtension::TAG_TRANSFORMER) as $serviceId => $attrs) {
+                $diagnosticProviders[] = new TransformerCodeAction(
+                    $container->get($serviceId),
+                    'quickfix.complete_constructor'
+                );
+            }
+
+
+            return new AggregateDiagnosticsProvider(...$diagnosticProviders);
+        }, [
             LanguageServerExtension::TAG_DIAGNOSTICS_PROVIDER => []
         ]);
     }
