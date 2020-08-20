@@ -116,5 +116,16 @@ class LanguageServerCodeTransformExtension implements Extension
             LanguageServerExtension::TAG_DIAGNOSTICS_PROVIDER => [],
             LanguageServerExtension::TAG_CODE_ACTION_PROVIDER => []
         ]);
+
+        $container->register(TransformerCodeActionPovider::class.'fix_namespace_class_name', function (Container $container) {
+            return new TransformerCodeActionPovider(
+                $container->get('code_transform.transformers'),
+                'fix_namespace_class_name',
+                'Fix PSR namespace and class name'
+            );
+        }, [
+            LanguageServerExtension::TAG_DIAGNOSTICS_PROVIDER => [],
+            LanguageServerExtension::TAG_CODE_ACTION_PROVIDER => []
+        ]);
     }
 }
