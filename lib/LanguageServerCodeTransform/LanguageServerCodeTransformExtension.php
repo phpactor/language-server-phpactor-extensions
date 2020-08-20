@@ -19,7 +19,7 @@ use Phpactor\MapResolver\Resolver;
 
 class LanguageServerCodeTransformExtension implements Extension
 {
-    const PARAM_IMPORT_GLOBALS = 'language_server_code_transform.import_globals';
+    public const PARAM_IMPORT_GLOBALS = 'language_server_code_transform.import_globals';
 
     /**
      * {@inheritDoc}

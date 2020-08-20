@@ -13,8 +13,6 @@ use Phpactor\LanguageServer\LanguageServerBuilder;
 use Phpactor\LanguageServer\Test\LanguageServerTester;
 use Phpactor\LanguageServer\Test\ProtocolFactory;
 use Phpactor\TestUtils\ExtractOffset;
-use function Amp\Promise\wait;
-use function Amp\delay;
 
 class ImportNameProviderTest extends IntegrationTestCase
 {
@@ -30,9 +28,12 @@ class ImportNameProviderTest extends IntegrationTestCase
         );
         $tester->initialize();
         assert($tester instanceof LanguageServerTester);
+
         $subject = $this->workspace()->getContents('subject.php');
         [ $source, $offset ] = ExtractOffset::fromSource($subject);
+
         $tester->textDocument()->open('file:///foobar', $source);
+
         $result = $tester->requestAndWait(CodeActionRequest::METHOD, new CodeActionParams(
             ProtocolFactory::textDocumentIdentifier('file:///foobar'),
             new Range(
@@ -45,9 +46,8 @@ class ImportNameProviderTest extends IntegrationTestCase
         $tester->assertSuccess($result);
 
         self::assertCount($expectedCount, $result->result, 'Number of code actions');
-
         $tester->textDocument()->update('file:///foobar', $source);
-        wait(delay(100));
+
         $diagnostics = $tester->transmitter()->filterByMethod('textDocument/publishDiagnostics')->shiftNotification();
         self::assertNotNull($diagnostics);
         $diagnostics = $diagnostics->params['diagnostics'];
