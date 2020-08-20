@@ -8,7 +8,7 @@ use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
-use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\ImportClassProvider;
+use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\ImportNameProvider;
 use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\TransformerCodeActionPovider;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportNameCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\TransformCommand;
@@ -73,8 +73,8 @@ class LanguageServerCodeTransformExtension implements Extension
 
     private function registerCodeActions(ContainerBuilder $container): void
     {
-        $container->register(ImportClassProvider::class, function (Container $container) {
-            return new ImportClassProvider(
+        $container->register(ImportNameProvider::class, function (Container $container) {
+            return new ImportNameProvider(
                 $container->get(UnresolvableClassNameFinder::class),
                 $container->get(SearchClient::class),
                 $container->getParameter(self::PARAM_IMPORT_GLOBALS)

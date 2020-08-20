@@ -21,7 +21,7 @@ use Phpactor\LanguageServer\Core\Diagnostics\DiagnosticsProvider;
 use Phpactor\TextDocument\TextDocumentBuilder;
 use function Amp\call;
 
-class ImportClassProvider implements CodeActionProvider, DiagnosticsProvider
+class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
 {
     /**
      * @var UnresolvableClassNameFinder

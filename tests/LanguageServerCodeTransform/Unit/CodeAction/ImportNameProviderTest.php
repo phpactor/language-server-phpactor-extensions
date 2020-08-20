@@ -16,7 +16,7 @@ use Phpactor\TestUtils\ExtractOffset;
 use function Amp\Promise\wait;
 use function Amp\delay;
 
-class ImportClassProviderTest extends IntegrationTestCase
+class ImportNameProviderTest extends IntegrationTestCase
 {
     /**
      * @dataProvider provideImportProvider
