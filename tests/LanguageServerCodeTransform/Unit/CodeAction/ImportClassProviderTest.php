@@ -13,6 +13,8 @@ use Phpactor\LanguageServer\LanguageServerBuilder;
 use Phpactor\LanguageServer\Test\LanguageServerTester;
 use Phpactor\LanguageServer\Test\ProtocolFactory;
 use Phpactor\TestUtils\ExtractOffset;
+use function Amp\Promise\wait;
+use function Amp\delay;
 
 class ImportClassProviderTest extends IntegrationTestCase
 {
@@ -45,6 +47,7 @@ class ImportClassProviderTest extends IntegrationTestCase
         self::assertCount($expectedCount, $result->result, 'Number of code actions');
 
         $tester->textDocument()->update('file:///foobar', $source);
+        wait(delay(100));
         $diagnostics = $tester->transmitter()->filterByMethod('textDocument/publishDiagnostics')->shiftNotification();
         self::assertNotNull($diagnostics);
         $diagnostics = $diagnostics->params['diagnostics'];
@@ -74,6 +77,14 @@ EOT
         , 0, 1
         ];
 
+        yield 'zero code actions and one diagnostic for namespaced non-existant class' => [
+            <<<'EOT'
+// File: subject.php
+<?php namespace Bar; new MissingNameFoo();'
+EOT
+        , 0, 1
+        ];
+
         yield 'one code action for missing global class name' => [
             <<<'EOT'
 // File: subject.php
@@ -90,6 +101,28 @@ EOT
 <?php namespace Foobar; sprintf('foo %s', 'bar')
 // File: sprintf.php
 <?php function sprintf($pattern, ...$args) {}
+EOT
+        , 0, 0
+        ];
+
+        yield 'no diagnostics for class declared in same namespace' => [
+            <<<'EOT'
+// File: subject.php
+<?php
+
+namespace Phpactor\Extension;
+
+class Test
+{
+    public function testBar()
+    {
+        new Bar();
+    }
+}
+
+class Bar
+{
+}
 EOT
         , 0, 0
         ];
