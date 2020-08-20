@@ -3,7 +3,6 @@
 namespace Phpactor\Extension\LanguageServerCodeTransform\CodeAction;
 
 use Amp\Promise;
-use Generator;
 use Phpactor\CodeTransform\Domain\Helper\UnresolvableClassNameFinder;
 use Phpactor\CodeTransform\Domain\NameWithByteOffset;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
@@ -46,50 +45,55 @@ class ImportClassProvider implements CodeActionProvider, DiagnosticsProvider
         $this->importGlobals = $importGlobals;
     }
 
-    public function provideActionsFor(TextDocumentItem $item, Range $range): Generator
+    public function provideActionsFor(TextDocumentItem $item, Range $range): Promise
     {
-        $unresolvedNames = $this->finder->find(
-            TextDocumentBuilder::create($item->text)->uri($item->uri)->language('php')->build()
-        );
+        return call(function () use ($item) {
+            $unresolvedNames = $this->finder->find(
+                TextDocumentBuilder::create($item->text)->uri($item->uri)->language('php')->build()
+            );
 
-        foreach ($unresolvedNames as $unresolvedName) {
-            assert($unresolvedName instanceof NameWithByteOffset);
+            $actions = [];
+            foreach ($unresolvedNames as $unresolvedName) {
+                assert($unresolvedName instanceof NameWithByteOffset);
 
-            $candidates = $this->findCandidates($unresolvedName);
+                $candidates = $this->findCandidates($unresolvedName);
 
-            foreach ($candidates as $candidate) {
-                assert($candidate instanceof HasFullyQualifiedName);
+                foreach ($candidates as $candidate) {
+                    assert($candidate instanceof HasFullyQualifiedName);
 
-                if (
-                    !$this->importGlobals &&
-                    $unresolvedName->type() === NameWithByteOffset::TYPE_FUNCTION &&
-                    $this->isCandidateGlobal($candidate)
-                ) {
-                    continue;
-                }
+                    if (
+                        !$this->importGlobals &&
+                        $unresolvedName->type() === NameWithByteOffset::TYPE_FUNCTION &&
+                        $this->isCandidateGlobal($candidate)
+                    ) {
+                        continue;
+                    }
 
-                yield CodeAction::fromArray([
-                    'title' => sprintf(
-                        'Import %s "%s"',
-                        $unresolvedName->type(),
-                        $candidate->fqn()->__toString()
-                    ),
-                    'kind' => 'quickfix.import_class',
-                    'isPreferred' => true,
-                    'diagnostics' => $this->diagnosticsFromUnresolvedName($unresolvedName, $item),
-                    'command' => new Command(
-                        'Import name',
-                        ImportNameCommand::NAME,
-                        [
-                            $item->uri,
-                            $unresolvedName->byteOffset()->toInt(),
+                    $actions[] = CodeAction::fromArray([
+                        'title' => sprintf(
+                            'Import %s "%s"',
                             $unresolvedName->type(),
                             $candidate->fqn()->__toString()
-                        ]
-                    )
-                ]);
+                        ),
+                        'kind' => 'quickfix.import_class',
+                        'isPreferred' => true,
+                        'diagnostics' => $this->diagnosticsFromUnresolvedName($unresolvedName, $item),
+                        'command' => new Command(
+                            'Import name',
+                            ImportNameCommand::NAME,
+                            [
+                                $item->uri,
+                                $unresolvedName->byteOffset()->toInt(),
+                                $unresolvedName->type(),
+                                $candidate->fqn()->__toString()
+                            ]
+                        )
+                    ]);
+                }
             }
-        }
+
+            return $actions;
+        });
     }
 
     /**

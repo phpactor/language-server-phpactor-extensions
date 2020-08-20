@@ -4,7 +4,6 @@ namespace Phpactor\Extension\LanguageServerCodeTransform\CodeAction;
 
 use Amp\Promise;
 use Amp\Success;
-use Generator;
 use Phpactor\CodeTransform\Domain\SourceCode;
 use Phpactor\CodeTransform\Domain\Transformers;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextDocumentConverter;
@@ -17,6 +16,7 @@ use Phpactor\LanguageServerProtocol\Range;
 use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\LanguageServer\Core\CodeAction\CodeActionProvider;
 use Phpactor\LanguageServer\Core\Diagnostics\DiagnosticsProvider;
+use function Amp\call;
 
 class TransformerCodeActionPovider implements DiagnosticsProvider, CodeActionProvider
 {
@@ -78,28 +78,29 @@ class TransformerCodeActionPovider implements DiagnosticsProvider, CodeActionPro
         ));
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function provideActionsFor(TextDocumentItem $textDocument, Range $range): Generator
+    public function provideActionsFor(TextDocumentItem $textDocument, Range $range): Promise
     {
-        if (0 === count($this->getDiagnostics($textDocument))) {
-            return;
-        }
+        return call(function () use ($textDocument) {
+            if (0 === count($this->getDiagnostics($textDocument))) {
+                return [];
+            }
 
-        yield CodeAction::fromArray([
-            'title' =>  $this->title,
-            'kind' => $this->kind(),
-            'diagnostics' => $this->getDiagnostics($textDocument),
-            'command' => new Command(
-                $this->title,
-                TransformCommand::NAME,
-                [
-                    $textDocument->uri,
-                    $this->name
-                ]
-            )
-        ]);
+            return [
+                CodeAction::fromArray([
+                'title' =>  $this->title,
+                'kind' => $this->kind(),
+                'diagnostics' => $this->getDiagnostics($textDocument),
+                'command' => new Command(
+                    $this->title,
+                    TransformCommand::NAME,
+                    [
+                        $textDocument->uri,
+                        $this->name
+                    ]
+                )
+                ])
+            ];
+        });
     }
 
     private function kind(): string
