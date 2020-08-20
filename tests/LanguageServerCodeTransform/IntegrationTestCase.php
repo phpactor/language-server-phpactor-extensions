@@ -41,6 +41,7 @@ class IntegrationTestCase extends TestCase
 
     public function container(): Container
     {
+        $this->workspace()->put('index/.foo', '');
         $container = PhpactorContainer::fromExtensions([
             LoggingExtension::class,
             LanguageServerExtension::class,

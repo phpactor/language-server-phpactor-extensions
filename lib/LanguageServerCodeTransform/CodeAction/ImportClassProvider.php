@@ -60,6 +60,14 @@ class ImportClassProvider implements CodeActionProvider, DiagnosticsProvider
             foreach ($candidates as $candidate) {
                 assert($candidate instanceof HasFullyQualifiedName);
 
+                if (
+                    !$this->importGlobals &&
+                    $unresolvedName->type() === NameWithByteOffset::TYPE_FUNCTION &&
+                    $this->isCandidateGlobal($candidate)
+                ) {
+                    continue;
+                }
+
                 yield CodeAction::fromArray([
                     'title' => sprintf(
                         'Import %s "%s"',
@@ -141,7 +149,11 @@ class ImportClassProvider implements CodeActionProvider, DiagnosticsProvider
             ];
         }
 
-        if (false === $this->importGlobals && $this->hasGlobalCandidate($candidates)) {
+        if (
+            false === $this->importGlobals &&
+            $unresolvedName->type() === NameWithByteOffset::TYPE_FUNCTION &&
+            $this->hasGlobalCandidate($candidates)
+        ) {
             return [];
         }
 
@@ -179,9 +191,18 @@ class ImportClassProvider implements CodeActionProvider, DiagnosticsProvider
     private function hasGlobalCandidate(array $candidates): bool
     {
         foreach ($candidates as $candidate) {
-            if (false === strpos($candidate->fqn()->__toString(), '\\')) {
+            if ($this->isCandidateGlobal($candidate)) {
                 return true;
             }
+        }
+
+        return false;
+    }
+
+    private function isCandidateGlobal(HasFullyQualifiedName $candidate): bool
+    {
+        if (false === strpos($candidate->fqn()->__toString(), '\\')) {
+            return true;
         }
 
         return false;
