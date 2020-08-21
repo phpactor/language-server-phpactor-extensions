@@ -39,7 +39,8 @@
         "dms/phpunit-arraysubset-asserts": "dev-master",
         "friendsofphp/php-cs-fixer": "^2.13",
         "jangregor/phpstan-prophecy": "^0.8.0",
-        "symfony/var-dumper": "^5.1"
+        "symfony/var-dumper": "^5.1",
+        "phpbench/phpbench": "^0.17.1"
     },
     "autoload": {
         "psr-4": {

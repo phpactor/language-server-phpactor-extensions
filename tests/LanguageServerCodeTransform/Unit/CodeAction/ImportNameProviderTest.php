@@ -4,6 +4,7 @@ namespace Phpactor\Extension\LanguageServerCodeTransform\Tests\Unit\CodeAction;
 
 use Generator;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
+use Phpactor\Extension\LanguageServerCodeTransform\LanguageServerCodeTransformExtension;
 use Phpactor\Extension\LanguageServerCodeTransform\Tests\IntegrationTestCase;
 use Phpactor\LanguageServerProtocol\CodeActionContext;
 use Phpactor\LanguageServerProtocol\CodeActionParams;
@@ -19,11 +20,13 @@ class ImportNameProviderTest extends IntegrationTestCase
     /**
      * @dataProvider provideImportProvider
      */
-    public function testImportProvider(string $manifest, int $expectedCount, int $expectedDiagnosticCount): void
+    public function testImportProvider(string $manifest, int $expectedCount, int $expectedDiagnosticCount, bool $imprtGlobals = false): void
     {
         $this->workspace()->reset();
         $this->workspace()->loadManifest($manifest);
-        $tester = $this->container()->get(LanguageServerBuilder::class)->tester(
+        $tester = $this->container([
+            LanguageServerCodeTransformExtension::PARAM_IMPORT_GLOBALS => $imprtGlobals
+        ])->get(LanguageServerBuilder::class)->tester(
             ProtocolFactory::initializeParams($this->workspace()->path())
         );
         $tester->initialize();
@@ -59,7 +62,7 @@ class ImportNameProviderTest extends IntegrationTestCase
      */
     public function provideImportProvider(): Generator
     {
-        yield 'one code action for missing name' => [
+        yield 'code action + diagnostic for non-imported name' => [
             <<<'EOT'
 // File: subject.php
 <?php new MissingName();'
@@ -69,7 +72,7 @@ EOT
         , 1, 1
         ];
 
-        yield 'zero code actions and one diagnostic for non existant class' => [
+        yield 'code actions + diagnostic for non-existant class' => [
             <<<'EOT'
 // File: subject.php
 <?php new MissingNameFoo();'
@@ -77,7 +80,7 @@ EOT
         , 0, 1
         ];
 
-        yield 'zero code actions and one diagnostic for namespaced non-existant class' => [
+        yield 'code actions + diagnostic for namespaced non-existant class' => [
             <<<'EOT'
 // File: subject.php
 <?php namespace Bar; new MissingNameFoo();'
@@ -85,22 +88,18 @@ EOT
         , 0, 1
         ];
 
-        yield 'one code action for missing global class name' => [
+        yield 'code action and diagnostic for missing global class name with import globals' => [
             <<<'EOT'
 // File: subject.php
 <?php namespace Foobar; function foobar(): Generator { yield 12; }'
-// File: Generator.php
-<?php class Generator {}
 EOT
-        , 1, 1
+        , 1, 1, true
         ];
 
         yield 'no code action or diagnostics for missing global function name' => [
             <<<'EOT'
 // File: subject.php
 <?php namespace Foobar; sprintf('foo %s', 'bar')
-// File: sprintf.php
-<?php function sprintf($pattern, ...$args) {}
 EOT
         , 0, 0
         ];

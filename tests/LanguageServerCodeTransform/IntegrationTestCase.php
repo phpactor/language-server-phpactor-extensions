@@ -39,7 +39,7 @@ class IntegrationTestCase extends TestCase
         return $builder->buildServerTester();
     }
 
-    public function container(): Container
+    public function container(array $config = []): Container
     {
         $this->workspace()->put('index/.foo', '');
         $container = PhpactorContainer::fromExtensions([
@@ -57,13 +57,14 @@ class IntegrationTestCase extends TestCase
             PhpExtension::class,
             LanguageServerBridgeExtension::class,
             TestLanguageServerSessionExtension::class,
-        ], [
+        ], array_merge([
             FilePathResolverExtension::PARAM_APPLICATION_ROOT => __DIR__ .'/../../',
             CodeTransformExtension::PARAM_TEMPLATE_PATHS => [],
             FilePathResolverExtension::PARAM_PROJECT_ROOT => $this->workspace()->path(),
             IndexerExtension::PARAM_INDEX_PATH => $this->workspace()->path('index'),
             LanguageServerExtension::PARAM_DIAGNOSTIC_SLEEP_TIME => 0,
-        ]);
+        ], $config));
+
         return $container;
     }
 }
