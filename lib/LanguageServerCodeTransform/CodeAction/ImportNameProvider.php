@@ -19,6 +19,8 @@ use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\LanguageServer\Core\CodeAction\CodeActionProvider;
 use Phpactor\LanguageServer\Core\Diagnostics\DiagnosticsProvider;
 use Phpactor\TextDocument\TextDocumentBuilder;
+use Phpactor\WorseReflection\Core\Exception\NotFound;
+use Phpactor\WorseReflection\Core\Reflector\FunctionReflector;
 use function Amp\call;
 
 class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
@@ -38,11 +40,17 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
      */
     private $importGlobals;
 
-    public function __construct(UnresolvableClassNameFinder $finder, SearchClient $client, bool $importGlobals = false)
+    /**
+     * @var FunctionReflector
+     */
+    private $functionReflector;
+
+    public function __construct(UnresolvableClassNameFinder $finder, FunctionReflector $functionReflector, SearchClient $client, bool $importGlobals = false)
     {
         $this->finder = $finder;
         $this->client = $client;
         $this->importGlobals = $importGlobals;
+        $this->functionReflector = $functionReflector;
     }
 
     public function provideActionsFor(TextDocumentItem $item, Range $range): Promise
@@ -137,6 +145,14 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
 
         $candidates = $this->findCandidates($unresolvedName);
 
+        if (
+            false === $this->importGlobals &&
+            $unresolvedName->type() === NameWithByteOffset::TYPE_FUNCTION &&
+            $this->hasGlobalFunctionCandidate($unresolvedName, $candidates)
+        ) {
+            return [];
+        }
+
         if (count($candidates) === 0) {
             return [
                 new Diagnostic(
@@ -151,14 +167,6 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
                     'phpactor'
                 )
             ];
-        }
-
-        if (
-            false === $this->importGlobals &&
-            $unresolvedName->type() === NameWithByteOffset::TYPE_FUNCTION &&
-            $this->hasGlobalCandidate($candidates)
-        ) {
-            return [];
         }
 
         return [
@@ -192,8 +200,14 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
         return $candidates;
     }
 
-    private function hasGlobalCandidate(array $candidates): bool
+    private function hasGlobalFunctionCandidate(NameWithByteOffset $name, array $candidates): bool
     {
+        try {
+            $this->functionReflector->reflectFunction($name->name());
+            return true;
+        } catch (NotFound $notFound) {
+        }
+
         foreach ($candidates as $candidate) {
             if ($this->isCandidateGlobal($candidate)) {
                 return true;

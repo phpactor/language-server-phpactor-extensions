@@ -126,5 +126,18 @@ class Bar
 EOT
         , 0, 0
         ];
+
+        yield 'built in global funtion' => [
+            <<<'EOT'
+// File: subject.php
+<?php
+
+namespace Phpactor\Extension;
+
+$bar = [];
+explode(array_keys($bar));
+EOT
+        , 0, 0
+        ];
     }
 }

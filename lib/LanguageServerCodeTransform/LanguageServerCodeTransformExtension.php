@@ -13,6 +13,7 @@ use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\TransformerCodeAct
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportNameCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\TransformCommand;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
+use Phpactor\Extension\WorseReflection\WorseReflectionExtension;
 use Phpactor\Indexer\Model\SearchClient;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\MapResolver\Resolver;
@@ -76,6 +77,7 @@ class LanguageServerCodeTransformExtension implements Extension
         $container->register(ImportNameProvider::class, function (Container $container) {
             return new ImportNameProvider(
                 $container->get(UnresolvableClassNameFinder::class),
+                $container->get(WorseReflectionExtension::SERVICE_REFLECTOR),
                 $container->get(SearchClient::class),
                 $container->getParameter(self::PARAM_IMPORT_GLOBALS)
             );
