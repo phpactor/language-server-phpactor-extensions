@@ -22,6 +22,7 @@ use Phpactor\TextDocument\TextDocumentBuilder;
 use Phpactor\WorseReflection\Core\Exception\NotFound;
 use Phpactor\WorseReflection\Core\Reflector\FunctionReflector;
 use function Amp\call;
+use function Amp\delay;
 
 class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
 {
@@ -62,13 +63,13 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
 
             $actions = [];
             foreach ($unresolvedNames as $unresolvedName) {
-                if ($this->isUnresolvedNameGlobal($unresolvedName)) {
+                if ($this->isUnresolvedGlobalFunction($unresolvedName)) {
                     if (false === $this->importGlobals) {
                         continue;
                     }
                     $actions[] = $this->codeActionForFqn($unresolvedName, $unresolvedName->name()->head()->__toString(), $item);
+                    continue;
                 }
-
                 assert($unresolvedName instanceof NameWithByteOffset);
 
                 $candidates = $this->findCandidates($unresolvedName);
@@ -78,6 +79,7 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
 
                     $fqn = $candidate->fqn()->__toString();
                     $actions[] = $this->codeActionForFqn($unresolvedName, $fqn, $item);
+                    yield delay(1);
                 }
             }
 
@@ -107,7 +109,7 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
             );
 
             foreach ($unresolvedNames as $unresolvedName) {
-                if (false === $this->importGlobals && $this->isUnresolvedNameGlobal($unresolvedName)) {
+                if (false === $this->importGlobals && $this->isUnresolvedGlobalFunction($unresolvedName)) {
                     continue;
                 }
                 $diagnostics = array_merge(
@@ -179,8 +181,12 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
         return $candidates;
     }
 
-    private function isUnresolvedNameGlobal(NameWithByteOffset $unresolvedName): bool
+    private function isUnresolvedGlobalFunction(NameWithByteOffset $unresolvedName): bool
     {
+        if ($unresolvedName->type() !== NameWithByteOffset::TYPE_FUNCTION) {
+            return false;
+        }
+
         try {
             $this->functionReflector->sourceCodeForFunction(
                 $unresolvedName->name()->head()->__toString()

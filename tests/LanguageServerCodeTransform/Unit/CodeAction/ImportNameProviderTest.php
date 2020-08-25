@@ -92,8 +92,20 @@ EOT
             <<<'EOT'
 // File: subject.php
 <?php namespace Foobar; function foobar(): Generator { yield 12; }'
+// File: Generator.php
+<?php class Generator {}
 EOT
         , 1, 1, true
+        ];
+
+        yield 'code action and diagnostic for missing global class name without import globals' => [
+            <<<'EOT'
+// File: subject.php
+<?php namespace Foobar; function foobar(): Generator { yield 12; }'
+// File: Generator.php
+<?php class Generator {}
+EOT
+        , 1, 1, false
         ];
 
         yield 'no code action or diagnostics for missing global function name' => [
@@ -128,6 +140,8 @@ EOT
 
         yield 'built in global funtion' => [
             <<<'EOT'
+// File: functions.php
+<?php function explode() {} function array_keys(){}
 // File: subject.php
 <?php
 
@@ -137,6 +151,34 @@ $bar = [];
 explode(array_keys($bar));
 EOT
         , 0, 0
+        ];
+
+        yield 'built in global funtion with import globals' => [
+            <<<'EOT'
+// File: functions.php
+<?php function explode() {} function array_keys(){}
+// File: subject.php
+<?php
+
+namespace Phpactor\Extension;
+
+$bar = [];
+explode(array_keys($bar));
+EOT
+        , 2, 2, true
+        ];
+
+        yield 'constant' => [
+            <<<'EOT'
+// File: subject.php
+<?php
+
+namespace Phpactor\Extension;
+
+if (INF) {
+}
+EOT
+        , 0, 0, true
         ];
     }
 }
