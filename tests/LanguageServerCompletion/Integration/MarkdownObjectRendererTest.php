@@ -441,7 +441,7 @@ class OneClass
 EOT
                 )->get('OneClass')->methods()->get('foobar');
             },
-            'method8.md',
+            'method8.md'
         ];
     }
 

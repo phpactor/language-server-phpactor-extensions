@@ -1,2 +1,2 @@
-_⚠ deprecated: This is deprecated_
+// @deprecated This is deprecated
 class Foobar

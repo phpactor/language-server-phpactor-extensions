@@ -1,2 +1,2 @@
-_⚠ deprecated: Do not use me_
-public function foobar()
+// @deprecated Do not use me
+    ⚠ public function foobar()
