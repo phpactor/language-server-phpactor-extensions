@@ -34,7 +34,6 @@ class ImportNameProviderBench extends IntegrationTestCase
      */
     private $provider;
 
-
     public function setUp(): void
     {
         $this->workspace()->reset();
