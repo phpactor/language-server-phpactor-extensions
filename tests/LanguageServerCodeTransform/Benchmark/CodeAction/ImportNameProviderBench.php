@@ -2,21 +2,11 @@
 
 namespace Phpactor\Extension\LanguageServerCodeTransform\Tests\Benchmark\CodeAction;
 
-use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\ImportNameProvider;
-use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\TransformerCodeActionPovider;
-use Phpactor\LanguageServerProtocol\CodeActionContext;
 use Phpactor\Extension\LanguageServerCodeTransform\Tests\IntegrationTestCase;
-use Phpactor\LanguageServerProtocol\CodeActionParams;
-use Phpactor\LanguageServerProtocol\CodeActionRequest;
-use Phpactor\LanguageServerProtocol\Range;
-use Phpactor\LanguageServer\LanguageServerTesterBuilder;
 use Phpactor\TestUtils\ExtractOffset;
 use Phpactor\LanguageServer\Test\LanguageServerTester;
 use Phpactor\LanguageServer\Test\ProtocolFactory;
-use Phpactor\LanguageServer\LanguageServerBuilder;
-use function Amp\Promise\wait;
-use function Amp\delay;
 
 /**
  * @Iterations(10)
@@ -37,7 +27,8 @@ class ImportNameProviderBench extends IntegrationTestCase
     public function setUp(): void
     {
         $this->workspace()->reset();
-        $this->workspace()->loadManifest(<<<'EOT'
+        $this->workspace()->loadManifest(
+            <<<'EOT'
 // File: Barfoo.php
 <?php
 class Barfoo
@@ -95,7 +86,7 @@ class Barbar
     }
 }
 EOT
-);
+        );
         $this->provider = $this->container()->get(ImportNameProvider::class);
     }
 
