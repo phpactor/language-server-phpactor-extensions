@@ -202,6 +202,14 @@ EOT
             'class_reflection5.md',
             true
         ];
+
+        yield 'deprecated class' => [
+            '',
+            function (Reflector $reflector) {
+                return $reflector->reflectClassesIn('<?php /** @deprecated This is deprecated */class Foobar {}')->first();
+            },
+            'class_reflection6.md',
+        ];
     }
 
     /**
@@ -412,6 +420,28 @@ EOT
                 )->get('OneClass')->methods()->get('foobar');
             },
             'method7.md',
+        ];
+
+        yield 'deprecated method' => [
+            '',
+            function (Reflector $reflector) {
+                return $reflector->reflectClassesIn(
+                    <<<'EOT'
+<?php
+
+class OneClass
+{
+    /**
+     * @deprecated Do not use me
+     */
+    public function foobar()
+    {
+    }
+}
+EOT
+                )->get('OneClass')->methods()->get('foobar');
+            },
+            'method8.md',
         ];
     }
 
