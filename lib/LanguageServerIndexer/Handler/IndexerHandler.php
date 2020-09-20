@@ -126,8 +126,9 @@ class IndexerHandler implements Handler, ServiceProvider
             }
 
             $this->clientApi->window()->showMessage()->info(sprintf(
-                'Done indexing (%ss), watching.',
-                number_format(microtime(true) - $start, 2)
+                'Done indexing (%ss), watching with %s',
+                number_format(microtime(true) - $start, 2),
+                $this->watcher->describe()
             ));
 
             return yield from $this->watch($cancel);
