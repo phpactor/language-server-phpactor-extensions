@@ -34,7 +34,7 @@ EOT
         );
 
         $this->tester->initialize();
-        wait(delay(10));
+        wait(delay(15));
 
         self::assertGreaterThanOrEqual(2, $this->tester->transmitter()->count());
         self::assertStringContainsString('Indexing', $this->tester->transmitter()->shift()->params['message']);

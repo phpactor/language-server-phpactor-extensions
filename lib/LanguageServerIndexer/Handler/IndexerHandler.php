@@ -9,6 +9,7 @@ use Amp\Promise;
 use Generator;
 use Phpactor\AmpFsWatch\Exception\WatcherDied;
 use Phpactor\AmpFsWatch\Watcher;
+use Phpactor\AmpFsWatch\WatcherProcess;
 use Phpactor\Extension\LanguageServerIndexer\Event\IndexReset;
 use Phpactor\LanguageServer\Core\Handler\Handler;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
@@ -125,13 +126,14 @@ class IndexerHandler implements Handler, ServiceProvider
                 yield new Delayed(1);
             }
 
+            $process = yield $this->watcher->watch();
             $this->clientApi->window()->showMessage()->info(sprintf(
                 'Done indexing (%ss), watching with %s',
                 number_format(microtime(true) - $start, 2),
                 $this->watcher->describe()
             ));
 
-            return yield from $this->watch($cancel);
+            return yield from $this->watch($process, $cancel);
         });
     }
 
@@ -149,11 +151,9 @@ class IndexerHandler implements Handler, ServiceProvider
     /**
      * @return Generator<Promise>
      */
-    private function watch(CancellationToken $cancel): Generator
+    private function watch(WatcherProcess $process, CancellationToken $cancel): Generator
     {
         try {
-            $process = yield $this->watcher->watch();
-
             while (null !== $file = yield $process->wait()) {
                 try {
                     $cancel->throwIfRequested();
