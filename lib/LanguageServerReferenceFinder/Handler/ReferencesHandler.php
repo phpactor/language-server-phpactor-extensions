@@ -161,18 +161,7 @@ class ReferencesHandler implements Handler, CanRegisterCapabilities
      */
     private function toLocations(array $locations): array
     {
-        usort($locations, function (Location $first, Location $second) {
-            $order = strcmp((string) $first->uri(), (string) $second->uri());
-            if (0 !== $order) {
-                return $order;
-            }
-
-            return $first->offset()->toInt() - $second->offset()->toInt();
-        });
-
-        $lspLocations = $this->locationConverter->toLspLocations(new Locations($locations));
-
-        return $lspLocations;
+        return $this->locationConverter->toLspLocations(Locations::bySorting($locations));
     }
 
     public function registerCapabiltiies(ServerCapabilities $capabilities): void
