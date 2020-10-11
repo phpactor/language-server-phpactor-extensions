@@ -31,12 +31,12 @@ class ReferencesHandlerTest extends TestCase
     const EXAMPLE_TEXT = 'hello';
 
     /**
-     * @var ObjectProphecy|ReferenceFinder
+     * @var ObjectProphecy<ReferenceFinder>
      */
     private $finder;
 
     /**
-     * @var ObjectProphecy
+     * @var ObjectProphecy<DefinitionLocator>
      */
     private $locator;
 
@@ -116,7 +116,7 @@ class ReferencesHandlerTest extends TestCase
             ByteOffset::fromInt(0)
         )->willReturn(new DefinitionLocation($document->uri(), ByteOffset::fromInt(2)))->shouldBeCalled();
 
-        $response = $this->createTester(true)->requestAndWait(ReferencesRequest::METHOD, [
+        $response = $this->createTester()->requestAndWait(ReferencesRequest::METHOD, [
             'textDocument' => ProtocolFactory::textDocumentIdentifier(self::EXAMPLE_URI),
             'position' => ProtocolFactory::position(0, 0),
             'context' => new ReferenceContext(true),
@@ -128,7 +128,7 @@ class ReferencesHandlerTest extends TestCase
         $this->assertInstanceOf(LspLocation::class, $lspLocation);
     }
 
-    public function testFindsReferencesIncludingDeclarationWhenDeclarationNotFound()
+    public function testFindsReferencesIncludingDeclarationWhenDeclarationNotFound(): void
     {
         $document = TextDocumentBuilder::create(self::EXAMPLE_TEXT)
             ->language('php')
