@@ -161,7 +161,9 @@ class ReferencesHandler implements Handler, CanRegisterCapabilities
      */
     private function toLocations(array $locations): array
     {
-        return $this->locationConverter->toLspLocations(new Locations($locations));
+        return $this->locationConverter->toLspLocations(
+            (new Locations($locations))->sorted()
+        );
     }
 
     public function registerCapabiltiies(ServerCapabilities $capabilities): void

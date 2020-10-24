@@ -3,6 +3,8 @@
 namespace Phpactor\Extension\LanguageServerReferenceFinder\Tests\Unit\Handler;
 
 use Phpactor\LanguageServerProtocol\Location as LspLocation;
+use Phpactor\LanguageServerProtocol\Position;
+use Phpactor\LanguageServerProtocol\Range;
 use Phpactor\LanguageServerProtocol\ReferenceContext;
 use Phpactor\LanguageServerProtocol\ReferencesRequest;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
@@ -21,6 +23,7 @@ use Phpactor\TestUtils\PHPUnit\TestCase;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\Location;
 use Phpactor\TextDocument\TextDocumentBuilder;
+use Prophecy\Prophecy\ObjectProphecy;
 
 class ReferencesHandlerTest extends TestCase
 {
@@ -28,12 +31,12 @@ class ReferencesHandlerTest extends TestCase
     const EXAMPLE_TEXT = 'hello';
 
     /**
-     * @var ObjectProphecy|ReferenceFinder
+     * @var ObjectProphecy<ReferenceFinder>
      */
     private $finder;
 
     /**
-     * @var ObjectProphecy
+     * @var ObjectProphecy<DefinitionLocator>
      */
     private $locator;
 
@@ -51,14 +54,23 @@ class ReferencesHandlerTest extends TestCase
             ->build()
         ;
 
+        $document2 = TextDocumentBuilder::create(self::EXAMPLE_TEXT)
+            ->language('php')
+            ->uri(self::EXAMPLE_URI.'2')
+            ->build()
+        ;
+
         $this->finder->findReferences(
             $document,
             ByteOffset::fromInt(0)
         )->willYield([
-            PotentialLocation::surely(new Location($document->uri(), ByteOffset::fromInt(2)))
+            PotentialLocation::surely(new Location($document->uri(), ByteOffset::fromInt(2))),
+            PotentialLocation::surely(new Location($document2->uri(), ByteOffset::fromInt(3))),
+            PotentialLocation::surely(new Location($document->uri(), ByteOffset::fromInt(5))),
         ])->shouldBeCalled();
 
         $tester = $this->createTester();
+        $tester->textDocument()->open(self::EXAMPLE_URI.'2', self::EXAMPLE_TEXT);
 
         $response = $tester->requestAndWait(ReferencesRequest::METHOD, [
             'textDocument' => ProtocolFactory::textDocumentIdentifier(self::EXAMPLE_URI),
@@ -68,9 +80,20 @@ class ReferencesHandlerTest extends TestCase
 
         $locations = $response->result;
         $this->assertIsArray($locations);
-        $this->assertCount(1, $locations);
-        $lspLocation = reset($locations);
-        $this->assertInstanceOf(LspLocation::class, $lspLocation);
+        $this->assertEquals([
+            new LspLocation(
+                (string) $document->uri(),
+                new Range(new Position(0, 2), new Position(0, 2)),
+            ),
+            new LspLocation(
+                (string) $document->uri(),
+                new Range(new Position(0, 5), new Position(0, 5)),
+            ),
+            new LspLocation(
+                (string) $document2->uri(),
+                new Range(new Position(0, 3), new Position(0, 3)),
+            ),
+        ], $locations);
     }
 
     public function testFindsReferencesIncludingDeclaration(): void
@@ -93,7 +116,7 @@ class ReferencesHandlerTest extends TestCase
             ByteOffset::fromInt(0)
         )->willReturn(new DefinitionLocation($document->uri(), ByteOffset::fromInt(2)))->shouldBeCalled();
 
-        $response = $this->createTester(true)->requestAndWait(ReferencesRequest::METHOD, [
+        $response = $this->createTester()->requestAndWait(ReferencesRequest::METHOD, [
             'textDocument' => ProtocolFactory::textDocumentIdentifier(self::EXAMPLE_URI),
             'position' => ProtocolFactory::position(0, 0),
             'context' => new ReferenceContext(true),
@@ -105,7 +128,7 @@ class ReferencesHandlerTest extends TestCase
         $this->assertInstanceOf(LspLocation::class, $lspLocation);
     }
 
-    public function testFindsReferencesIncludingDeclarationWhenDeclarationNotFound()
+    public function testFindsReferencesIncludingDeclarationWhenDeclarationNotFound(): void
     {
         $document = TextDocumentBuilder::create(self::EXAMPLE_TEXT)
             ->language('php')
