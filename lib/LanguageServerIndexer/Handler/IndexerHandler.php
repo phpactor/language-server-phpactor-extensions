@@ -11,6 +11,7 @@ use Phpactor\AmpFsWatch\Exception\WatcherDied;
 use Phpactor\AmpFsWatch\Watcher;
 use Phpactor\AmpFsWatch\WatcherProcess;
 use Phpactor\Extension\LanguageServerIndexer\Event\IndexReset;
+use Phpactor\Indexer\Model\MemoryUsage;
 use Phpactor\LanguageServer\Core\Handler\Handler;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\Indexer\Model\Indexer;
@@ -109,11 +110,13 @@ class IndexerHandler implements Handler, ServiceProvider
                 $index++;
 
                 if ($index % 500 === 0) {
+                    $usage = MemoryUsage::create();
                     $this->clientApi->window()->showMessage()->info(sprintf(
-                        'Indexed %s/%s (%s%%)',
+                        'Indexed %s/%s (%s%%) %s',
                         $index,
                         $size,
-                        number_format($index / $size * 100, 2)
+                        number_format($index / $size * 100, 2),
+                        $usage->memoryUsageFormatted()
                     ));
                 }
 
@@ -128,8 +131,9 @@ class IndexerHandler implements Handler, ServiceProvider
 
             $process = yield $this->watcher->watch();
             $this->clientApi->window()->showMessage()->info(sprintf(
-                'Done indexing (%ss), watching with %s',
+                'Done indexing (%ss, %s), watching with %s',
                 number_format(microtime(true) - $start, 2),
+                MemoryUsage::create()->memoryUsageFormatted(),
                 $this->watcher->describe()
             ));
 
