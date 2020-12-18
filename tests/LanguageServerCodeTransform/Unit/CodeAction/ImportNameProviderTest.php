@@ -19,6 +19,7 @@ class ImportNameProviderTest extends IntegrationTestCase
 {
     /**
      * @dataProvider provideImportProvider
+     * @group flakey
      */
     public function testImportProvider(string $manifest, int $expectedCount, int $expectedDiagnosticCount, bool $imprtGlobals = false): void
     {
