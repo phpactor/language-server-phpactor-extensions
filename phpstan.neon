@@ -1,11 +1,8 @@
 includes:
-    - vendor/jangregor/phpstan-prophecy/extension.neon
+    - phpstan-baseline.neon
 parameters:
     level: 7
     inferPrivatePropertyTypeFromConstructor: true
     checkMissingIterableValueType: false
-    ignoreErrors:
-        - '{return type with generic interface .*Promise does}'
-        - '{Unable to resolve the template type T.* in call to function}'
     paths:
         - lib

@@ -1,0 +1,357 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Unable to resolve the template type T in call to function Amp\\\\call$#"
+			count: 2
+			path: lib/LanguageServerCodeTransform/CodeAction/ImportNameProvider.php
+
+		-
+			message: "#^Unable to resolve the template type TGenerator in call to function Amp\\\\call$#"
+			count: 2
+			path: lib/LanguageServerCodeTransform/CodeAction/ImportNameProvider.php
+
+		-
+			message: "#^Unable to resolve the template type TGeneratorPromise in call to function Amp\\\\call$#"
+			count: 2
+			path: lib/LanguageServerCodeTransform/CodeAction/ImportNameProvider.php
+
+		-
+			message: "#^Unable to resolve the template type TGeneratorReturn in call to function Amp\\\\call$#"
+			count: 2
+			path: lib/LanguageServerCodeTransform/CodeAction/ImportNameProvider.php
+
+		-
+			message: "#^Unable to resolve the template type TPromise in call to function Amp\\\\call$#"
+			count: 2
+			path: lib/LanguageServerCodeTransform/CodeAction/ImportNameProvider.php
+
+		-
+			message: "#^Unable to resolve the template type TReturn in call to function Amp\\\\call$#"
+			count: 2
+			path: lib/LanguageServerCodeTransform/CodeAction/ImportNameProvider.php
+
+		-
+			message: "#^Unable to resolve the template type T in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerCodeTransform/CodeAction/TransformerCodeActionPovider.php
+
+		-
+			message: "#^Unable to resolve the template type TGenerator in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerCodeTransform/CodeAction/TransformerCodeActionPovider.php
+
+		-
+			message: "#^Unable to resolve the template type TGeneratorPromise in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerCodeTransform/CodeAction/TransformerCodeActionPovider.php
+
+		-
+			message: "#^Unable to resolve the template type TGeneratorReturn in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerCodeTransform/CodeAction/TransformerCodeActionPovider.php
+
+		-
+			message: "#^Unable to resolve the template type TPromise in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerCodeTransform/CodeAction/TransformerCodeActionPovider.php
+
+		-
+			message: "#^Unable to resolve the template type TReturn in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerCodeTransform/CodeAction/TransformerCodeActionPovider.php
+
+		-
+			message: "#^Method Phpactor\\\\Extension\\\\LanguageServerCodeTransform\\\\LspCommand\\\\ImportNameCommand\\:\\:__invoke\\(\\) return type with generic interface Amp\\\\Promise does not specify its types\\: TValue$#"
+			count: 1
+			path: lib/LanguageServerCodeTransform/LspCommand/ImportNameCommand.php
+
+		-
+			message: "#^Method Phpactor\\\\Extension\\\\LanguageServerCodeTransform\\\\LspCommand\\\\TransformCommand\\:\\:__invoke\\(\\) return type with generic interface Amp\\\\Promise does not specify its types\\: TValue$#"
+			count: 1
+			path: lib/LanguageServerCodeTransform/LspCommand/TransformCommand.php
+
+		-
+			message: "#^Method Phpactor\\\\Extension\\\\LanguageServerCompletion\\\\Handler\\\\CompletionHandler\\:\\:completion\\(\\) return type with generic interface Amp\\\\Promise does not specify its types\\: TValue$#"
+			count: 1
+			path: lib/LanguageServerCompletion/Handler/CompletionHandler.php
+
+		-
+			message: "#^Unable to resolve the template type T in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerCompletion/Handler/CompletionHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TGenerator in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerCompletion/Handler/CompletionHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TGeneratorPromise in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerCompletion/Handler/CompletionHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TGeneratorReturn in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerCompletion/Handler/CompletionHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TPromise in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerCompletion/Handler/CompletionHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TReturn in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerCompletion/Handler/CompletionHandler.php
+
+		-
+			message: "#^Method Phpactor\\\\Extension\\\\LanguageServerCompletion\\\\Handler\\\\SignatureHelpHandler\\:\\:signatureHelp\\(\\) return type with generic interface Amp\\\\Promise does not specify its types\\: TValue$#"
+			count: 1
+			path: lib/LanguageServerCompletion/Handler/SignatureHelpHandler.php
+
+		-
+			message: "#^Unable to resolve the template type T in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerCompletion/Handler/SignatureHelpHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TGenerator in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerCompletion/Handler/SignatureHelpHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TGeneratorPromise in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerCompletion/Handler/SignatureHelpHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TGeneratorReturn in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerCompletion/Handler/SignatureHelpHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TPromise in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerCompletion/Handler/SignatureHelpHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TReturn in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerCompletion/Handler/SignatureHelpHandler.php
+
+		-
+			message: "#^Method Phpactor\\\\Extension\\\\LanguageServerHover\\\\Handler\\\\HoverHandler\\:\\:hover\\(\\) return type with generic interface Amp\\\\Promise does not specify its types\\: TValue$#"
+			count: 1
+			path: lib/LanguageServerHover/Handler/HoverHandler.php
+
+		-
+			message: "#^Unable to resolve the template type T in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerHover/Handler/HoverHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TGenerator in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerHover/Handler/HoverHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TGeneratorPromise in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerHover/Handler/HoverHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TGeneratorReturn in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerHover/Handler/HoverHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TPromise in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerHover/Handler/HoverHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TReturn in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerHover/Handler/HoverHandler.php
+
+		-
+			message: "#^Unable to resolve the template type T in call to function Amp\\\\call$#"
+			count: 2
+			path: lib/LanguageServerIndexer/Handler/IndexerHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TGenerator in call to function Amp\\\\call$#"
+			count: 2
+			path: lib/LanguageServerIndexer/Handler/IndexerHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TGeneratorPromise in call to function Amp\\\\call$#"
+			count: 2
+			path: lib/LanguageServerIndexer/Handler/IndexerHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TGeneratorReturn in call to function Amp\\\\call$#"
+			count: 2
+			path: lib/LanguageServerIndexer/Handler/IndexerHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TPromise in call to function Amp\\\\call$#"
+			count: 2
+			path: lib/LanguageServerIndexer/Handler/IndexerHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TReturn in call to function Amp\\\\call$#"
+			count: 2
+			path: lib/LanguageServerIndexer/Handler/IndexerHandler.php
+
+		-
+			message: "#^Method Phpactor\\\\Extension\\\\LanguageServerIndexer\\\\Handler\\\\IndexerHandler\\:\\:reindex\\(\\) return type with generic interface Amp\\\\Promise does not specify its types\\: TValue$#"
+			count: 1
+			path: lib/LanguageServerIndexer/Handler/IndexerHandler.php
+
+		-
+			message: "#^Method Phpactor\\\\Extension\\\\LanguageServerIndexer\\\\Handler\\\\IndexerHandler\\:\\:watch\\(\\) return type with generic interface Amp\\\\Promise does not specify its types\\: TValue$#"
+			count: 1
+			path: lib/LanguageServerIndexer/Handler/IndexerHandler.php
+
+		-
+			message: "#^Method Phpactor\\\\Extension\\\\LanguageServerReferenceFinder\\\\Handler\\\\GotoDefinitionHandler\\:\\:definition\\(\\) return type with generic interface Amp\\\\Promise does not specify its types\\: TValue$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/GotoDefinitionHandler.php
+
+		-
+			message: "#^Unable to resolve the template type T in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/GotoDefinitionHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TGenerator in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/GotoDefinitionHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TGeneratorPromise in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/GotoDefinitionHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TGeneratorReturn in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/GotoDefinitionHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TPromise in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/GotoDefinitionHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TReturn in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/GotoDefinitionHandler.php
+
+		-
+			message: "#^Method Phpactor\\\\Extension\\\\LanguageServerReferenceFinder\\\\Handler\\\\GotoImplementationHandler\\:\\:gotoImplementation\\(\\) return type with generic interface Amp\\\\Promise does not specify its types\\: TValue$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/GotoImplementationHandler.php
+
+		-
+			message: "#^Unable to resolve the template type T in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/GotoImplementationHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TGenerator in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/GotoImplementationHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TGeneratorPromise in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/GotoImplementationHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TGeneratorReturn in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/GotoImplementationHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TPromise in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/GotoImplementationHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TReturn in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/GotoImplementationHandler.php
+
+		-
+			message: "#^Method Phpactor\\\\Extension\\\\LanguageServerReferenceFinder\\\\Handler\\\\ReferencesHandler\\:\\:references\\(\\) return type with generic interface Amp\\\\Promise does not specify its types\\: TValue$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/ReferencesHandler.php
+
+		-
+			message: "#^Unable to resolve the template type T in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/ReferencesHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TGenerator in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/ReferencesHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TGeneratorPromise in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/ReferencesHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TGeneratorReturn in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/ReferencesHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TPromise in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/ReferencesHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TReturn in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/ReferencesHandler.php
+
+		-
+			message: "#^Method Phpactor\\\\Extension\\\\LanguageServerReferenceFinder\\\\Handler\\\\TypeDefinitionHandler\\:\\:type\\(\\) return type with generic interface Amp\\\\Promise does not specify its types\\: TValue$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/TypeDefinitionHandler.php
+
+		-
+			message: "#^Unable to resolve the template type T in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/TypeDefinitionHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TGenerator in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/TypeDefinitionHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TGeneratorPromise in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/TypeDefinitionHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TGeneratorReturn in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/TypeDefinitionHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TPromise in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/TypeDefinitionHandler.php
+
+		-
+			message: "#^Unable to resolve the template type TReturn in call to function Amp\\\\call$#"
+			count: 1
+			path: lib/LanguageServerReferenceFinder/Handler/TypeDefinitionHandler.php
+
