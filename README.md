@@ -1,7 +1,7 @@
 Language Server Phpactor Extensions
 ===================================
 
-[![Build Status](https://travis-ci.org/phpactor/language-server-phpactor-extensions.svg?branch=master)](https://travis-ci.org/phpactor/language-server-phpactor-extensions)
+![CI](https://github.com/phpactor/language-server-phpactor-extensions/workflows/CI/badge.svg)
 
 The Phpactor Language Server Extensions.
 
