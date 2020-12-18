@@ -1,6 +1,5 @@
 includes:
     - vendor/jangregor/phpstan-prophecy/extension.neon
-
 parameters:
     level: 7
     inferPrivatePropertyTypeFromConstructor: true
@@ -8,6 +7,5 @@ parameters:
     ignoreErrors:
         - '{return type with generic interface .*Promise does}'
         - '{Unable to resolve the template type T.* in call to function}'
-        
     paths:
         - lib

@@ -33,7 +33,7 @@
     },
     "require-dev": {
         "phpspec/prophecy-phpunit": "^2.0",
-        "phpstan/phpstan": "^0.12.0",
+        "phpstan/phpstan": "~0.12.0",
         "phpunit/phpunit": "^9.0",
         "phpactor/test-utils": "^1.1",
         "dms/phpunit-arraysubset-asserts": "dev-master",
