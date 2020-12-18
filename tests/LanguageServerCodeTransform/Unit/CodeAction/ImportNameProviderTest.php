@@ -49,7 +49,7 @@ class ImportNameProviderTest extends IntegrationTestCase
         $tester->assertSuccess($result);
 
         self::assertCount($expectedCount, $result->result, 'Number of code actions');
-        $tester->textDocument()->update('file:///foobar', $source);
+        $tester->textDocument()->save('file:///foobar', $source);
 
         $diagnostics = $tester->transmitter()->filterByMethod('textDocument/publishDiagnostics')->shiftNotification();
         self::assertNotNull($diagnostics);
