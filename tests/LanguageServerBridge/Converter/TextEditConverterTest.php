@@ -23,7 +23,7 @@ class TextEditConverterTest extends IntegrationTestCase
      */
     private $converter;
 
-    protected function setUp(): void
+    protected function setUp(): void: void
     {
         $this->workspace()->reset();
         $this->workspace = new Workspace();

@@ -25,7 +25,7 @@ class GotoDefinitionHandlerTest extends TestCase
      */
     private $locator;
 
-    protected function setUp(): void
+    protected function setUp(): void: void
     {
         $this->locator = $this->prophesize(DefinitionLocator::class);
     }

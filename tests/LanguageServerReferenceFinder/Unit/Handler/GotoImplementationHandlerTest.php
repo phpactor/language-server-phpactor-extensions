@@ -25,7 +25,7 @@ class GotoImplementationHandlerTest extends TestCase
      */
     private $finder;
 
-    protected function setUp(): void
+    protected function setUp(): void: void
     {
         $this->finder = $this->prophesize(ClassImplementationFinder::class);
     }

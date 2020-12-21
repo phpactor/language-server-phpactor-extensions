@@ -34,7 +34,7 @@ class MarkdownObjectRendererTest extends IntegrationTestCase
      */
     private $locator;
 
-    protected function setUp(): void
+    protected function setUp(): void: void
     {
         $this->workspace()->mkdir('project');
         $this->workspace()->reset();

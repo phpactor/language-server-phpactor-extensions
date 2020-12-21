@@ -21,7 +21,7 @@ class WorkspaceSourceLocatorTest extends TestCase
      */
     private $locator;
 
-    protected function setUp(): void
+    protected function setUp(): void: void
     {
         $this->index = $this->prophesize(WorkspaceIndex::class);
         $this->locator = new WorkspaceSourceLocator($this->index->reveal());

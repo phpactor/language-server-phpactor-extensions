@@ -24,7 +24,7 @@ class ImportNameProviderBench extends IntegrationTestCase
      */
     private $provider;
 
-    public function setUp(): void
+    protected function setUp(): void: void
     {
         $this->workspace()->reset();
         $this->workspace()->loadManifest(

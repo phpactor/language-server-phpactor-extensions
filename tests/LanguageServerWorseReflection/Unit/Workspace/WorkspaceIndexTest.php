@@ -15,7 +15,7 @@ class WorkspaceIndexTest extends TestCase
      */
     private $index;
 
-    protected function setUp(): void
+    protected function setUp(): void: void
     {
         $reflector = ReflectorBuilder::create()->build();
         $this->index = new WorkspaceIndex($reflector);

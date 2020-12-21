@@ -15,7 +15,7 @@ use Phpactor\LanguageServerProtocol\Location as LspLocation;
 
 class LocationConverterTest extends IntegrationTestCase
 {
-    protected function setUp(): void
+    protected function setUp(): void: void
     {
         $this->workspace()->reset();
     }

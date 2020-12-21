@@ -13,7 +13,7 @@ class SuggestionNameFormatterTest extends TestCase
      */
     private $formatter;
 
-    protected function setUp(): void
+    protected function setUp(): void: void
     {
         $this->formatter = new SuggestionNameFormatter(true);
     }

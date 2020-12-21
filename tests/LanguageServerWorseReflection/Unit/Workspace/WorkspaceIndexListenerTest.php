@@ -27,7 +27,7 @@ class WorkspaceIndexListenerTest extends TestCase
      */
     private $dispatcher;
 
-    protected function setUp(): void
+    protected function setUp(): void: void
     {
         $this->index = $this->prophesize(WorkspaceIndex::class);
         $this->dispatcher = new EventDispatcher(

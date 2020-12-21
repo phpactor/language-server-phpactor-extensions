@@ -55,7 +55,7 @@ class ImportNameCommandTest extends TestCase
      */
     private $command;
 
-    protected function setUp(): void
+    protected function setUp(): void: void
     {
         $this->importName = $this->prophesize(ImportName::class);
         $this->workspace = new Workspace();

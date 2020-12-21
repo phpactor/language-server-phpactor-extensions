@@ -16,7 +16,7 @@ class IndexerHandlerTest extends IntegrationTestCase
      */
     private $tester;
 
-    protected function setUp(): void
+    protected function setUp(): void: void
     {
         $container = $this->container();
         $this->tester = $container->get(LanguageServerBuilder::class)->tester(
@@ -47,13 +47,13 @@ EOT
 
         wait(delay(10));
 
-        self::assertContains('indexer', $this->tester->services()->listRunning());
+        self::assertStringContainsString('indexer', $this->tester->services()->listRunning());
         $this->tester->services()->stop('indexer');
         self::assertNotContains('indexer', $this->tester->services()->listRunning());
 
         $this->tester->notifyAndWait('phpactor/indexer/reindex', []);
 
-        self::assertContains('indexer', $this->tester->services()->listRunning());
+        self::assertStringContainsString('indexer', $this->tester->services()->listRunning());
     }
 
     public function testReindexHard(): void
@@ -62,7 +62,7 @@ EOT
             'soft' => false,
         ]);
 
-        self::assertContains('indexer', $this->tester->services()->listRunning());
+        self::assertStringContainsString('indexer', $this->tester->services()->listRunning());
     }
 
     public function testShowsMessageOnWatcherDied(): void
