@@ -89,14 +89,14 @@ EOT
         , 0, 1
         ];
 
-// this test fails on the main phpactor integration tests
+        // this test fails on the main phpactor integration tests
 //        yield 'code action and diagnostic for missing global class name with import globals' => [
 //            <<<'EOT'
-//// File: subject.php
-//<?php namespace Foobar; function foobar(): Generator { yield 12; }'
-//// File: Generator.php
-//<?php class Generator {}
-//EOT
+        //// File: subject.php
+        //<?php namespace Foobar; function foobar(): Generator { yield 12; }'
+        //// File: Generator.php
+        //<?php class Generator {}
+        //EOT
 //        , 1, 1, true
 //        ];
 
