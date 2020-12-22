@@ -11,6 +11,7 @@ use Phpactor\LanguageServerProtocol\WorkspaceEdit;
 use Phpactor\LanguageServer\Core\Command\Command;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
+use Phpactor\TextDocument\TextDocumentUri;
 
 class TransformCommand implements Command
 {
@@ -47,7 +48,10 @@ class TransformCommand implements Command
         $transformer = $this->transformers->get($transform);
         assert($transformer instanceof Transformer);
         $textEdits = $transformer->transform(
-            SourceCode::fromStringAndPath($textDocument->text, $textDocument->uri),
+            SourceCode::fromStringAndPath(
+                $textDocument->text,
+                TextDocumentUri::fromString($textDocument->uri)->path()
+            ),
         );
 
         return $this->clientApi->workspace()->applyEdit(new WorkspaceEdit([
