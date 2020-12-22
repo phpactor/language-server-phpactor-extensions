@@ -20,8 +20,9 @@ class TransformCommandTest extends TestCase
 
     public function testAppliesTransform(): void
     {
+        $testTransformer = new TestTransformer();
         $transformers = new Transformers([
-            self::EXAMPLE_TRANSFORM_NAME => new TestTransformer()
+            self::EXAMPLE_TRANSFORM_NAME => $testTransformer
         ]);
         $tester = LanguageServerTesterBuilder::create();
         $tester->addCommand('transform', new TransformCommand(
@@ -40,13 +41,22 @@ class TransformCommandTest extends TestCase
         $response = wait($promise);
         self::assertInstanceOf(ResponseMessage::class, $response);
         self::assertInstanceOf(ApplyWorkspaceEditResponse::class, $response->result);
+
+        self::assertNotNull($testTransformer->code);
+        self::assertEquals('/foobar', $testTransformer->code->path());
     }
 }
 
 class TestTransformer implements Transformer
 {
+    /**
+     * @var SourceCode
+     */
+    public $code;
+
     public function transform(SourceCode $code): TextEdits
     {
+        $this->code = $code;
         return TextEdits::none();
     }
 
