@@ -2,6 +2,7 @@
 
 namespace Phpactor\Extension\LanguageServerWorseReflection\Workspace;
 
+use Phpactor\TextDocument\Exception\TextDocumentNotFound;
 use Phpactor\TextDocument\TextDocument;
 use Phpactor\TextDocument\TextDocumentBuilder;
 use Phpactor\TextDocument\TextDocumentUri;
