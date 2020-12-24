@@ -17,6 +17,7 @@ use Phpactor\Extension\LanguageServerCompletion\LanguageServerCompletionExtensio
 use Phpactor\Extension\LanguageServerHover\LanguageServerHoverExtension;
 use Phpactor\Extension\LanguageServerIndexer\LanguageServerIndexerExtension;
 use Phpactor\Extension\LanguageServerReferenceFinder\LanguageServerReferenceFinderExtension;
+use Phpactor\Extension\LanguageServerRename\LanguageServerRenameExtension;
 use Phpactor\Extension\LanguageServerSelectionRange\LanguageServerSelectionRangeExtension;
 use Phpactor\Extension\LanguageServerSymbolProvider\LanguageServerSymbolProviderExtension;
 use Phpactor\Extension\LanguageServerWorseReflection\LanguageServerWorseReflectionExtension;
@@ -52,6 +53,7 @@ $container = PhpactorContainer::fromExtensions([
     LanguageServerBridgeExtension::class,
     LanguageServerSelectionRangeExtension::class,
     LanguageServerCodeTransformExtension::class,
+    LanguageServerRenameExtension::class,
     CodeTransformExtension::class,
     PhpExtension::class,
 ], [
