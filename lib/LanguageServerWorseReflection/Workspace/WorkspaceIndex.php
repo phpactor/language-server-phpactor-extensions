@@ -2,7 +2,6 @@
 
 namespace Phpactor\Extension\LanguageServerWorseReflection\Workspace;
 
-use Phpactor\TextDocument\Exception\TextDocumentNotFound;
 use Phpactor\TextDocument\TextDocument;
 use Phpactor\TextDocument\TextDocumentBuilder;
 use Phpactor\TextDocument\TextDocumentUri;
@@ -68,23 +67,24 @@ class WorkspaceIndex
     {
         $namesToRemove = array_diff($currentNames, $newNames);
         
-        foreach($newNames as $name) {
+        foreach ($newNames as $name) {
             $this->byName[$name] = $textDocument;
         }
-        foreach($namesToRemove as $name){
+        foreach ($namesToRemove as $name) {
             unset($this->byName[$name]);
         }
 
-        if(!empty($newNames))
+        if (!empty($newNames)) {
             $this->documentToNameMap[(string)$textDocument->uri()] = $newNames;
-        else
+        } else {
             unset($this->documentToNameMap[(string)$textDocument->uri()]);
+        }
     }
 
     public function update(TextDocumentUri $textDocumentUri, string $updatedText): void
     {
         $textDocument = $this->documents[(string)$textDocumentUri] ?? null;
-        if($textDocument === null){
+        if ($textDocument === null) {
             throw new RuntimeException(sprintf(
                 'Could not find document "%s"',
                 $textDocumentUri->__toString()
@@ -96,7 +96,7 @@ class WorkspaceIndex
     public function remove(TextDocumentUri $textDocumentUri): void
     {
         $textDocument = $this->documents[(string)$textDocumentUri] ?? null;
-        if($textDocument === null){
+        if ($textDocument === null) {
             throw new RuntimeException(sprintf(
                 'Could not find document "%s"',
                 $textDocumentUri->__toString()
