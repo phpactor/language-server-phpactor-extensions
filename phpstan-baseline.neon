@@ -91,37 +91,32 @@ parameters:
 			path: lib/LanguageServerRename/Handler/RenameHandler.php
 
 		-
-			message: "#^Method Phpactor\\\\Extension\\\\LanguageServerRename\\\\Handler\\\\RenameHandler\\:\\:rename\\(\\) return type with generic interface Amp\\\\Promise does not specify its types\\: TValue$#"
-			count: 1
-			path: lib/LanguageServerRename/Handler/RenameHandler.php
-			
-		-
 			message: "#^Unable to resolve the template type T in call to function Amp\\\\call$#"
-			count: 2
+			count: 1
 			path: lib/LanguageServerRename/Handler/RenameHandler.php
 
 		-
 			message: "#^Unable to resolve the template type TGenerator in call to function Amp\\\\call$#"
-			count: 2
+			count: 1
 			path: lib/LanguageServerRename/Handler/RenameHandler.php
 
 		-
 			message: "#^Unable to resolve the template type TGeneratorPromise in call to function Amp\\\\call$#"
-			count: 2
+			count: 1
 			path: lib/LanguageServerRename/Handler/RenameHandler.php
 
 		-
 			message: "#^Unable to resolve the template type TGeneratorReturn in call to function Amp\\\\call$#"
-			count: 2
+			count: 1
 			path: lib/LanguageServerRename/Handler/RenameHandler.php
 
 		-
 			message: "#^Unable to resolve the template type TPromise in call to function Amp\\\\call$#"
-			count: 2
+			count: 1
 			path: lib/LanguageServerRename/Handler/RenameHandler.php
 
 		-
 			message: "#^Unable to resolve the template type TReturn in call to function Amp\\\\call$#"
-			count: 2
+			count: 1
 			path: lib/LanguageServerRename/Handler/RenameHandler.php
 
