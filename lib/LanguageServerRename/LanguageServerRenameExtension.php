@@ -2,6 +2,7 @@
 
 namespace Phpactor\Extension\LanguageServerRename;
 
+use Microsoft\PhpParser\Parser;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
@@ -16,10 +17,10 @@ class LanguageServerRenameExtension implements Extension
      */
     public function load(ContainerBuilder $container)
     {
-        dump("Loading extension");
         $container->register(RenameHandler::class, function (Container $container) {
             return new RenameHandler(
-                // $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
+                $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
+                new Parser()
                 // $container->get(ReferenceFinderExtension::SERVICE_DEFINITION_LOCATOR),
                 // $container->get(LocationConverter::class)
             );
