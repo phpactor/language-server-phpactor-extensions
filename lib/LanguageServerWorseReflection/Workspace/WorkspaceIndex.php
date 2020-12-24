@@ -2,7 +2,6 @@
 
 namespace Phpactor\Extension\LanguageServerWorseReflection\Workspace;
 
-use Phpactor\TextDocument\Exception\TextDocumentNotFound;
 use Phpactor\TextDocument\TextDocument;
 use Phpactor\TextDocument\TextDocumentBuilder;
 use Phpactor\TextDocument\TextDocumentUri;
@@ -120,7 +119,6 @@ class WorkspaceIndex
     private function updateNames(TextDocument $textDocument, array $newNames, array $currentNames): void
     {
         $namesToRemove = array_diff($currentNames, $newNames);
-
         foreach ($newNames as $name) {
             $this->byName[$name] = $textDocument;
         }
