@@ -6,9 +6,14 @@ use Microsoft\PhpParser\Parser;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
+use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerRename\Handler\RenameHandler;
+use Phpactor\Extension\LanguageServerRename\Model\Renamer;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
+use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
+use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\MapResolver\Resolver;
+use Phpactor\ReferenceFinder\ReferenceFinder;
 
 class LanguageServerRenameExtension implements Extension
 {
@@ -20,9 +25,15 @@ class LanguageServerRenameExtension implements Extension
         $container->register(RenameHandler::class, function (Container $container) {
             return new RenameHandler(
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
-                new Parser()
-                // $container->get(ReferenceFinderExtension::SERVICE_DEFINITION_LOCATOR),
-                // $container->get(LocationConverter::class)
+                new Parser(),
+                new Renamer(
+                    $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
+                    new Parser(),
+                    $container->get(ReferenceFinder::class),
+                    $container->get(ReferenceFinderExtension::SERVICE_DEFINITION_LOCATOR),
+                    $container->get(LocationConverter::class),
+                    $container->get(ClientApi::class),
+                )
             );
         }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [] ]);
     }
