@@ -3,6 +3,7 @@
 namespace Phpactor\Extension\LanguageServerRename;
 
 use Microsoft\PhpParser\Parser;
+use Phpactor\CodeTransform\Domain\Refactor\RenameVariable;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
@@ -31,8 +32,8 @@ class LanguageServerRenameExtension implements Extension
                     new Parser(),
                     $container->get(ReferenceFinder::class),
                     $container->get(ReferenceFinderExtension::SERVICE_DEFINITION_LOCATOR),
-                    $container->get(LocationConverter::class),
                     $container->get(ClientApi::class),
+                    $container->get(RenameVariable::class),
                 )
             );
         }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [] ]);
