@@ -16,9 +16,14 @@ use Microsoft\PhpParser\Node\QualifiedName;
 use Microsoft\PhpParser\Node\Statement\ClassDeclaration;
 use Microsoft\PhpParser\Parser;
 use Microsoft\PhpParser\Token;
+use Phpactor\CodeTransform\Adapter\TolerantParser\Refactor\TolerantRenameVariable;
+use Phpactor\CodeTransform\Domain\Refactor\RenameVariable;
+use Phpactor\CodeTransform\Domain\SourceCode;
 use Phpactor\Extension\LanguageServerBridge\Converter\Exception\CouldNotLoadFileContents;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
+use Phpactor\Extension\Rpc\Diff\TextEditBuilder;
+use Phpactor\Extension\Rpc\Response\UpdateFileSourceResponse;
 use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\Range;
 use Phpactor\LanguageServerProtocol\TextDocumentEdit;
@@ -51,10 +56,6 @@ class Renamer
      */
     private $finder;
     /**
-     * @var LocationConverter
-     */
-    private $locationConverter;
-    /**
      * @var ClientApi
      */
     private $clientApi;
@@ -66,21 +67,31 @@ class Renamer
      * @var Workspace
      */
     private $workspace;
+    /**
+     * @var RenameVariable
+     */
+    private $renameVariable;
+    /**
+     * @var TextEditBuilder
+     */
+     private $textEditBuilder;
 
     public function __construct(
         Workspace $workspace,
         Parser $parser,
         ReferenceFinder $finder,
         DefinitionLocator $definitionLocator,
-        LocationConverter $locationConverter,
-        ClientApi $clientApi
+        ClientApi $clientApi,
+        RenameVariable $renameVariable
     ) {
         $this->parser = $parser;
         $this->definitionLocator = $definitionLocator;
         $this->finder = $finder;
-        $this->locationConverter = $locationConverter;
         $this->clientApi = $clientApi;
         $this->workspace = $workspace;
+        $this->renameVariable = $renameVariable;
+        // TODO: This should be a service
+        $this->textEditBuilder = new TextEditBuilder();
     }
 
     public function prepareRename(TextDocumentItem $textDocument, Position $position): ?Range
@@ -108,7 +119,7 @@ class Renamer
         } elseif ($node instanceof MemberAccessExpression) {
             $range = $this->getNodeNameRange($node);
         } else {
-            dump("Cannot rename: ". get_class($node));
+            // dump("Cannot rename: ". get_class($node));
         }
 
         return $range;
@@ -138,9 +149,9 @@ class Renamer
             ($node instanceof ScopedPropertyAccessExpression && $node->memberName instanceof Token)
         ) {
             return $this->renameClassOrMemberSymbol($phpactorDocument, $offset, $node, $this->getNodeName($node, $phpactorDocument), $newName);
+        } else {
+            return $this->renameVariable($phpactorDocument, $node, $offset, $newName);
         }
-
-        return null;
     }
     
     private function renameClassOrMemberSymbol(TextDocument $phpactorDocument, ByteOffset $offset, Node $node, string $oldName, string $newName): ?WorkspaceEdit
@@ -180,7 +191,7 @@ class Renamer
                     number_format(microtime(true) - $start, 2),
                     $this->timeoutSeconds
                 ));
-                return $this->toWorkspaceEdit($locations, $oldName, $newName);
+                return $this->locationsToWorkspaceEdit($locations, $oldName, $newName);
             }
 
             // if ($count++ % 10) {
@@ -194,10 +205,10 @@ class Renamer
             count($locations)
         ));
 
-        return $this->toWorkspaceEdit($locations, $oldName, $newName);
+        return $this->locationsToWorkspaceEdit($locations, $oldName, $newName);
     }
 
-    private function toWorkspaceEdit(array $locations, string $oldName, string $newName): WorkspaceEdit
+    private function locationsToWorkspaceEdit(array $locations, string $oldName, string $newName): WorkspaceEdit
     {
         // group locations by uri
         $locationsByUri = [];
@@ -367,5 +378,41 @@ class Renamer
         }
 
         return $contents;
+    }
+
+    private function renameVariable(TextDocument $phpactorDocument, Node $node, ByteOffset $offset, string $newName): WorkspaceEdit
+    {
+        $sourceCode = SourceCode::fromString((string)$phpactorDocument);
+        $newSource = $this->renameVariable->renameVariable($sourceCode, $offset->toInt(), $newName);
+        // $edits = $this->textEditBuilder->calculateTextEdits((string)$phpactorDocument, $newSource);
+        
+        // dump($newSource);
+        // dump($edits);
+        return $this->editsToWorkspaceEdit($phpactorDocument, $node, $newSource);
+    }
+
+    private function editsToWorkspaceEdit(TextDocument $phpactorDocument, Node $node, string $newSource): WorkspaceEdit
+    {
+        $uri = (string)$phpactorDocument->uri();
+        $oldSource = (string)$phpactorDocument;
+        $version = $this->workspace->has($uri) ? $this->workspace->get($uri)->version : 0;
+        $root = $node->getRoot();
+        return new WorkspaceEdit(
+            null,
+            [
+                new TextDocumentEdit(
+                    new VersionedTextDocumentIdentifier($uri, $version),
+                    [
+                        new TextEdit(
+                            new Range(
+                                PositionConverter::byteOffsetToPosition(ByteOffset::fromInt($root->getFullStart()), $oldSource),
+                                PositionConverter::byteOffsetToPosition(ByteOffset::fromInt($root->getEndPosition()), $oldSource),
+                            ),
+                            (string)$newSource
+                        )
+                    ]
+                )
+            ]
+        );
     }
 }
