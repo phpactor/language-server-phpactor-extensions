@@ -4,6 +4,7 @@ namespace Phpactor\Extension\LanguageServerRename\Model;
 
 use Amp\Delayed;
 use Microsoft\PhpParser\Node;
+use Microsoft\PhpParser\Node\ClassConstDeclaration;
 use Microsoft\PhpParser\Node\ConstElement;
 use Microsoft\PhpParser\Node\Expression\MemberAccessExpression;
 use Microsoft\PhpParser\Node\Expression\ScopedPropertyAccessExpression;
@@ -291,6 +292,13 @@ class Renamer
             );
         } elseif ($node instanceof ConstElement) {
             return $this->getTokenRange($node->name, $fileContents);
+        } elseif ($node instanceof ClassConstDeclaration) {
+            foreach($node->constElements->getElements() as $element){
+                if ($element instanceof ConstElement && !empty($name) && $element->getName() == $name) {
+                    return $this->getNodeNameRange($element, $name);
+                }
+            }
+            return null;
         } elseif ($node instanceof Parameter) {
             $range = $this->getTokenRange($node->variableName, $fileContents);
             $range->start->character++; // compensate for the dollar
@@ -315,9 +323,10 @@ class Renamer
                 }
             }
             return null;
-        } else {
-            dump("Cannot get node name position for node: ". get_class($node));
-        }
+        } 
+        // else {
+        //     dump("Cannot get node name position for node: ". get_class($node));
+        // }
         return null;
     }
 
