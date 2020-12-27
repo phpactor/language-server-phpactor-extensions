@@ -11,6 +11,7 @@ use Microsoft\PhpParser\Node\Expression\MemberAccessExpression;
 use Microsoft\PhpParser\Node\Expression\ScopedPropertyAccessExpression;
 use Microsoft\PhpParser\Node\Expression\Variable;
 use Microsoft\PhpParser\Node\MethodDeclaration;
+use Microsoft\PhpParser\Node\NamespaceUseClause;
 use Microsoft\PhpParser\Node\Parameter;
 use Microsoft\PhpParser\Node\PropertyDeclaration;
 use Microsoft\PhpParser\Node\QualifiedName;
@@ -258,6 +259,15 @@ class Highlighter
     private function namespacedNames(Node $rootNode, string $fullyQualfiiedName): Generator
     {
         foreach ($rootNode->getDescendantNodes() as $node) {
+            if ($node instanceof NamespaceUseClause && $node->namespaceName instanceof QualifiedName && (string)$node->namespaceName === $fullyQualfiiedName) {
+                yield new DocumentHighlight(
+                    new Range(
+                        PositionConverter::intByteOffsetToPosition($node->namespaceName->getStart(), $node->getFileContents()),
+                        PositionConverter::intByteOffsetToPosition($node->namespaceName->getEndPosition(), $node->getFileContents())
+                    ),
+                    DocumentHighlightKind::TEXT
+                );
+            }
             if ($node instanceof ClassDeclaration && (string)$node->getNamespacedName() === $fullyQualfiiedName) {
                 yield new DocumentHighlight(
                     new Range(
