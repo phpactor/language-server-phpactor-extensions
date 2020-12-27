@@ -20,6 +20,14 @@ class WorkspaceIndex
      * @var array<string, TextDocument>
      */
     private $byName = [];
+    /**
+     * @var array<string, TextDocument>
+     */
+    private $documents = [];
+    /**
+     * @var array<string, array<string>>
+     */
+    private $documentToNameMap = [];
 
     public function __construct(SourceCodeReflector $reflector)
     {
@@ -37,41 +45,64 @@ class WorkspaceIndex
 
     public function index(TextDocument $textDocument): void
     {
+        $this->documents[(string)$textDocument->uri()] = $textDocument;
+        $this->updateDocument($textDocument);
+    }
+
+    private function updateDocument(TextDocument $textDocument): void
+    {
+        $newNames = [];
         foreach ($this->reflector->reflectClassesIn($textDocument) as $reflectionClass) {
-            $this->byName[$reflectionClass->name()->full()] = $textDocument;
+            $newNames[] = $reflectionClass->name()->full();
+        }
+        
+        foreach ($this->reflector->reflectFunctionsIn($textDocument) as $reflectionFunction) {
+            $newNames[] = $reflectionFunction->name()->full();
         }
 
-        foreach ($this->reflector->reflectFunctionsIn($textDocument) as $reflectionFunction) {
-            $this->byName[$reflectionFunction->name()->full()] = $textDocument;
+        $this->updateNames($textDocument, $newNames, $this->documentToNameMap[(string)$textDocument->uri()] ?? []);
+    }
+
+    private function updateNames(TextDocument $textDocument, array $newNames, array $currentNames): void
+    {
+        $namesToRemove = array_diff($currentNames, $newNames);
+        
+        foreach ($newNames as $name) {
+            $this->byName[$name] = $textDocument;
+        }
+        foreach ($namesToRemove as $name) {
+            unset($this->byName[$name]);
+        }
+
+        if (!empty($newNames)) {
+            $this->documentToNameMap[(string)$textDocument->uri()] = $newNames;
+        } else {
+            unset($this->documentToNameMap[(string)$textDocument->uri()]);
         }
     }
 
     public function update(TextDocumentUri $textDocumentUri, string $updatedText): void
     {
-        foreach ($this->byName as $className => $textDocument) {
-            if ($textDocumentUri != $textDocument->uri()) {
-                continue;
-            }
-
-            $this->byName[$className] = TextDocumentBuilder::fromTextDocument($textDocument)->text($updatedText)->build();
-            return;
+        $textDocument = $this->documents[(string)$textDocumentUri] ?? null;
+        if ($textDocument === null) {
+            throw new RuntimeException(sprintf(
+                'Could not find document "%s"',
+                $textDocumentUri->__toString()
+            ));
         }
+        $this->updateDocument(TextDocumentBuilder::fromTextDocument($textDocument)->text($updatedText)->build());
     }
 
     public function remove(TextDocumentUri $textDocumentUri): void
     {
-        foreach ($this->byName as $className => $textDocument) {
-            if ($textDocumentUri != $textDocument->uri()) {
-                continue;
-            }
-
-            unset($this->byName[$className]);
-            return;
+        $textDocument = $this->documents[(string)$textDocumentUri] ?? null;
+        if ($textDocument === null) {
+            throw new RuntimeException(sprintf(
+                'Could not find document "%s"',
+                $textDocumentUri->__toString()
+            ));
         }
-
-        throw new RuntimeException(sprintf(
-            'Could not find document "%s"',
-            $textDocumentUri->__toString()
-        ));
+        $this->updateNames($textDocument, [], $this->documentToNameMap[(string)$textDocument->uri()] ?? []);
+        unset($this->documents[(string)$textDocumentUri]);
     }
 }
