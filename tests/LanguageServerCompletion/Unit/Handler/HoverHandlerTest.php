@@ -16,7 +16,7 @@ class HoverHandlerTest extends IntegrationTestCase
     /**
      * @dataProvider provideHover
      */
-    public function testHover(string $test)
+    public function testHover(string $test): void
     {
         [ $text, $offset ] = ExtractOffset::fromSource($test);
 
@@ -82,7 +82,14 @@ EOT
 
         yield 'class' => [
             '<?php cl<>ass A { } }',
-            'A'
+        ];
+
+        yield 'function' => [
+            '<?php function foo() {} f<>oo();',
+        ];
+
+        yield 'namespaced function' => [
+            '<?php namespace Barf {function foo() {}} Barf\f<>oo();',
         ];
     }
 }
