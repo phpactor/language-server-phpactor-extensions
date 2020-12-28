@@ -124,25 +124,7 @@ class Renamer
         
         $rootNode = $this->parser->parseSourceFile($textDocument->text);
         $node = $rootNode->getDescendantNodeAtPosition($offset->toInt());
-        return [$node, $offset];
-    }
-
-    private function isClassMemberOrClass(Node $node): bool
-    {
-        return
-            $node instanceof MethodDeclaration ||
-            $node instanceof ClassDeclaration ||
-            $node instanceof ConstElement ||
-            ($node instanceof Variable && $node->getFirstAncestor(PropertyDeclaration::class)) ||
-            ($node instanceof MemberAccessExpression && $node->memberName instanceof Token) ||
-            ($node instanceof ScopedPropertyAccessExpression && $node->memberName instanceof Token);
-    }
-
-    private function isVariable(Node $node): bool
-    {
-        return
-            $node instanceof Variable &&
-            $node->getFirstAncestor(PropertyDeclaration::class) === null;
+        return [$offset, $node];
     }
     
     private function renameClassOrMemberSymbol(TextDocument $phpactorDocument, ByteOffset $offset, Node $node, string $oldName, string $newName): ?WorkspaceEdit
@@ -233,7 +215,7 @@ class Renamer
                 }
             }
 
-            $version = $this->workspace->has($uri) ? $this->workspace->get($uri)->version : 0;
+            $version = $this->getDocumentVersion($uri);
             $documentEdits[] = new TextDocumentEdit(
                 new VersionedTextDocumentIdentifier($uri, $version),
                 $edits
@@ -241,6 +223,11 @@ class Renamer
         }
 
         return new WorkspaceEdit(null, $documentEdits);
+    }
+
+    private function getDocumentVersion(string $uri): int
+    {
+        return $this->workspace->has($uri) ? $this->workspace->get($uri)->version : 0;
     }
 
     private function loadDocumentText(string $uri): string
@@ -273,7 +260,7 @@ class Renamer
     {
         $uri = (string)$phpactorDocument->uri();
         $oldSource = (string)$phpactorDocument;
-        $version = $this->workspace->has($uri) ? $this->workspace->get($uri)->version : 0;
+        $version = $this->getDocumentVersion($uri);
         $root = $node->getRoot();
         return new WorkspaceEdit(
             null,
@@ -292,5 +279,23 @@ class Renamer
                 )
             ]
         );
+    }
+
+    private function isClassMemberOrClass(Node $node): bool
+    {
+        return
+            $node instanceof MethodDeclaration ||
+            $node instanceof ClassDeclaration ||
+            $node instanceof ConstElement ||
+            ($node instanceof Variable && $node->getFirstAncestor(PropertyDeclaration::class)) ||
+            ($node instanceof MemberAccessExpression && $node->memberName instanceof Token) ||
+            ($node instanceof ScopedPropertyAccessExpression && $node->memberName instanceof Token);
+    }
+
+    private function isVariable(Node $node): bool
+    {
+        return
+            $node instanceof Variable &&
+            $node->getFirstAncestor(PropertyDeclaration::class) === null;
     }
 }
