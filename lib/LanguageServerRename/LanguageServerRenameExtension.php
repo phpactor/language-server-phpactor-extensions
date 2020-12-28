@@ -9,6 +9,7 @@ use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerRename\Handler\RenameHandler;
+use Phpactor\Extension\LanguageServerRename\Model\NodeUtils;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
@@ -34,6 +35,7 @@ class LanguageServerRenameExtension implements Extension
                     $container->get(ReferenceFinderExtension::SERVICE_DEFINITION_LOCATOR),
                     $container->get(ClientApi::class),
                     $container->get(RenameVariable::class),
+                    new NodeUtils(),
                 )
             );
         }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [] ]);
