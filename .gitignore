@@ -2,6 +2,5 @@
 /cache
 /vendor
 /tests/*/Workspace
-/phpbench.json
 /composer.lock
 /.php_cs.cache
