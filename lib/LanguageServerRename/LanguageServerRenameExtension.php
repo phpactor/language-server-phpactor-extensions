@@ -7,7 +7,6 @@ use Phpactor\CodeTransform\Domain\Refactor\RenameVariable;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
-use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerRename\Handler\RenameHandler;
 use Phpactor\Extension\LanguageServerRename\Model\NodeUtils;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;

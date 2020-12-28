@@ -4,26 +4,19 @@ namespace Phpactor\Extension\LanguageServerRename\Model;
 
 use Amp\Delayed;
 use Microsoft\PhpParser\Node;
-use Microsoft\PhpParser\Node\ClassConstDeclaration;
 use Microsoft\PhpParser\Node\ConstElement;
 use Microsoft\PhpParser\Node\Expression\MemberAccessExpression;
 use Microsoft\PhpParser\Node\Expression\ScopedPropertyAccessExpression;
 use Microsoft\PhpParser\Node\Expression\Variable;
 use Microsoft\PhpParser\Node\MethodDeclaration;
-use Microsoft\PhpParser\Node\Parameter;
 use Microsoft\PhpParser\Node\PropertyDeclaration;
-use Microsoft\PhpParser\Node\QualifiedName;
 use Microsoft\PhpParser\Node\Statement\ClassDeclaration;
 use Microsoft\PhpParser\Parser;
 use Microsoft\PhpParser\Token;
-use Phpactor\CodeTransform\Adapter\TolerantParser\Refactor\TolerantRenameVariable;
 use Phpactor\CodeTransform\Domain\Refactor\RenameVariable;
 use Phpactor\CodeTransform\Domain\SourceCode;
 use Phpactor\Extension\LanguageServerBridge\Converter\Exception\CouldNotLoadFileContents;
-use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
-use Phpactor\Extension\Rpc\Diff\TextEditBuilder;
-use Phpactor\Extension\Rpc\Response\UpdateFileSourceResponse;
 use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\Range;
 use Phpactor\LanguageServerProtocol\TextDocumentEdit;
@@ -119,7 +112,7 @@ class Renamer
 
         if ($this->isClassMemberOrClass($node)) {
             return $this->renameClassOrMemberSymbol($phpactorDocument, $offset, $node, $this->nodeUtils->getNodeNameText($node, $phpactorDocument), $newName);
-        } else if($this->isVariable($node)){
+        } elseif ($this->isVariable($node)) {
             return $this->renameVariable($phpactorDocument, $node, $offset, $newName);
         }
         return null;
@@ -136,7 +129,7 @@ class Renamer
 
     private function isClassMemberOrClass(Node $node): bool
     {
-        return 
+        return
             $node instanceof MethodDeclaration ||
             $node instanceof ClassDeclaration ||
             $node instanceof ConstElement ||
@@ -147,8 +140,8 @@ class Renamer
 
     private function isVariable(Node $node): bool
     {
-        return 
-            $node instanceof Variable && 
+        return
+            $node instanceof Variable &&
             $node->getFirstAncestor(PropertyDeclaration::class) === null;
     }
     
