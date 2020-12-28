@@ -8,6 +8,8 @@ use Phpactor\TextDocument\TextDocumentUri;
 use Phpactor\WorseReflection\Core\Name;
 use Phpactor\WorseReflection\Core\Reflector\SourceCodeReflector;
 use RuntimeException;
+use function Amp\asyncCall;
+use function Amp\delay;
 
 class WorkspaceIndex
 {
@@ -29,9 +31,25 @@ class WorkspaceIndex
      */
     private $documentToNameMap = [];
 
-    public function __construct(SourceCodeReflector $reflector)
+    /**
+     * @var TextDocument|null
+     */
+    private $documentToUpdate;
+
+    /**
+     * @var bool
+     */
+    private $waiting = false;
+
+    /**
+     * @var int
+     */
+    private $updateInterval;
+
+    public function __construct(SourceCodeReflector $reflector, int $updateInterval = 1000)
     {
         $this->reflector = $reflector;
+        $this->updateInterval = $updateInterval;
     }
 
     public function documentForName(Name $name): ?TextDocument
@@ -49,24 +67,58 @@ class WorkspaceIndex
         $this->updateDocument($textDocument);
     }
 
+    /**
+     * Refresh the document.
+     *
+     * In order to prevent continuous reparsing the document will
+     * only be refreshed at the sepecified interval.
+     */
     private function updateDocument(TextDocument $textDocument): void
     {
+        if ($this->waiting) {
+            $this->documentToUpdate = $textDocument;
+            return;
+        }
+
+        $this->documentToUpdate = null;
+
         $newNames = [];
         foreach ($this->reflector->reflectClassesIn($textDocument) as $reflectionClass) {
             $newNames[] = $reflectionClass->name()->full();
         }
-        
+
         foreach ($this->reflector->reflectFunctionsIn($textDocument) as $reflectionFunction) {
             $newNames[] = $reflectionFunction->name()->full();
         }
 
-        $this->updateNames($textDocument, $newNames, $this->documentToNameMap[(string)$textDocument->uri()] ?? []);
+        $this->updateNames(
+            $textDocument,
+            $newNames,
+            $this->documentToNameMap[(string)$textDocument->uri()] ?? []
+        );
+
+        if ($this->updateInterval === 0) {
+            return;
+        }
+
+        $this->waiting = true;
+
+        asyncCall(function () {
+            yield delay($this->updateInterval);
+            $this->waiting = false;
+
+            if (null === $this->documentToUpdate) {
+                return;
+            }
+
+            $this->updateDocument($this->documentToUpdate);
+        });
     }
 
     private function updateNames(TextDocument $textDocument, array $newNames, array $currentNames): void
     {
         $namesToRemove = array_diff($currentNames, $newNames);
-        
+
         foreach ($newNames as $name) {
             $this->byName[$name] = $textDocument;
         }

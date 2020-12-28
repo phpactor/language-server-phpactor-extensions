@@ -25,11 +25,13 @@ class WorkspaceIndexBench extends IntegrationTestCase
     public function setUp(): void
     {
         $this->tester = $this->createTester();
+        $this->tester->initialize();
+        $this->tester->textDocument()->open('file:///foobar', '');
     }
 
     /**
      * @ParamProviders({"provideUpdate"})
-     * @Revs(100)
+     * @Revs(10)
      * @Iterations(10)
      */
     public function benchUpdate(array $params): void

@@ -7,6 +7,8 @@ use Phpactor\Extension\LanguageServerWorseReflection\Workspace\WorkspaceIndex;
 use Phpactor\TextDocument\TextDocumentBuilder;
 use Phpactor\WorseReflection\Core\Name;
 use Phpactor\WorseReflection\ReflectorBuilder;
+use function Amp\Promise\wait;
+use function Amp\delay;
 
 class WorkspaceIndexTest extends TestCase
 {
@@ -18,7 +20,7 @@ class WorkspaceIndexTest extends TestCase
     protected function setUp(): void
     {
         $reflector = ReflectorBuilder::create()->build();
-        $this->index = new WorkspaceIndex($reflector);
+        $this->index = new WorkspaceIndex($reflector, 0);
     }
 
     public function testIndexesClassesAndReturnsTextDocuments(): void

@@ -52,7 +52,7 @@ class IntegrationTestCase extends TestCase
 
             LanguageServerBridgeExtension::class,
         ], [
-            FilePathResolverExtension::PARAM_APPLICATION_ROOT => __DIR__ .'/../../'
+            FilePathResolverExtension::PARAM_APPLICATION_ROOT => __DIR__ .'/../../',
         ]);
         
         $builder = $container->get(LanguageServerBuilder::class);
