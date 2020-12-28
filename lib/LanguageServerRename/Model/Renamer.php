@@ -72,9 +72,9 @@ class Renamer
      */
     private $renameVariable;
     /**
-     * @var TextEditBuilder
+     * @var NodeUtils
      */
-     private $textEditBuilder;
+    private $nodeUtils;
 
     public function __construct(
         Workspace $workspace,
@@ -82,7 +82,8 @@ class Renamer
         ReferenceFinder $finder,
         DefinitionLocator $definitionLocator,
         ClientApi $clientApi,
-        RenameVariable $renameVariable
+        RenameVariable $renameVariable,
+        NodeUtils $nodeUtils
     ) {
         $this->parser = $parser;
         $this->definitionLocator = $definitionLocator;
@@ -90,47 +91,23 @@ class Renamer
         $this->clientApi = $clientApi;
         $this->workspace = $workspace;
         $this->renameVariable = $renameVariable;
-        // TODO: This should be a service
-        $this->textEditBuilder = new TextEditBuilder();
+        $this->nodeUtils = $nodeUtils;
     }
 
     public function prepareRename(TextDocumentItem $textDocument, Position $position): ?Range
     {
-        $offset = PositionConverter::positionToByteOffset($position, $textDocument->text);
-        
-        $rootNode = $this->parser->parseSourceFile($textDocument->text);
-        $node = $rootNode->getDescendantNodeAtPosition($offset->toInt());
+        [$offset, $node] = $this->documentAndPositionToNodeAndOffset($textDocument, $position);
 
-        $range = null;
-        if ($node instanceof Variable && $node->getFirstAncestor(PropertyDeclaration::class)) {
-            $range = $this->getNodeNameRange($node);
-        } elseif ($node instanceof Parameter) {
-            $range = $this->getNodeNameRange($node);
-        } elseif ($node instanceof Variable) {
-            $range = $this->getNodeNameRange($node);
-        } elseif ($node instanceof MethodDeclaration) {
-            $range = $this->getNodeNameRange($node);
-        } elseif ($node instanceof ClassDeclaration) {
-            $range = $this->getNodeNameRange($node);
-        } elseif ($node instanceof ConstElement) {
-            $range = $this->getNodeNameRange($node);
-        } elseif ($node instanceof ScopedPropertyAccessExpression) {
-            $range = $this->getNodeNameRange($node);
-        } elseif ($node instanceof MemberAccessExpression) {
-            $range = $this->getNodeNameRange($node);
-        } else {
-            // dump("Cannot rename: ". get_class($node));
+        if ($this->isClassMemberOrClass($node) || $this->isVariable($node)) {
+            return $this->nodeUtils->getNodeNameRange($node);
         }
 
-        return $range;
+        return null;
     }
 
     public function rename(TextDocumentItem $textDocument, Position $position, string $newName): ?WorkspaceEdit
     {
-        $offset = PositionConverter::positionToByteOffset($position, $textDocument->text);
-        
-        $rootNode = $this->parser->parseSourceFile($textDocument->text);
-        $node = $rootNode->getDescendantNodeAtPosition($offset->toInt());
+        [$offset, $node] = $this->documentAndPositionToNodeAndOffset($textDocument, $position);
         
         $phpactorDocument = TextDocumentBuilder::create(
             $textDocument->text
@@ -140,18 +117,39 @@ class Renamer
             $textDocument->languageId ?? 'php'
         )->build();
 
-        if (
+        if ($this->isClassMemberOrClass($node)) {
+            return $this->renameClassOrMemberSymbol($phpactorDocument, $offset, $node, $this->nodeUtils->getNodeNameText($node, $phpactorDocument), $newName);
+        } else if($this->isVariable($node)){
+            return $this->renameVariable($phpactorDocument, $node, $offset, $newName);
+        }
+        return null;
+    }
+
+    private function documentAndPositionToNodeAndOffset(TextDocumentItem $textDocument, Position $position): array
+    {
+        $offset = PositionConverter::positionToByteOffset($position, $textDocument->text);
+        
+        $rootNode = $this->parser->parseSourceFile($textDocument->text);
+        $node = $rootNode->getDescendantNodeAtPosition($offset->toInt());
+        return [$node, $offset];
+    }
+
+    private function isClassMemberOrClass(Node $node): bool
+    {
+        return 
             $node instanceof MethodDeclaration ||
             $node instanceof ClassDeclaration ||
             $node instanceof ConstElement ||
             ($node instanceof Variable && $node->getFirstAncestor(PropertyDeclaration::class)) ||
             ($node instanceof MemberAccessExpression && $node->memberName instanceof Token) ||
-            ($node instanceof ScopedPropertyAccessExpression && $node->memberName instanceof Token)
-        ) {
-            return $this->renameClassOrMemberSymbol($phpactorDocument, $offset, $node, $this->getNodeName($node, $phpactorDocument), $newName);
-        } else {
-            return $this->renameVariable($phpactorDocument, $node, $offset, $newName);
-        }
+            ($node instanceof ScopedPropertyAccessExpression && $node->memberName instanceof Token);
+    }
+
+    private function isVariable(Node $node): bool
+    {
+        return 
+            $node instanceof Variable && 
+            $node->getFirstAncestor(PropertyDeclaration::class) === null;
     }
     
     private function renameClassOrMemberSymbol(TextDocument $phpactorDocument, ByteOffset $offset, Node $node, string $oldName, string $newName): ?WorkspaceEdit
@@ -191,7 +189,7 @@ class Renamer
                     number_format(microtime(true) - $start, 2),
                     $this->timeoutSeconds
                 ));
-                return $this->locationsToWorkspaceEdit($locations, $oldName, $newName);
+                return $this->convertLocationsToWorkspaceEdit($locations, $oldName, $newName);
             }
 
             // if ($count++ % 10) {
@@ -205,14 +203,15 @@ class Renamer
             count($locations)
         ));
 
-        return $this->locationsToWorkspaceEdit($locations, $oldName, $newName);
+        return $this->convertLocationsToWorkspaceEdit($locations, $oldName, $newName);
     }
 
-    private function locationsToWorkspaceEdit(array $locations, string $oldName, string $newName): WorkspaceEdit
+    private function convertLocationsToWorkspaceEdit(array $locations, string $oldName, string $newName): WorkspaceEdit
     {
         // group locations by uri
         $locationsByUri = [];
         foreach ($locations as $location) {
+            /** @var Location $location */
             $uri = (string)$location->uri();
             if (!isset($locationsByUri[$uri])) {
                 $locationsByUri[$uri] = [];
@@ -223,14 +222,12 @@ class Renamer
         $documentEdits = [];
         foreach ($locationsByUri as $uri => $locations) {
             $edits = [];
-            $documentContent = $this->loadText($uri);
+            $documentContent = $this->loadDocumentText($uri);
             $rootNode = $this->parser->parseSourceFile($documentContent);
             foreach ($locations as $location) {
                 /** @var Location $location */
                 $node = $rootNode->getDescendantNodeAtPosition($location->offset()->toInt());
-                $position = $this->getNodeNamePosition($node, $oldName);
-                $temp = PositionConverter::intByteOffsetToPosition($location->offset()->toInt(), $documentContent);
-                $temp2 = PositionConverter::intByteOffsetToPosition($node->getStart(), $documentContent);
+                $position = $this->nodeUtils->getNodeNameStartPosition($node, $oldName);
 
                 if ($position !== null) {
                     $edits[] = new TextEdit(
@@ -252,117 +249,8 @@ class Renamer
 
         return new WorkspaceEdit(null, $documentEdits);
     }
-    
-    private function getNodeName(Node $node, TextDocument $phpactorDocument): ?string
-    {
-        if (
-            $node instanceof MethodDeclaration
-            || ($node instanceof Variable && $node->getFirstAncestor(PropertyDeclaration::class))
-            || $node instanceof ConstElement
-            || $node instanceof Parameter
-            || $node instanceof Variable
-        ) {
-            return $node->getName();
-        } elseif ($node instanceof ClassDeclaration) {
-            $name = $node->name->getText((string)$phpactorDocument);
-            return is_string($name) ? $name : null;
-        } elseif (
-            ($node instanceof ScopedPropertyAccessExpression && $node->memberName instanceof Token)
-            || ($node instanceof MemberAccessExpression && $node->memberName instanceof Token)
-        ) {
-            $memberName = $node->memberName;
-            /** @var Token $memberName */
-            $name = $memberName->getText((string)$phpactorDocument);
-            return is_string($name) ? $name : null;
-        }
-        return null;
-    }
 
-    private function getNodeNamePosition(Node $node, string $name): ?Position
-    {
-        $range = $this->getNodeNameRange($node, $name);
-        return ($range !== null) ? $range->start : null;
-    }
-
-    private function getNodeNameRange(Node $node, ?string $name = null): ?Range
-    {
-        $fileContents = $node->getRoot()->fileContents;
-        if ($node instanceof MethodDeclaration) {
-            return $this->getTokenRange($node->name, $fileContents);
-        } elseif ($node instanceof ClassDeclaration) {
-            return $this->getTokenRange($node->name, $fileContents);
-        } elseif ($node instanceof QualifiedName && ($nameToken = $node->getLastNamePart()) !== null) {
-            return $this->getTokenRange($nameToken, $fileContents);
-        } elseif ($node instanceof ScopedPropertyAccessExpression && $node->memberName instanceof Token) {
-            return $this->getTokenRange($node->memberName, $fileContents);
-        } elseif ($node instanceof Variable && $node->name instanceof Token && $node->getFirstAncestor(PropertyDeclaration::class)) {
-            return $this->fixVariableNameRange(
-                $node,
-                $this->getTokenRange($node->name, $fileContents),
-                $fileContents
-            );
-        } elseif ($node instanceof ConstElement) {
-            return $this->getTokenRange($node->name, $fileContents);
-        } elseif ($node instanceof ClassConstDeclaration) {
-            foreach($node->constElements->getElements() as $element){
-                if ($element instanceof ConstElement && !empty($name) && $element->getName() == $name) {
-                    return $this->getNodeNameRange($element, $name);
-                }
-            }
-            return null;
-        } elseif ($node instanceof Parameter) {
-            $range = $this->getTokenRange($node->variableName, $fileContents);
-            $range->start->character++; // compensate for the dollar
-            return $range;
-        } elseif ($node instanceof Variable && $node->name instanceof Token) {
-            return $this->fixVariableNameRange(
-                $node,
-                $this->getTokenRange($node->name, $fileContents),
-                $fileContents
-            );
-        } elseif ($node instanceof MemberAccessExpression && $node->memberName instanceof Token) {
-            return $this->getTokenRange($node->memberName, $fileContents);
-        } elseif ($node instanceof PropertyDeclaration) {
-            foreach ($node->propertyElements->getElements() as $nodeOrToken) {
-                /** @var Node|Token $nodeOrToken */
-                if ($nodeOrToken instanceof Variable && $nodeOrToken->name instanceof Token && !empty($name) && $nodeOrToken->getName() == $name) {
-                    return $this->fixVariableNameRange(
-                        $nodeOrToken,
-                        $this->getTokenRange($nodeOrToken->name, $fileContents),
-                        $fileContents
-                    );
-                }
-            }
-            return null;
-        } 
-        // else {
-        //     dump("Cannot get node name position for node: ". get_class($node));
-        // }
-        return null;
-    }
-
-    private function fixVariableNameRange(Variable $node, Range $range, string $fileContents): Range
-    {
-        if (!($node->name instanceof Token)) {
-            return $range;
-        }
-        $variableName = (string)$node->name->getText($fileContents);
-        
-        if (mb_substr($variableName, 0, 1) == '$') {
-            $range->start->character++;
-        } // compensate for the dollar
-        return $range;
-    }
-
-    private function getTokenRange(Token $token, string $document): Range
-    {
-        return new Range(
-            PositionConverter::intByteOffsetToPosition($token->getStartPosition(), $document),
-            PositionConverter::intByteOffsetToPosition($token->getEndPosition(), $document)
-        );
-    }
-
-    private function loadText(string $uri): string
+    private function loadDocumentText(string $uri): string
     {
         if ($this->workspace->has($uri)) {
             return $this->workspace->get($uri)->text;
@@ -384,14 +272,11 @@ class Renamer
     {
         $sourceCode = SourceCode::fromString((string)$phpactorDocument);
         $newSource = $this->renameVariable->renameVariable($sourceCode, $offset->toInt(), $newName);
-        // $edits = $this->textEditBuilder->calculateTextEdits((string)$phpactorDocument, $newSource);
         
-        // dump($newSource);
-        // dump($edits);
-        return $this->editsToWorkspaceEdit($phpactorDocument, $node, $newSource);
+        return $this->convertEditsToWorkspaceEdit($phpactorDocument, $node, $newSource);
     }
 
-    private function editsToWorkspaceEdit(TextDocument $phpactorDocument, Node $node, string $newSource): WorkspaceEdit
+    private function convertEditsToWorkspaceEdit(TextDocument $phpactorDocument, Node $node, string $newSource): WorkspaceEdit
     {
         $uri = (string)$phpactorDocument->uri();
         $oldSource = (string)$phpactorDocument;

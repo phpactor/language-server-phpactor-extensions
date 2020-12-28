@@ -13,28 +13,23 @@ use Microsoft\PhpParser\Node\Parameter;
 use Microsoft\PhpParser\Node\PropertyDeclaration;
 use Microsoft\PhpParser\Node\QualifiedName;
 use Microsoft\PhpParser\Node\Statement\ClassDeclaration;
-use Microsoft\PhpParser\Node\Statement\InterfaceDeclaration;
-use Microsoft\PhpParser\Node\Statement\TraitDeclaration;
 use Microsoft\PhpParser\Token;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\Range;
+use Phpactor\TextDocument\TextDocument;
 
 class NodeUtils
 {
-    public function getNodeNameText(Node $node, string $documentContent, string $name = null): ?string
+	
+    public function getNodeNameText(Node $node, TextDocument $phpactorDocument): ?string
     {
-        $token = $this->getNodeNameToken($node, $name);
-        if ($token === null) {
+        $token = $this->getNodeNameToken($node);
+        if($token === null)
             return null;
-        }
-        $text = (string)$token->getText($documentContent);
-        if (mb_substr($text, 0, 1) == '$') {
-            return mb_substr($text, 1);
-        }
-        return $text;
-    }
-    
+        return (string)$token->getText((string)$phpactorDocument);
+	}
+	
     public function getNodeNameStartPosition(Node $node, string $name): ?Position
     {
         $range = $this->getNodeNameRange($node, $name);
@@ -44,19 +39,17 @@ class NodeUtils
     public function getNodeNameRange(Node $node, ?string $name = null): ?Range
     {
         $token = $this->getNodeNameToken($node, $name);
-        if ($token === null) {
+        if($token === null)
             return null;
-        }
         
         $fileContents = $node->getRoot()->fileContents;
         
         $range = $this->getTokenRange($token, $fileContents);
-        if (mb_substr((string)$token->getText($fileContents), 0, 1) == '$') {
+        if(mb_substr((string)$token->getText($fileContents), 0, 1) == '$')
             $range->start->character++;
-        }
         return $range;
-    }
-    
+	}
+	
     public function getTokenRange(Token $token, string $document): Range
     {
         return new Range(
@@ -67,13 +60,10 @@ class NodeUtils
 
     public function getNodeNameToken(Node $node, ?string $name = null): ?Token
     {
+        
         if ($node instanceof MethodDeclaration) {
             return $node->name;
         } elseif ($node instanceof ClassDeclaration) {
-            return $node->name;
-        } elseif ($node instanceof InterfaceDeclaration) {
-            return $node->name;
-        } elseif ($node instanceof TraitDeclaration) {
             return $node->name;
         } elseif ($node instanceof QualifiedName && ($nameToken = $node->getLastNamePart()) !== null) {
             return $nameToken;
@@ -84,7 +74,7 @@ class NodeUtils
         } elseif ($node instanceof ConstElement) {
             return $node->name;
         } elseif ($node instanceof ClassConstDeclaration) {
-            foreach ($node->constElements->getElements() as $element) {
+            foreach($node->constElements->getElements() as $element){
                 if ($element instanceof ConstElement && !empty($name) && $element->getName() == $name) {
                     return $this->getNodeNameToken($element);
                 }
@@ -93,12 +83,10 @@ class NodeUtils
         } elseif ($node instanceof Parameter) {
             return $node->variableName;
         } elseif ($node instanceof Variable) {
-            while ($node->name instanceof Variable) {
+            while($node->name instanceof Variable)
                 $node = $node->name;
-            }
-            if ($node->name instanceof Token) {
+            if($node->name instanceof Token)
                 return $node->name;
-            }
             return null;
         } elseif ($node instanceof MemberAccessExpression) {
             return $node->memberName;
@@ -106,15 +94,15 @@ class NodeUtils
             foreach ($node->propertyElements->getElements() as $nodeOrToken) {
                 /** @var Node|Token $nodeOrToken */
                 if ($nodeOrToken instanceof Variable
-                    && $nodeOrToken->name instanceof Token &&
-                    !empty($name)
+                    && $nodeOrToken->name instanceof Token && 
+                    !empty($name) 
                     && $nodeOrToken->getName() == $name
                 ) {
                     return $nodeOrToken->name;
                 }
             }
             return null;
-        }
+        } 
         
         return null;
     }
