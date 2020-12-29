@@ -1,4 +1,7 @@
 {
     "bootstrap": "vendor/autoload.php",
-    "path": "tests/LanguageServerCodeTransform/Benchmark"
+    "path": [
+        "tests/LanguageServerCodeTransform/Benchmark",
+        "tests/LanguageServerWorseReflection/Benchmark"
+    ]
 }

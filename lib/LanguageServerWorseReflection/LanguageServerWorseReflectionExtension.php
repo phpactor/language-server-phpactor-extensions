@@ -15,6 +15,8 @@ use Phpactor\WorseReflection\ReflectorBuilder;
 
 class LanguageServerWorseReflectionExtension implements Extension
 {
+    const PARAM_UPDATE_INTERVAL = 'language_server_worse_reflection.workspace_index.update_interval';
+
     /**
      * {@inheritDoc}
      */
@@ -25,6 +27,12 @@ class LanguageServerWorseReflectionExtension implements Extension
 
     public function configure(Resolver $schema)
     {
+        $schema->setDefaults([
+            self::PARAM_UPDATE_INTERVAL => 100,
+        ]);
+        $schema->setDescriptions([
+            self::PARAM_UPDATE_INTERVAL => 'Minimum interval to update the workspace index as documents are updated (in milliseconds)'
+        ]);
     }
 
     private function registerSourceLocator(ContainerBuilder $container): void
@@ -45,7 +53,8 @@ class LanguageServerWorseReflectionExtension implements Extension
 
         $container->register(WorkspaceIndex::class, function (Container $container) {
             return new WorkspaceIndex(
-                ReflectorBuilder::create()->build()
+                ReflectorBuilder::create()->build(),
+                $container->getParameter(self::PARAM_UPDATE_INTERVAL)
             );
         });
     }

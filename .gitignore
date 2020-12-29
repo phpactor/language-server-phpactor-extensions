@@ -4,3 +4,4 @@
 /tests/*/Workspace
 /composer.lock
 /.php_cs.cache
+/.phpbench
