@@ -10,7 +10,9 @@ use Microsoft\PhpParser\Node\Expression\ScopedPropertyAccessExpression;
 use Microsoft\PhpParser\Node\Expression\Variable;
 use Microsoft\PhpParser\Node\MethodDeclaration;
 use Microsoft\PhpParser\Node\PropertyDeclaration;
+use Microsoft\PhpParser\Node\QualifiedName;
 use Microsoft\PhpParser\Node\Statement\ClassDeclaration;
+use Microsoft\PhpParser\Node\Statement\InterfaceDeclaration;
 use Microsoft\PhpParser\Parser;
 use Microsoft\PhpParser\Token;
 use Phpactor\CodeTransform\Domain\Refactor\RenameVariable;
@@ -286,6 +288,8 @@ class Renamer
         return
             $node instanceof MethodDeclaration ||
             $node instanceof ClassDeclaration ||
+            // $node instanceof QualifiedName ||
+            // $node instanceof InterfaceDeclaration ||
             $node instanceof ConstElement ||
             ($node instanceof Variable && $node->getFirstAncestor(PropertyDeclaration::class)) ||
             ($node instanceof MemberAccessExpression && $node->memberName instanceof Token) ||
