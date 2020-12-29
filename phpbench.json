@@ -3,7 +3,5 @@
     "path": [
         "tests/LanguageServerCodeTransform/Benchmark",
         "tests/LanguageServerWorseReflection/Benchmark"
-    ],
-    "remote_script_path": ".phpbench/script",
-    "remote_script_remove": false
+    ]
 }
