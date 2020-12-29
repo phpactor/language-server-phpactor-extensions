@@ -109,10 +109,38 @@ class RenamerTest extends TestCase
 	public function providePrepareRename(): Generator
 	{
 		yield [
+			'Rename class (definition)' =>
 			'<?php class Clas<>s1 {}',
 			Range::fromArray([
                 'start' => ['line' => 0, 'character' => 12],
                 'end' => ['line' => 0, 'character' => 18],
+            ])
+		];
+
+		yield [
+			'Rename class (extends)' =>
+			'<?php class Class1 extends Clas<>s2 {  }',
+			Range::fromArray([
+                'start' => ['line' => 0, 'character' => 27],
+                'end' => ['line' => 0, 'character' => 33],
+            ])
+		];
+
+		yield [
+			'Rename class (implements)' =>
+			'<?php class Class1 implements Clas<>s2 {  }',
+			Range::fromArray([
+                'start' => ['line' => 0, 'character' => 30],
+                'end' => ['line' => 0, 'character' => 36],
+            ])
+		];
+
+		yield [
+			'Rename class (typehint)' =>
+			'<?php class Class1 { function f(Cla<>ss2 $arg) {} }',
+			Range::fromArray([
+                'start' => ['line' => 0, 'character' => 32],
+                'end' => ['line' => 0, 'character' => 38],
             ])
 		];
 	}

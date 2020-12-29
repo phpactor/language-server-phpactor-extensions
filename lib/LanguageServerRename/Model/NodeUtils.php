@@ -13,6 +13,7 @@ use Microsoft\PhpParser\Node\Parameter;
 use Microsoft\PhpParser\Node\PropertyDeclaration;
 use Microsoft\PhpParser\Node\QualifiedName;
 use Microsoft\PhpParser\Node\Statement\ClassDeclaration;
+use Microsoft\PhpParser\Node\Statement\InterfaceDeclaration;
 use Microsoft\PhpParser\Token;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\LanguageServerProtocol\Position;
@@ -65,6 +66,8 @@ class NodeUtils
         if ($node instanceof MethodDeclaration) {
             return $node->name;
         } elseif ($node instanceof ClassDeclaration) {
+            return $node->name;
+        } elseif ($node instanceof InterfaceDeclaration) {
             return $node->name;
         } elseif ($node instanceof QualifiedName && ($nameToken = $node->getLastNamePart()) !== null) {
             return $nameToken;

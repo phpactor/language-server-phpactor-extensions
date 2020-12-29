@@ -46,6 +46,34 @@ class NodeUtilsTest extends TestCase
             null
         ];
 
+        yield 'Interface' => [
+            '<?php interface MyCla<>ss {}',
+            new Token(TokenKind::Name, 15, 16, 8),
+            "MyClass",
+            null
+        ];
+
+        yield 'Extends class' => [
+            '<?php class Class1 extends MyCla<>ss {}',
+            new Token(TokenKind::Name, 26, 27, 8),
+            "MyClass",
+            null
+        ];
+
+        yield 'Implements interface' => [
+            '<?php class Class1 implements MyCla<>ss {}',
+            new Token(TokenKind::Name, 29, 30, 8),
+            "MyClass",
+            null
+        ];
+
+        yield 'Implements interface 2' => [
+            '<?php class Class1 implements OtherClass, MyCla<>ss {}',
+            new Token(TokenKind::Name, 41, 42, 8),
+            "MyClass",
+            null
+        ];
+
         yield 'Method' => [
             '<?php class MyClass { function myMe<>thod() {} }',
             new Token(TokenKind::Name, 30, 31, 9),
