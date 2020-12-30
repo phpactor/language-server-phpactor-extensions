@@ -22,13 +22,13 @@ use Phpactor\TextDocument\TextDocument;
 
 class NodeUtils
 {
-    public function getNodeNameText(Node $node, TextDocument $phpactorDocument): ?string
+    public function getNodeNameText(Node $node, string $documentContent): ?string
     {
         $token = $this->getNodeNameToken($node);
         if ($token === null) {
             return null;
         }
-        return (string)$token->getText((string)$phpactorDocument);
+        return (string)$token->getText($documentContent);
     }
     
     public function getNodeNameStartPosition(Node $node, string $name): ?Position
