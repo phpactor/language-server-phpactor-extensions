@@ -17,7 +17,6 @@ use Microsoft\PhpParser\Parser;
 use Microsoft\PhpParser\Token;
 use Phpactor\CodeTransform\Domain\Refactor\RenameVariable;
 use Phpactor\CodeTransform\Domain\SourceCode;
-use Phpactor\Extension\LanguageServerBridge\Converter\Exception\CouldNotLoadFileContents;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\Range;
@@ -112,8 +111,9 @@ class Renamer
             $textDocument->languageId ?? 'php'
         )->build();
 
+        
         if ($this->isClassMemberOrClass($node)) {
-            return $this->renameClassOrMemberSymbol($phpactorDocument, $offset, $node, $this->nodeUtils->getNodeNameText($node, $phpactorDocument), $newName);
+            return $this->renameClassOrMemberSymbol($phpactorDocument, $offset, $node, $this->nodeUtils->getNodeNameText($node, $textDocument->text), $newName);
         } elseif ($this->isVariable($node)) {
             return $this->renameVariable($phpactorDocument, $node, $offset, $newName);
         }
@@ -204,6 +204,9 @@ class Renamer
             foreach ($locations as $location) {
                 /** @var Location $location */
                 $node = $rootNode->getDescendantNodeAtPosition($location->offset()->toInt());
+                $nodeNameText = $this->nodeUtils->getNodeNameText($node, $documentContent);
+                if($nodeNameText !== $oldName)
+                    continue;
                 $position = $this->nodeUtils->getNodeNameStartPosition($node, $oldName);
 
                 if ($position !== null) {
@@ -241,10 +244,11 @@ class Renamer
         $contents = @file_get_contents($uri);
 
         if (false === $contents) {
-            throw new CouldNotLoadFileContents(sprintf(
-                'Could not load file contents "%s"',
-                $uri
-            ));
+            // throw new CouldNotLoadFileContents(sprintf(
+            //     'Could not load file contents "%s"',
+            //     $uri
+            // ));
+            return "";
         }
 
         return $contents;
@@ -288,8 +292,8 @@ class Renamer
         return
             $node instanceof MethodDeclaration ||
             $node instanceof ClassDeclaration ||
-            // $node instanceof QualifiedName ||
-            // $node instanceof InterfaceDeclaration ||
+            $node instanceof QualifiedName ||
+            $node instanceof InterfaceDeclaration ||
             $node instanceof ConstElement ||
             ($node instanceof Variable && $node->getFirstAncestor(PropertyDeclaration::class)) ||
             ($node instanceof MemberAccessExpression && $node->memberName instanceof Token) ||
