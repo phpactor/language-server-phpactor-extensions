@@ -12,6 +12,7 @@ use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\LanguageServerRename\Model\NodeUtils;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
 use Phpactor\LanguageServerProtocol\Range;
+use Phpactor\LanguageServerProtocol\RenameFile;
 use Phpactor\LanguageServerProtocol\TextDocumentEdit;
 use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\LanguageServerProtocol\TextEdit;
@@ -199,7 +200,7 @@ class RenamerTest extends TestCase
     /**
      * @dataProvider provideRename
      */
-    public function testRename(string $source, string $uri, string $newName, ?string $newSource = null): void
+    public function testRename(string $source, string $uri, string $newName, ?string $renamedUri = null): void
     {
 		list(
 			$source, 
@@ -215,18 +216,25 @@ class RenamerTest extends TestCase
             }
 		};
 		
-		$textEdits = array_map(function(Range $range) use ($newSource, $newName) {
-			return new TextEdit($range, $newSource ?? $newName);
-		}, $ranges);
+		$textEdits = array_map(function(Range $range) use ($newName) {
+			return new TextEdit($range, $newName);
+        }, $ranges);
+        
+        
+        $changes = [
+            new TextDocumentEdit(
+                new VersionedTextDocumentIdentifier($uri, 1),
+                $textEdits
+            ),
+        ];
+
+        if(!empty($renamedUri)) {
+            $changes[] = new RenameFile("rename", $uri, $renamedUri, null);
+        }
 
 		$expectedWorkspaceEdit = new WorkspaceEdit(
 			null,
-			[
-				new TextDocumentEdit(
-					new VersionedTextDocumentIdentifier($uri, 1),
-					$textEdits
-				)
-			]
+			$changes
 		);
 
         $docItem = new TextDocumentItem($uri, "php", 1, $source);
@@ -250,19 +258,6 @@ class RenamerTest extends TestCase
             $methodProphecy->willThrow(new CouldNotLocateDefinition());
         }
 		$renameVariable = $prophet->prophesize(RenameVariable::class);
-		// $methodProphecy = $renameVariable->renameVariable(Argument::any(), Argument::any(), Argument::any());
-		// $renameVariableArgs = [];
-		// if($newSource !== null){
-		// 	$newSourceCode = SourceCode::fromStringAndPath($newSource, $uri);
-		// 	$methodProphecy->will(
-		// 		function($args) use (&$renameVariableArgs, $newSourceCode) {
-		// 			$renameVariableArgs['sourceCode'] = $args[0];
-		// 			$renameVariableArgs['offsetInt'] = $args[1];
-		// 			$renameVariableArgs['newName'] = $args[2];
-		// 			return $newSourceCode;
-		// 		}
-		// 	);
-		// }
 		
         $apiClient = new ClientApi(new class implements RpcClient {
             public function notification(string $method, array $params): void
@@ -297,17 +292,13 @@ class RenamerTest extends TestCase
 		);
 		
 		$this->assertEquals($expectedWorkspaceEdit, $actualEdit);
-		// if(count($renameVariableArgs) > 0){
-		// 	$this->assertEquals($renameVariableArgs['sourceCode'], SourceCode::fromStringAndPath($source, $uri));
-		// 	$this->assertEquals($renameVariableArgs['offsetInt'], $selectionOffset);
-		// 	$this->assertEquals($renameVariableArgs['newName'], $newName);
-		// }
     }
 
     public function provideRename(): Generator
     {
         $newName = 'newName';
-        $uri = "file:///test/testDoc";
+        $uri = "file:///test/Class1.php";
+        $renamedUri = "file:///test/$newName.php";
 
 		// {{ .. }} -> the expected rename range
 		// « .. » -> the expected rename range. That symbol is used when {{ }} are adjacent to other braces
@@ -318,14 +309,46 @@ class RenamerTest extends TestCase
             'Rename class (definition)' =>
             '<?php class <d>{{Clas<>s1}} { function method1(<r>{{Class1}} $arg1){} }',
             $uri,
-            $newName
+            $newName,
+            $renamedUri
 		];
 		
 		yield [
             'Rename class (reference)' =>
             '<?php class <d>{{Class1}} { function method1(<r>{{Cl<>ass1}} $arg1){} }',
             $uri,
-            $newName
+            $newName,
+            $renamedUri
+        ];
+        
+        yield [
+            'Rename class (different from the file name)' =>
+            '<?php class <d>{{Class2}} { function method1(<r>{{Cl<>ass2}} $arg1){} }',
+            $uri,
+            $newName,
+        ];
+        
+        yield [
+            'Rename interface (definition)' =>
+            '<?php interface <d>{{Clas<>s1}} { }',
+            $uri,
+            $newName,
+            $renamedUri
+        ];
+        
+        yield [
+            'Rename trait (definition)' =>
+            '<?php trait <d>{{Clas<>s1}} { }',
+            $uri,
+            $newName,
+            $renamedUri
+        ];
+        
+        yield [
+            'Rename trait (use)' =>
+            '<?php trait <d>{{Trat1}} {}; class Class1 { use <r>{{Tra<>it1}}; }',
+            $uri,
+            $newName,
 		];
 		
 		yield [
@@ -335,12 +358,12 @@ class RenamerTest extends TestCase
 			$newName
 		];
 		
-		// yield [
-        //     'Rename variable' =>
-        //     '<?php class Class1 { function method1(){ $var1 = 5; $var2 = $var1 + 5; } }',
-        //     $uri,
-		// 	$newName
-        // ];
+		yield [
+            'Rename variable' =>
+            '<?php class Class1 { function method1(){ <d>${{va<>r1}} = 5; $var2 = <r>${{var1}} + 5; } }',
+            $uri,
+			$newName
+        ];
     }
 
     private static function offsetsFromSource(string $source, ?string $uri): array
@@ -352,9 +375,7 @@ class RenamerTest extends TestCase
         $definitionLocation = null;
         $selectionOffset = null;
 		$ranges = [];
-		$currentResult = null;
 		$currentResultStartOffset = null;
-        $collectResultOffset = false;
         if (is_array($results)) {
             $newSource = "";
             $offset = 0;
@@ -368,8 +389,6 @@ class RenamerTest extends TestCase
                         new Location($textDocumentUri, ByteOffset::fromInt($offset))
                     );
                 } elseif ($result == "{{" || $result == "«") {
-					$collectResultOffset = true;
-					$currentResult = "";
                     $currentResultStartOffset = $offset;
                 } elseif ($result == "}}" || $result == "»") {
 					$ranges[] = 
@@ -377,10 +396,8 @@ class RenamerTest extends TestCase
 							PositionConverter::byteOffsetToPosition(ByteOffset::fromInt($currentResultStartOffset), $source),
 							PositionConverter::byteOffsetToPosition(ByteOffset::fromInt($offset), $source)
 						);
-                    $collectResultOffset = true;
                 } else {
 					$newSource .= $result;
-					$currentResult .= $result;
                     $offset += mb_strlen($result);
                 }
             }

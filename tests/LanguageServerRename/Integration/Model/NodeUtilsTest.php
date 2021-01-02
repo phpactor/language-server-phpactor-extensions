@@ -25,10 +25,8 @@ class NodeUtilsTest extends TestCase
         
         $utils = new NodeUtils();
         $node = $root->getDescendantNodeAtPosition((int)$offset);
-        // dump(get_class($node));
         $foundToken = $utils->getNodeNameToken($node, ltrim($expectedText, '$'));
-        // dump($foundToken);
-        // dump($foundToken->getFullText($source));
+        
         $this->assertEquals($expectedToken, $foundToken, 'length');
         $this->assertEquals($foundToken->getText($source), $expectedText, 'text');
         if ($expectedRange !== null) {
@@ -53,6 +51,13 @@ class NodeUtilsTest extends TestCase
             null
         ];
 
+        yield 'Trait' => [
+            '<?php trait MyCla<>ss {}',
+            new Token(TokenKind::Name, 11, 12, 8),
+            "MyClass",
+            null
+        ];
+
         yield 'Extends class' => [
             '<?php class Class1 extends MyCla<>ss {}',
             new Token(TokenKind::Name, 26, 27, 8),
@@ -71,6 +76,13 @@ class NodeUtilsTest extends TestCase
             '<?php class Class1 implements OtherClass, MyCla<>ss {}',
             new Token(TokenKind::Name, 41, 42, 8),
             "MyClass",
+            null
+        ];
+
+        yield 'Uses trait' => [
+            '<?php class Class1 { use MyTra<>it; }',
+            new Token(TokenKind::Name, 24, 25, 8),
+            "MyTrait",
             null
         ];
 

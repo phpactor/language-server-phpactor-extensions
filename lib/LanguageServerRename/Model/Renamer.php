@@ -14,6 +14,7 @@ use Microsoft\PhpParser\Node\PropertyDeclaration;
 use Microsoft\PhpParser\Node\QualifiedName;
 use Microsoft\PhpParser\Node\Statement\ClassDeclaration;
 use Microsoft\PhpParser\Node\Statement\InterfaceDeclaration;
+use Microsoft\PhpParser\Node\Statement\TraitDeclaration;
 use Microsoft\PhpParser\Node\UseVariableName;
 use Microsoft\PhpParser\Parser;
 use Microsoft\PhpParser\Token;
@@ -22,6 +23,7 @@ use Phpactor\CodeTransform\Domain\SourceCode;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\Range;
+use Phpactor\LanguageServerProtocol\RenameFile;
 use Phpactor\LanguageServerProtocol\TextDocumentEdit;
 use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\LanguageServerProtocol\TextEdit;
@@ -36,6 +38,8 @@ use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\Location;
 use Phpactor\TextDocument\TextDocument;
 use Phpactor\TextDocument\TextDocumentBuilder;
+use function mb_strlen;
+use function mb_substr;
 
 class Renamer
 {
@@ -195,10 +199,13 @@ class Renamer
 
         $documentEdits = [];
         foreach ($locationsByUri as $uri => $locations) {
+            list($textEdits, $rename) = $this->documentLocationsToTextEdits($uri, $locations, $oldName, $newName);
             $documentEdits[] = new TextDocumentEdit(
                 new VersionedTextDocumentIdentifier($uri, $this->getDocumentVersion($uri)),
-                $this->documentLocationsToTextEdits($uri, $locations, $oldName, $newName)
+                $textEdits
             );
+            if($rename !== null)
+                $documentEdits[] = $rename;
         }
 
         return new WorkspaceEdit(null, $documentEdits);
@@ -207,11 +214,17 @@ class Renamer
     private function documentLocationsToTextEdits(string $documentUri, array $locations, string $oldName, string $newName): array
     {
         $edits = [];
+        $rename = null;
         $documentContent = $this->getDocumentText($documentUri);
         $rootNode = $this->parser->parseSourceFile($documentContent);
         foreach ($locations as $location) {
             /** @var Location $location */
             $node = $rootNode->getDescendantNodeAtPosition($location->offset()->toInt());
+            
+            if(($r = $this->renameFileIfNeeded($node, $documentUri, $oldName, $newName)) !== null){
+                $rename = $r;
+            }
+
             $nodeNameText = $this->nodeUtils->getNodeNameText($node, $documentContent);
             if ($nodeNameText !== $oldName) {
                 continue;
@@ -229,7 +242,36 @@ class Renamer
                 );
             }
         }
-        return $edits;
+
+        return [ $edits, $rename ];
+    }
+
+    private function renameFileIfNeeded(Node $node, string $documentUri, string $oldName, string $newName): ?RenameFile
+    {
+        if(
+            false === $node instanceof ClassDeclaration
+            && false === $node instanceof InterfaceDeclaration
+            && false === $node instanceof TraitDeclaration
+        ){
+            return null;
+        }
+        
+        $parts = explode("/", $documentUri);
+        $fileName = array_pop($parts);
+        $extension = null;
+        if(($lastDot = strrpos($fileName, ".")) !== false){
+            $extension = mb_substr($fileName, $lastDot);
+            $fileName = mb_substr($fileName, 0, $lastDot);
+        }
+        if($fileName == $oldName){
+            return new RenameFile(
+                'rename', 
+                $documentUri, 
+                implode("/", $parts) ."/{$newName}{$extension}"
+            );
+        }
+
+        return null;
     }
 
     private function getDocumentVersion(string $uri): int
@@ -257,8 +299,9 @@ class Renamer
         return
             $node instanceof MethodDeclaration 
             || $node instanceof ClassDeclaration 
-            || $node instanceof QualifiedName 
             || $node instanceof InterfaceDeclaration 
+            || $node instanceof TraitDeclaration 
+            || $node instanceof QualifiedName 
             || $node instanceof ConstElement 
             || ($node instanceof ScopedPropertyAccessExpression && $node->memberName instanceof Token)
             || ($node instanceof Variable && $node->getFirstAncestor(PropertyDeclaration::class)) 
