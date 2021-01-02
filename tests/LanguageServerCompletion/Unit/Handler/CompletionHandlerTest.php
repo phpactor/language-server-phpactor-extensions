@@ -193,6 +193,44 @@ class CompletionHandlerTest extends TestCase
         $this->assertFalse($response->result->isIncomplete);
     }
 
+    public function testHandleSuggestionsWithProiority(): void
+    {
+        $tester = $this->create([
+            Suggestion::createWithOptions('hello', [
+                'type' => Suggestion::TYPE_METHOD,
+                'label' => 'hello',
+                'priority' => Suggestion::PRIORITY_HIGH
+            ]),
+            Suggestion::createWithOptions('goodbye', [
+                'type' => Suggestion::TYPE_METHOD,
+                'snippet' => 'goodbye()',
+                'priority' => Suggestion::PRIORITY_LOW
+            ]),
+            Suggestion::createWithOptions('$var', [
+                'type' => Suggestion::TYPE_VARIABLE,
+            ]),
+        ], false);
+
+        $response = $tester->requestAndWait(
+            'textDocument/completion',
+            [
+                'textDocument' => ProtocolFactory::textDocumentIdentifier(self::EXAMPLE_URI),
+                'position' => ProtocolFactory::position(0, 0)
+            ]
+        );
+
+        $this->assertEquals([
+            self::completionItem('hello', 2, [
+                'sortText' => '0064-hello',
+            ]),
+            self::completionItem('goodbye', 2, [
+                'sortText' => '0255-goodbye',
+            ]),
+            self::completionItem('var', 6),
+        ], $response->result->items);
+        $this->assertFalse($response->result->isIncomplete);
+    }
+
     private static function completionItem(
         string $label,
         ?int $type,

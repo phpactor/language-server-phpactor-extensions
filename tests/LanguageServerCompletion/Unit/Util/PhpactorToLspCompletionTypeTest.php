@@ -12,8 +12,11 @@ class PhpactorToLspCompletionTypeTest extends TestCase
     public function testConverts()
     {
         $reflection = new ReflectionClass(Suggestion::class);
-        foreach ($reflection->getConstants() as $constantValue) {
-            $this->assertNotNull(PhpactorToLspCompletionType::fromPhpactorType($constantValue));
+        foreach ($reflection->getConstants() as $name => $constantValue) {
+            if (0 !== strpos($name, 'TYPE')) {
+                continue;
+            }
+            $this->assertNotNull(PhpactorToLspCompletionType::fromPhpactorType($constantValue), $constantValue);
         }
     }
 }

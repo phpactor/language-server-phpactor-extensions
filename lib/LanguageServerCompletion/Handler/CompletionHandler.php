@@ -111,13 +111,14 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
                         : InsertTextFormat::PLAIN_TEXT
                     ;
                 }
-
-                $items[] = CompletionItem::fromArray([
+                
+                $items[] = $i = CompletionItem::fromArray([
                     'label' => $name,
                     'kind' => PhpactorToLspCompletionType::fromPhpactorType($suggestion->type()),
                     'detail' => $this->formatShortDescription($suggestion),
                     'documentation' => $suggestion->documentation(),
                     'insertText' => $insertText,
+                    'sortText' => $this->sortText($suggestion),
                     'textEdit' => $this->textEdit($suggestion, $textDocument),
                     'command' => $this->command($textDocument->uri, $byteOffset, $suggestion),
                     'insertTextFormat' => $insertTextFormat
@@ -190,5 +191,14 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
         }
 
         return $prefix . $suggestion->shortDescription();
+    }
+
+    private function sortText(Suggestion $suggestion): ?string
+    {
+        if (null === $suggestion->priority()) {
+            return null;
+        }
+
+        return sprintf('%04s-%s', $suggestion->priority(), $suggestion->name());
     }
 }

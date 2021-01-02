@@ -45,7 +45,9 @@ class PhpactorToLspCompletionType
         case Suggestion::TYPE_REFERENCE:
                 return CompletionItemKind::REFERENCE;
         case Suggestion::TYPE_CONSTANT:
-                return 21; // not currently in the LSP protocol library
+                return CompletionItemKind::CONSTANT;
+        case Suggestion::TYPE_FIELD:
+                return CompletionItemKind::FIELD;
         default:
                 return null;
         endswitch;

@@ -105,6 +105,7 @@ class WorkspaceIndex
 
         asyncCall(function () {
             yield delay($this->updateInterval);
+
             $this->waiting = false;
 
             if (null === $this->documentToUpdate) {

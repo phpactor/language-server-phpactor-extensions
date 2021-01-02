@@ -2,7 +2,6 @@
 
 namespace Phpactor\Extension\LanguageServerWorseReflection\Tests\Benchmark;
 
-use PhpBench\Benchmark\Metadata\Annotations\Executor;
 use PhpBench\Benchmark\Metadata\Annotations\OutputTimeUnit;
 use PhpBench\Benchmark\Metadata\Annotations\Revs;
 use Phpactor\Extension\LanguageServerCompletion\Tests\IntegrationTestCase;
@@ -13,7 +12,6 @@ use Generator;
 /**
  * @BeforeMethods({"setUp"})
  * @OutputTimeUnit("milliseconds")
- * @Executor("local")
  */
 class WorkspaceIndexBench extends IntegrationTestCase
 {
