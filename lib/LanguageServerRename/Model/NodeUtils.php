@@ -18,7 +18,6 @@ use Microsoft\PhpParser\Token;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\Range;
-use Phpactor\TextDocument\TextDocument;
 
 class NodeUtils
 {
@@ -28,7 +27,10 @@ class NodeUtils
         if ($token === null) {
             return null;
         }
-        return (string)$token->getText($documentContent);
+        $text = (string)$token->getText($documentContent);
+        if(mb_substr($text, 0, 1) == '$')
+            return mb_substr($text, 1);
+        return $text;
     }
     
     public function getNodeNameStartPosition(Node $node, string $name): ?Position

@@ -9,10 +9,12 @@ use Microsoft\PhpParser\Node\Expression\MemberAccessExpression;
 use Microsoft\PhpParser\Node\Expression\ScopedPropertyAccessExpression;
 use Microsoft\PhpParser\Node\Expression\Variable;
 use Microsoft\PhpParser\Node\MethodDeclaration;
+use Microsoft\PhpParser\Node\Parameter;
 use Microsoft\PhpParser\Node\PropertyDeclaration;
 use Microsoft\PhpParser\Node\QualifiedName;
 use Microsoft\PhpParser\Node\Statement\ClassDeclaration;
 use Microsoft\PhpParser\Node\Statement\InterfaceDeclaration;
+use Microsoft\PhpParser\Node\UseVariableName;
 use Microsoft\PhpParser\Parser;
 use Microsoft\PhpParser\Token;
 use Phpactor\CodeTransform\Domain\Refactor\RenameVariable;
@@ -91,8 +93,8 @@ class Renamer
     public function prepareRename(TextDocumentItem $textDocument, Position $position): ?Range
     {
         [$offset, $node] = $this->documentAndPositionToNodeAndOffset($textDocument, $position);
-
-        if ($this->isClassMemberOrClass($node) || $this->isVariable($node)) {
+        
+        if ($this->canRenameNode($node)) {
             return $this->nodeUtils->getNodeNameRange($node);
         }
 
@@ -103,33 +105,18 @@ class Renamer
     {
         [$offset, $node] = $this->documentAndPositionToNodeAndOffset($textDocument, $position);
         
-        $phpactorDocument = TextDocumentBuilder::create(
-            $textDocument->text
-        )->uri(
-            $textDocument->uri
-        )->language(
-            $textDocument->languageId ?? 'php'
-        )->build();
+        $phpactorDocument = TextDocumentBuilder::create($textDocument->text)
+            ->uri($textDocument->uri)
+            ->language($textDocument->languageId ?? 'php')
+            ->build();
 
+        if ($this->canRenameNode($node))
+            return $this->renameNode($phpactorDocument, $offset, $node, $this->nodeUtils->getNodeNameText($node, $textDocument->text), $newName);
         
-        if ($this->isClassMemberOrClass($node)) {
-            return $this->renameClassOrMemberSymbol($phpactorDocument, $offset, $node, $this->nodeUtils->getNodeNameText($node, $textDocument->text), $newName);
-        } elseif ($this->isVariable($node)) {
-            return $this->renameVariable($phpactorDocument, $node, $offset, $newName);
-        }
         return null;
     }
-
-    private function documentAndPositionToNodeAndOffset(TextDocumentItem $textDocument, Position $position): array
-    {
-        $offset = PositionConverter::positionToByteOffset($position, $textDocument->text);
-        
-        $rootNode = $this->parser->parseSourceFile($textDocument->text);
-        $node = $rootNode->getDescendantNodeAtPosition($offset->toInt());
-        return [$offset, $node];
-    }
     
-    private function renameClassOrMemberSymbol(TextDocument $phpactorDocument, ByteOffset $offset, Node $node, string $oldName, string $newName): ?WorkspaceEdit
+    private function renameNode(TextDocument $phpactorDocument, ByteOffset $offset, Node $node, string $oldName, string $newName): ?WorkspaceEdit
     {
         if (empty($oldName)) {
             return null;
@@ -139,6 +126,7 @@ class Renamer
             $potentialLocation = $this->definitionLocator->locateDefinition($phpactorDocument, $offset);
             $locations[] = new Location($potentialLocation->uri(), $potentialLocation->offset());
         } catch (CouldNotLocateDefinition $notFound) {
+            // ignore the missing definition
         }
         
         $start = microtime(true);
@@ -166,7 +154,7 @@ class Renamer
                     number_format(microtime(true) - $start, 2),
                     $this->timeoutSeconds
                 ));
-                return $this->convertLocationsToWorkspaceEdit($locations, $oldName, $newName);
+                return $this->locationsToWorkspaceEdit($locations, $oldName, $newName);
             }
 
             // if ($count++ % 10) {
@@ -180,10 +168,19 @@ class Renamer
             count($locations)
         ));
 
-        return $this->convertLocationsToWorkspaceEdit($locations, $oldName, $newName);
+        return $this->locationsToWorkspaceEdit($locations, $oldName, $newName);
     }
 
-    private function convertLocationsToWorkspaceEdit(array $locations, string $oldName, string $newName): WorkspaceEdit
+    private function documentAndPositionToNodeAndOffset(TextDocumentItem $textDocument, Position $position): array
+    {
+        $offset = PositionConverter::positionToByteOffset($position, $textDocument->text);
+        
+        $rootNode = $this->parser->parseSourceFile($textDocument->text);
+        $node = $rootNode->getDescendantNodeAtPosition($offset->toInt());
+        return [$offset, $node];
+    }
+
+    private function locationsToWorkspaceEdit(array $locations, string $oldName, string $newName): WorkspaceEdit
     {
         // group locations by uri
         $locationsByUri = [];
@@ -198,36 +195,41 @@ class Renamer
 
         $documentEdits = [];
         foreach ($locationsByUri as $uri => $locations) {
-            $edits = [];
-            $documentContent = $this->loadDocumentText($uri);
-            $rootNode = $this->parser->parseSourceFile($documentContent);
-            foreach ($locations as $location) {
-                /** @var Location $location */
-                $node = $rootNode->getDescendantNodeAtPosition($location->offset()->toInt());
-                $nodeNameText = $this->nodeUtils->getNodeNameText($node, $documentContent);
-                if($nodeNameText !== $oldName)
-                    continue;
-                $position = $this->nodeUtils->getNodeNameStartPosition($node, $oldName);
-
-                if ($position !== null) {
-                    $edits[] = new TextEdit(
-                        new Range(
-                            $position,
-                            new Position($position->line, $position->character + mb_strlen($oldName))
-                        ),
-                        $newName
-                    );
-                }
-            }
-
-            $version = $this->getDocumentVersion($uri);
             $documentEdits[] = new TextDocumentEdit(
-                new VersionedTextDocumentIdentifier($uri, $version),
-                $edits
+                new VersionedTextDocumentIdentifier($uri, $this->getDocumentVersion($uri)),
+                $this->documentLocationsToTextEdits($uri, $locations, $oldName, $newName)
             );
         }
 
         return new WorkspaceEdit(null, $documentEdits);
+    }
+
+    private function documentLocationsToTextEdits(string $documentUri, array $locations, string $oldName, string $newName): array
+    {
+        $edits = [];
+        $documentContent = $this->getDocumentText($documentUri);
+        $rootNode = $this->parser->parseSourceFile($documentContent);
+        foreach ($locations as $location) {
+            /** @var Location $location */
+            $node = $rootNode->getDescendantNodeAtPosition($location->offset()->toInt());
+            $nodeNameText = $this->nodeUtils->getNodeNameText($node, $documentContent);
+            if ($nodeNameText !== $oldName) {
+                continue;
+            }
+            
+            $position = $this->nodeUtils->getNodeNameStartPosition($node, $oldName);
+            
+            if ($position !== null) {
+                $edits[] = new TextEdit(
+                    new Range(
+                        $position,
+                        new Position($position->line, $position->character + mb_strlen($oldName))
+                    ),
+                    $newName
+                );
+            }
+        }
+        return $edits;
     }
 
     private function getDocumentVersion(string $uri): int
@@ -235,7 +237,7 @@ class Renamer
         return $this->workspace->has($uri) ? $this->workspace->get($uri)->version : 0;
     }
 
-    private function loadDocumentText(string $uri): string
+    private function getDocumentText(string $uri): string
     {
         if ($this->workspace->has($uri)) {
             return $this->workspace->get($uri)->text;
@@ -244,66 +246,25 @@ class Renamer
         $contents = @file_get_contents($uri);
 
         if (false === $contents) {
-            // throw new CouldNotLoadFileContents(sprintf(
-            //     'Could not load file contents "%s"',
-            //     $uri
-            // ));
             return "";
         }
 
         return $contents;
     }
 
-    private function renameVariable(TextDocument $phpactorDocument, Node $node, ByteOffset $offset, string $newName): WorkspaceEdit
-    {
-        $sourceCode = SourceCode::fromString((string)$phpactorDocument);
-        $newSource = $this->renameVariable->renameVariable($sourceCode, $offset->toInt(), $newName);
-        
-        return $this->convertEditsToWorkspaceEdit($phpactorDocument, $node, $newSource);
-    }
-
-    private function convertEditsToWorkspaceEdit(TextDocument $phpactorDocument, Node $node, string $newSource): WorkspaceEdit
-    {
-        $uri = (string)$phpactorDocument->uri();
-        $oldSource = (string)$phpactorDocument;
-        $version = $this->getDocumentVersion($uri);
-        $root = $node->getRoot();
-        return new WorkspaceEdit(
-            null,
-            [
-                new TextDocumentEdit(
-                    new VersionedTextDocumentIdentifier($uri, $version),
-                    [
-                        new TextEdit(
-                            new Range(
-                                PositionConverter::byteOffsetToPosition(ByteOffset::fromInt($root->getFullStart()), $oldSource),
-                                PositionConverter::byteOffsetToPosition(ByteOffset::fromInt($root->getEndPosition()), $oldSource),
-                            ),
-                            (string)$newSource
-                        )
-                    ]
-                )
-            ]
-        );
-    }
-
-    private function isClassMemberOrClass(Node $node): bool
+    private function canRenameNode(Node $node): bool
     {
         return
-            $node instanceof MethodDeclaration ||
-            $node instanceof ClassDeclaration ||
-            $node instanceof QualifiedName ||
-            $node instanceof InterfaceDeclaration ||
-            $node instanceof ConstElement ||
-            ($node instanceof Variable && $node->getFirstAncestor(PropertyDeclaration::class)) ||
-            ($node instanceof MemberAccessExpression && $node->memberName instanceof Token) ||
-            ($node instanceof ScopedPropertyAccessExpression && $node->memberName instanceof Token);
-    }
-
-    private function isVariable(Node $node): bool
-    {
-        return
-            $node instanceof Variable &&
-            $node->getFirstAncestor(PropertyDeclaration::class) === null;
+            $node instanceof MethodDeclaration 
+            || $node instanceof ClassDeclaration 
+            || $node instanceof QualifiedName 
+            || $node instanceof InterfaceDeclaration 
+            || $node instanceof ConstElement 
+            || ($node instanceof ScopedPropertyAccessExpression && $node->memberName instanceof Token)
+            || ($node instanceof Variable && $node->getFirstAncestor(PropertyDeclaration::class)) 
+            || ($node instanceof MemberAccessExpression && $node->memberName instanceof Token) 
+            || ($node instanceof Variable && $node->getFirstAncestor(PropertyDeclaration::class) === null)
+            || $node instanceof Parameter
+            ;
     }
 }
