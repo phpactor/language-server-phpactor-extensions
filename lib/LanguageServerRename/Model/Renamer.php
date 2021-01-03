@@ -23,7 +23,6 @@ use Microsoft\PhpParser\Node\Statement\TraitDeclaration;
 use Microsoft\PhpParser\Parser;
 use Microsoft\PhpParser\ResolvedName;
 use Microsoft\PhpParser\Token;
-use Phpactor\CodeTransform\Domain\Refactor\RenameVariable;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\Range;
@@ -43,7 +42,6 @@ use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\Location;
 use Phpactor\TextDocument\TextDocument;
 use Phpactor\TextDocument\TextDocumentBuilder;
-use Phpactor\WorseReflection\Reflector;
 use function mb_strlen;
 use function mb_substr;
 
@@ -212,7 +210,7 @@ class Renamer
             || $node instanceof TraitDeclaration
         ) {
             $namespacePrefix = null;
-            if(($namespace = $node->getNamespaceDefinition()) !== null){
+            if (($namespace = $node->getNamespaceDefinition()) !== null) {
                 /** @var NamespaceDefinition $namespace */
                 $namespacePrefix = "{$namespace->name->getNamespacedName()->getFullyQualifiedNameText()}\\";
             }
@@ -345,13 +343,13 @@ class Renamer
             
             /** @var NamespaceUseClause $node */
             if (
-                null === $node->groupClauses 
+                null === $node->groupClauses
                 && ($edit = $this->getQualifiedNameEdit(
-                    $node->namespaceName, 
+                    $node->namespaceName,
                     $node->namespaceAliasingClause,
-                    '', 
-                    $oldFqn, 
-                    $oldName, 
+                    '',
+                    $oldFqn,
+                    $oldName,
                     $newName
                 )) !== null
             ) {
@@ -364,18 +362,17 @@ class Renamer
                     /** @var NamespaceUseGroupClause $groupClause */
                     if ((
                         $edit = $this->getQualifiedNameEdit(
-                            $groupClause->namespaceName, 
+                            $groupClause->namespaceName,
                             $groupClause->namespaceAliasingClause,
-                            ResolvedName::buildName($node->namespaceName->nameParts, $documentContent)->getFullyQualifiedNameText(), 
+                            ResolvedName::buildName($node->namespaceName->nameParts, $documentContent)->getFullyQualifiedNameText(),
                             $oldFqn,
                             $oldName,
                             $newName
-                        )) !== null
+                        )
+                    ) !== null
                     ) {
                         $edits[] = $edit;
                     }
-
-                    
                 }
             }
         }
@@ -384,20 +381,21 @@ class Renamer
 
     private function getQualifiedNameEdit(QualifiedName $qualifiedName, ?NamespaceAliasingClause $alias, string $prefix, ?string $oldFqn, string $oldName, string $newName): ?TextEdit
     {
-        if(!empty($prefix) && mb_substr($prefix, -1) != "\\")
+        if (!empty($prefix) && mb_substr($prefix, -1) != "\\") {
             $prefix .= "\\";
+        }
         $documentContent = $qualifiedName->getFileContents();
         $fqn = ResolvedName::buildName($qualifiedName->nameParts, $documentContent)->getFullyQualifiedNameText();
         $lastPartText = $qualifiedName->getLastNamePart()->getText($documentContent);
         // dump("{$prefix}{$fqn} === $oldFqn ($lastPartText == $oldName)");
         if ($prefix.$fqn === $oldFqn) {
-            if($lastPartText === $oldName){
+            if ($lastPartText === $oldName) {
                 return new TextEdit(
                     $this->nodeUtils->getTokenRange($qualifiedName->getLastNamePart(), $documentContent),
                     $newName
                 );
             }
-            if(null !== $alias && $alias->name->getText($documentContent) === $oldName) {
+            if (null !== $alias && $alias->name->getText($documentContent) === $oldName) {
                 return new TextEdit(
                     $this->nodeUtils->getTokenRange($alias->name, $documentContent),
                     $newName
