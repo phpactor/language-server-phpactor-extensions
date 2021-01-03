@@ -12,6 +12,7 @@ use Phpactor\Extension\LanguageServerRename\Model\NodeUtils;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
+use Phpactor\Extension\WorseReflection\WorseReflectionExtension;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\MapResolver\Resolver;
 use Phpactor\ReferenceFinder\ReferenceFinder;
@@ -33,7 +34,6 @@ class LanguageServerRenameExtension implements Extension
                     $container->get(ReferenceFinder::class),
                     $container->get(ReferenceFinderExtension::SERVICE_DEFINITION_LOCATOR),
                     $container->get(ClientApi::class),
-                    $container->get(RenameVariable::class),
                     new NodeUtils(),
                 )
             );

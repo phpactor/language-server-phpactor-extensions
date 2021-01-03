@@ -22,15 +22,16 @@ use Phpactor\LanguageServerProtocol\Range;
 
 class NodeUtils
 {
-    public function getNodeNameText(Node $node, string $documentContent): ?string
+    public function getNodeNameText(Node $node): ?string
     {
         $token = $this->getNodeNameToken($node);
         if ($token === null) {
             return null;
         }
-        $text = (string)$token->getText($documentContent);
-        if(mb_substr($text, 0, 1) == '$')
+        $text = (string)$token->getText($node->getFileContents());
+        if (mb_substr($text, 0, 1) == '$') {
             return mb_substr($text, 1);
+        }
         return $text;
     }
     
@@ -47,7 +48,7 @@ class NodeUtils
             return null;
         }
         
-        $fileContents = $node->getRoot()->fileContents;
+        $fileContents = $node->getFileContents();
         
         $range = $this->getTokenRange($token, $fileContents);
         if (mb_substr((string)$token->getText($fileContents), 0, 1) == '$') {
@@ -63,12 +64,12 @@ class NodeUtils
             PositionConverter::intByteOffsetToPosition($token->getEndPosition(), $document)
         );
     }
-
-    public function getNodeNameToken(Node $node, ?string $name = null): ?Token
+    
+    public function getNodeNameToken(Node $node, ?string $name = null): ?Token // NOSONAR
     {
-        if ($node instanceof MethodDeclaration) {
+        if ($node instanceof ClassDeclaration) {
             return $node->name;
-        } elseif ($node instanceof ClassDeclaration) {
+        } elseif ($node instanceof MethodDeclaration) {
             return $node->name;
         } elseif ($node instanceof InterfaceDeclaration) {
             return $node->name;
@@ -82,13 +83,6 @@ class NodeUtils
             return $node->name;
         } elseif ($node instanceof ConstElement) {
             return $node->name;
-        } elseif ($node instanceof ClassConstDeclaration) {
-            foreach ($node->constElements->getElements() as $element) {
-                if ($element instanceof ConstElement && !empty($name) && $element->getName() == $name) {
-                    return $this->getNodeNameToken($element);
-                }
-            }
-            return null;
         } elseif ($node instanceof Parameter) {
             return $node->variableName;
         } elseif ($node instanceof Variable) {
@@ -101,15 +95,25 @@ class NodeUtils
             return null;
         } elseif ($node instanceof MemberAccessExpression) {
             return $node->memberName;
+        } elseif ($node instanceof ClassConstDeclaration) {
+            if(!empty($name)){
+                foreach ($node->constElements->getElements() as $element) {
+                    if ($element instanceof ConstElement && $element->getName() == $name) {
+                        return $this->getNodeNameToken($element);
+                    }
+                }
+            }
+            return null;
         } elseif ($node instanceof PropertyDeclaration) {
-            foreach ($node->propertyElements->getElements() as $nodeOrToken) {
-                /** @var Node|Token $nodeOrToken */
-                if ($nodeOrToken instanceof Variable
-                    && $nodeOrToken->name instanceof Token &&
-                    !empty($name)
-                    && $nodeOrToken->getName() == $name
-                ) {
-                    return $nodeOrToken->name;
+            if(!empty($name)){
+                foreach ($node->propertyElements->getElements() as $nodeOrToken) {
+                    /** @var Node|Token $nodeOrToken */
+                    if ($nodeOrToken instanceof Variable
+                        && $nodeOrToken->name instanceof Token
+                        && $nodeOrToken->getName() == $name
+                    ) {
+                        return $nodeOrToken->name;
+                    }
                 }
             }
             return null;

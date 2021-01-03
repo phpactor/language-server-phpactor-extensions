@@ -205,6 +205,13 @@ class NodeUtilsTest extends TestCase
             null
         ];
 
+        yield 'Property access' => [
+            '<?php class MyClass { private function myMethod() { $this-><>otherProperty; } }',
+            new Token(TokenKind::Name, 59, 59, 13),
+            'otherProperty',
+            null
+        ];
+
         yield 'Named property access' => [
             '<?php class MyClass { pub<>lic $otherProp, $myProp; } }',
             new Token(TokenKind::VariableName, 28, 29, 11),
