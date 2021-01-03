@@ -182,7 +182,10 @@ class Renamer
 
         return $this->locationsToWorkspaceEdit($locations, $oldFqn, $oldName, $newName);
     }
-
+    /**
+     * Given the defintion location returns the location of the name token and the 
+     * FQN of the type if one is being renamed (classes, interfaces or traits)
+     */
     private function getDefinitionNameLocation(DefinitionLocation $location, string $oldName): array // NOSONAR
     {
         $documentContents = $this->getDocumentText($location->uri());
@@ -215,7 +218,6 @@ class Renamer
                 $namespacePrefix = "{$namespace->name->getNamespacedName()->getFullyQualifiedNameText()}\\";
             }
             
-            // dump("{$namespacePrefix}{$node->name->getText($documentContents)}");
             return [
                 new Location($location->uri(), ByteOffset::fromInt($node->name->start)),
                 "{$namespacePrefix}{$node->name->getText($documentContents)}"
@@ -387,7 +389,7 @@ class Renamer
         $documentContent = $qualifiedName->getFileContents();
         $fqn = ResolvedName::buildName($qualifiedName->nameParts, $documentContent)->getFullyQualifiedNameText();
         $lastPartText = $qualifiedName->getLastNamePart()->getText($documentContent);
-        // dump("{$prefix}{$fqn} === $oldFqn ($lastPartText == $oldName)");
+        
         if ($prefix.$fqn === $oldFqn) {
             if ($lastPartText === $oldName) {
                 return new TextEdit(
