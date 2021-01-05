@@ -73,12 +73,21 @@ class CreateClassProviderTest extends IntegrationTestCase
      */
     public function provideClassCreateProvider(): Generator
     {
-        yield 'empty class' => [
+        yield 'empty file' => [
             <<<'EOT'
 // File: subject.php
 
 EOT
         , 1, 1
+        ];
+
+        yield 'non empty file' => [
+            <<<'EOT'
+// File: subject.php
+<?php
+
+EOT
+        , 0, 0
         ];
     }
 }

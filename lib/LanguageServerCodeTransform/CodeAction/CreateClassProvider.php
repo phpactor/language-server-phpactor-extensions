@@ -20,6 +20,8 @@ use function Amp\call;
 
 class CreateClassProvider implements DiagnosticsProvider, CodeActionProvider
 {
+    public const KIND = 'quickfix.create_class';
+
     /**
      * @var Generators
      */
@@ -42,7 +44,7 @@ class CreateClassProvider implements DiagnosticsProvider, CodeActionProvider
     public function kinds(): array
     {
         return [
-            'quickfix.create_class'
+            self::KIND
         ];
     }
 
@@ -96,7 +98,7 @@ class CreateClassProvider implements DiagnosticsProvider, CodeActionProvider
                 $title = sprintf('Create new "%s" class', $name);
                 $actions[] = CodeAction::fromArray([
                     'title' =>  $title,
-                    'kind' => 'quickfix.create_class',
+                    'kind' => self::KIND,
                     'diagnostics' => $this->getDiagnostics($textDocument),
                     'command' => new Command(
                         $title,
@@ -115,6 +117,6 @@ class CreateClassProvider implements DiagnosticsProvider, CodeActionProvider
 
     private function kind(): string
     {
-        return 'quickfix.create_class';
+        return self::KIND;
     }
 }
