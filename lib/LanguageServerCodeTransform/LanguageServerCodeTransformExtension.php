@@ -7,9 +7,11 @@ use Phpactor\CodeTransform\Domain\Refactor\ImportName;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
+use Phpactor\Extension\ClassToFile\ClassToFileExtension;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
 use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\ImportNameProvider;
 use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\TransformerCodeActionPovider;
+use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\CreateClassCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportNameCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\TransformCommand;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
@@ -68,6 +70,19 @@ class LanguageServerCodeTransformExtension implements Extension
         }, [
             LanguageServerExtension::TAG_COMMAND => [
                 'name' => TransformCommand::NAME
+            ],
+        ]);
+
+        $container->register(CreateClassCommand::class, function (Container $container) {
+            return new CreateClassCommand(
+                $container->get(ClientApi::class),
+                $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
+                $container->get('code_transform.transformers'),
+                $container->get(ClassToFileExtension::SERVICE_CONVERTER)
+            );
+        }, [
+            LanguageServerExtension::TAG_COMMAND => [
+                'name' => CreateClassCommand::NAME
             ],
         ]);
     }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerCodeTransform\Tests\LspCommand;
+namespace Phpactor\Extension\LanguageServerCodeTransform\Tests\Unit\LspCommand;
 
 use Amp\Promise;
 use Phpactor\LanguageServerProtocol\ApplyWorkspaceEditResponse;
