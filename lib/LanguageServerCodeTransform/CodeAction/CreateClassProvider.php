@@ -5,6 +5,7 @@ namespace Phpactor\Extension\LanguageServerCodeTransform\CodeAction;
 use Amp\Promise;
 use Amp\Success;
 use Microsoft\PhpParser\Parser;
+use Phpactor\CodeTransform\Domain\GenerateNew;
 use Phpactor\CodeTransform\Domain\Generators;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\CreateClassCommand;
 use Phpactor\LanguageServerProtocol\CodeAction;
@@ -21,7 +22,7 @@ use function Amp\call;
 class CreateClassProvider implements DiagnosticsProvider, CodeActionProvider
 {
     /**
-     * @var Generators<GenerateNew>
+     * @var Generators
      */
     private $generators;
 
