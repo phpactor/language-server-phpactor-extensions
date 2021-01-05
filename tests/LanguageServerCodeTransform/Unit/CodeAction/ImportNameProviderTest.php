@@ -3,7 +3,10 @@
 namespace Phpactor\Extension\LanguageServerCodeTransform\Tests\Unit\CodeAction;
 
 use Generator;
+use Microsoft\PhpParser\Parser;
+use Phpactor\CodeTransform\Domain\Generators;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
+use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\CreateClassProvider;
 use Phpactor\Extension\LanguageServerCodeTransform\LanguageServerCodeTransformExtension;
 use Phpactor\Extension\LanguageServerCodeTransform\Tests\IntegrationTestCase;
 use Phpactor\LanguageServerProtocol\CodeActionContext;
@@ -11,6 +14,7 @@ use Phpactor\LanguageServerProtocol\CodeActionParams;
 use Phpactor\LanguageServerProtocol\CodeActionRequest;
 use Phpactor\LanguageServerProtocol\Range;
 use Phpactor\LanguageServer\LanguageServerBuilder;
+use Phpactor\LanguageServer\LanguageServerTesterBuilder;
 use Phpactor\LanguageServer\Test\LanguageServerTester;
 use Phpactor\LanguageServer\Test\ProtocolFactory;
 use Phpactor\TestUtils\ExtractOffset;
@@ -23,13 +27,22 @@ class ImportNameProviderTest extends IntegrationTestCase
      */
     public function testImportProvider(string $manifest, int $expectedCount, int $expectedDiagnosticCount, bool $imprtGlobals = false): void
     {
+        $generator = new TestGenerator();
+        $generators = new Generators([
+            'default' => $generator,
+            'foobar' => $generator,
+        ]);
+
         $this->workspace()->reset();
         $this->workspace()->loadManifest($manifest);
-        $tester = $this->container([
-            LanguageServerCodeTransformExtension::PARAM_IMPORT_GLOBALS => $imprtGlobals
-        ])->get(LanguageServerBuilder::class)->tester(
-            ProtocolFactory::initializeParams($this->workspace()->path())
+
+        $tester = LanguageServerTesterBuilder::create();
+        $tester->enableDiagnostics();
+        $provider = new CreateClassProvider($generators, new Parser());
+        $tester->addDiagnosticsProvider(
+            $provider
         );
+
         $tester->initialize();
         assert($tester instanceof LanguageServerTester);
 
@@ -184,3 +197,18 @@ EOT
         ];
     }
 }
+
+class TestGenerator implements GenerateNew
+{
+    public const EXAMPLE_TEXT = 'hello';
+    public const EXAMPLE_PATH = '/path';
+
+    /**
+     * {@inheritDoc}
+     */
+    public function generateNew(ClassName $targetName): SourceCode
+    {
+        return SourceCode::fromStringAndPath(self::EXAMPLE_TEXT, self::EXAMPLE_PATH);
+    }
+}
+
