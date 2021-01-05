@@ -5,7 +5,6 @@ namespace Phpactor\Extension\LanguageServerCodeTransform\CodeAction;
 use Amp\Promise;
 use Amp\Success;
 use Microsoft\PhpParser\Parser;
-use Phpactor\CodeTransform\Domain\GenerateNew;
 use Phpactor\CodeTransform\Domain\Generators;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\CreateClassCommand;
 use Phpactor\LanguageServerProtocol\CodeAction;
