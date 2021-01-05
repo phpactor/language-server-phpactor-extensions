@@ -60,9 +60,11 @@ class CreateClassProvider implements DiagnosticsProvider, CodeActionProvider
     private function getDiagnostics(TextDocumentItem $textDocument): array
     {
         $node = $this->parser->parseSourceFile($textDocument->text);
-        if (null !== $node->getFirstChildNode()) {
+
+        if ('' !== trim($node->getFileContents())) {
             return [];
         }
+
         return [
             new Diagnostic(
                 new Range(
@@ -82,6 +84,12 @@ class CreateClassProvider implements DiagnosticsProvider, CodeActionProvider
     public function provideActionsFor(TextDocumentItem $textDocument, Range $range): Promise
     {
         return call(function () use ($textDocument) {
+            $diagnostics = $this->getDiagnostics($textDocument);
+
+            if (empty($diagnostics)) {
+                return [];
+            }
+
             $actions = [];
 
             foreach ($this->generators as $name => $generator) {
