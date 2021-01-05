@@ -8,14 +8,10 @@ use Phpactor\ClassFileConverter\Domain\FileToClass;
 use Phpactor\CodeTransform\Domain\ClassName;
 use Phpactor\CodeTransform\Domain\GenerateNew;
 use Phpactor\CodeTransform\Domain\Generators;
-use Phpactor\CodeTransform\Domain\SourceCode;
-use Phpactor\CodeTransform\Domain\Transformer;
-use Phpactor\CodeTransform\Domain\Transformers;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
 use Phpactor\LanguageServerProtocol\ApplyWorkspaceEditResponse;
 use Phpactor\LanguageServerProtocol\WorkspaceEdit;
 use Phpactor\LanguageServer\Core\Command\Command;
-use Phpactor\LanguageServer\Core\Rpc\ResponseMessage;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\TextDocument\TextDocumentUri;
@@ -48,7 +44,6 @@ class CreateClassCommand implements Command
         Workspace $workspace,
         Generators $generators,
         FileToClass $fileToClass
-        
     ) {
         $this->clientApi = $clientApi;
         $this->workspace = $workspace;
