@@ -71,6 +71,6 @@ class CreateClassCommand implements Command
 
         return $this->clientApi->workspace()->applyEdit(new WorkspaceEdit([
             $uri => TextEditConverter::toLspTextEdits($textEdits, $textDocument->text)
-        ]), 'Apply source code transformation');
+        ]), 'Create class');
     }
 }
