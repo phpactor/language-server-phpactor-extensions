@@ -102,7 +102,7 @@ class LocationConverterTest extends IntegrationTestCase
             '12345',
             null,
             10,
-            $this->createRange(0, 4, 0, 4)
+            $this->createRange(0, 5, 0, 5)
         ];
     }
 

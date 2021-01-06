@@ -17,7 +17,7 @@ class PositionConverter
     public static function byteOffsetToPosition(ByteOffset $offset, string $text): Position
     {
         if ($offset->toInt() > strlen($text)) {
-            $offset = ByteOffset::fromInt(strlen($text) - 1);
+            $offset = ByteOffset::fromInt(strlen($text));
         }
 
         $lineCol = LineCol::fromByteOffset($text, $offset);
