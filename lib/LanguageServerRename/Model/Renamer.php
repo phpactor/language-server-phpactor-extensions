@@ -161,6 +161,7 @@ class Renamer
                 return $this->locationsToWorkspaceEdit($locations, $oldName, $newName);
             }
 
+            // I can't see how I can yield here.
             // if ($count++ % 10) {
             //     // give other co-routines a chance
             //     yield new Delayed(0);
@@ -186,7 +187,7 @@ class Renamer
 
     private function locationsToWorkspaceEdit(array $locations, string $oldName, string $newName): WorkspaceEdit
     {
-        // group locations by uri
+        // group locations by document
         $locationsByUri = [];
         foreach ($locations as $location) {
             /** @var Location $location */
@@ -199,13 +200,13 @@ class Renamer
 
         $documentEdits = [];
         foreach ($locationsByUri as $uri => $locations) {
-            list($textEdits, $rename) = $this->documentLocationsToTextEdits($uri, $locations, $oldName, $newName);
+            list($textEdits, $renameOperation) = $this->documentLocationsToTextEdits($uri, $locations, $oldName, $newName);
             $documentEdits[] = new TextDocumentEdit(
                 new VersionedTextDocumentIdentifier($uri, $this->getDocumentVersion($uri)),
                 $textEdits
             );
-            if($rename !== null)
-                $documentEdits[] = $rename;
+            if($renameOperation !== null)
+                $documentEdits[] = $renameOperation;
         }
 
         return new WorkspaceEdit(null, $documentEdits);
