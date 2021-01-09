@@ -2,6 +2,7 @@
 
 namespace Phpactor\Extension\LanguageServerReferenceFinder\Tests\Unit\Handler;
 
+use Phpactor\Extension\LanguageServerBridge\TextDocument\WorkspaceTextDocumentLocator;
 use Phpactor\LanguageServerProtocol\Location as LspLocation;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\GotoImplementationHandler;
@@ -49,7 +50,7 @@ class GotoImplementationHandlerTest extends TestCase
         $tester = $builder->addHandler(new GotoImplementationHandler(
             $builder->workspace(),
             $this->finder->reveal(),
-            new LocationConverter($builder->workspace())
+            new LocationConverter(new WorkspaceTextDocumentLocator($builder->workspace()))
         ))->build();
         $tester->textDocument()->open(self::EXAMPLE_URI, self::EXAMPLE_TEXT);
 

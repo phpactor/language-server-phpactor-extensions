@@ -6,20 +6,22 @@ use Phpactor\LanguageServerProtocol\Location as LspLocation;
 use Phpactor\LanguageServerProtocol\Range;
 use Phpactor\Extension\LanguageServerBridge\Converter\Exception\CouldNotLoadFileContents;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
+use Phpactor\TextDocument\Exception\TextDocumentNotFound;
 use Phpactor\TextDocument\Location;
 use Phpactor\TextDocument\Locations;
+use Phpactor\TextDocument\TextDocumentLocator;
 use Phpactor\TextDocument\TextDocumentUri;
 
 class LocationConverter
 {
     /**
-     * @var Workspace
+     * @var TextDocumentLocator
      */
-    private $workspace;
+    private $locator;
 
-    public function __construct(Workspace $workspace)
+    public function __construct(TextDocumentLocator $locator)
     {
-        $this->workspace = $workspace;
+        $this->locator = $locator;
     }
 
     public function toLspLocations(Locations $locations): array
@@ -28,8 +30,9 @@ class LocationConverter
         foreach ($locations as $location) {
             try {
                 $lspLocations[] = $this->toLspLocation($location);
+            } catch (TextDocumentNotFound $notFound) {
+                continue;
             } catch (CouldNotLoadFileContents $couldNotLoad) {
-                // ignore stale records
                 continue;
             }
         }
@@ -39,27 +42,12 @@ class LocationConverter
 
     public function toLspLocation(Location $location): LspLocation
     {
-        $text = $this->loadText($location->uri());
-        $position = PositionConverter::byteOffsetToPosition($location->offset(), $text);
+        $textDocument = $this->locator->get($location->uri());
+        $position = PositionConverter::byteOffsetToPosition(
+            $location->offset(),
+            $textDocument->__toString()
+        );
 
         return new LspLocation($location->uri()->__toString(), new Range($position, $position));
-    }
-
-    private function loadText(TextDocumentUri $uri): string
-    {
-        if ($this->workspace->has($uri)) {
-            return $this->workspace->get($uri)->text;
-        }
-
-        $contents = @file_get_contents($uri);
-
-        if (false === $contents) {
-            throw new CouldNotLoadFileContents(sprintf(
-                'Could not load file contents "%s"',
-                $uri
-            ));
-        }
-
-        return $contents;
     }
 }

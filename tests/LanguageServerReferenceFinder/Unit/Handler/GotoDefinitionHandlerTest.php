@@ -2,6 +2,7 @@
 
 namespace Phpactor\Extension\LanguageServerReferenceFinder\Tests\Unit\Handler;
 
+use Phpactor\Extension\LanguageServerBridge\TextDocument\WorkspaceTextDocumentLocator;
 use Phpactor\LanguageServerProtocol\DefinitionRequest;
 use Phpactor\LanguageServerProtocol\Location;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
@@ -47,7 +48,7 @@ class GotoDefinitionHandlerTest extends TestCase
         $tester = $builder->addHandler(new GotoDefinitionHandler(
             $builder->workspace(),
             $this->locator->reveal(),
-            new LocationConverter($builder->workspace())
+            new LocationConverter(new WorkspaceTextDocumentLocator($builder->workspace()))
         ))->build();
         $tester->textDocument()->open(self::EXAMPLE_URI, self::EXAMPLE_TEXT);
 

@@ -2,6 +2,7 @@
 
 namespace Phpactor\Extension\LanguageServerBridge\Tests\Converter;
 
+use Phpactor\Extension\LanguageServerBridge\TextDocument\WorkspaceTextDocumentLocator;
 use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\Range;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
@@ -27,7 +28,7 @@ class TextEditConverterTest extends IntegrationTestCase
     {
         $this->workspace()->reset();
         $this->workspace = new Workspace();
-        $this->converter = new TextEditConverter(new LocationConverter($this->workspace));
+        $this->converter = new TextEditConverter(new LocationConverter(new WorkspaceTextDocumentLocator($this->workspace)));
     }
 
     public function testConvertsTextEdits(): void
