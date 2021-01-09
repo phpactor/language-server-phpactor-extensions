@@ -14,6 +14,8 @@ use Phpactor\LanguageServer\LanguageServerBuilder;
 use Phpactor\LanguageServer\Test\LanguageServerTester;
 use Phpactor\LanguageServer\Test\ProtocolFactory;
 use Phpactor\TestUtils\ExtractOffset;
+use function Amp\Promise\wait;
+use function Amp\delay;
 
 class ImportNameProviderTest extends IntegrationTestCase
 {
@@ -39,6 +41,7 @@ class ImportNameProviderTest extends IntegrationTestCase
 
         $tester->textDocument()->open('file:///foobar', $source);
 
+        wait(delay(10));
         $result = $tester->requestAndWait(CodeActionRequest::METHOD, new CodeActionParams(
             ProtocolFactory::textDocumentIdentifier('file:///foobar'),
             new Range(
@@ -156,7 +159,6 @@ EOT
         yield 'built in global funtion with import globals' => [
             <<<'EOT'
 // File: functions.php
-<?php function explode() {} function array_keys(){}
 // File: subject.php
 <?php
 
