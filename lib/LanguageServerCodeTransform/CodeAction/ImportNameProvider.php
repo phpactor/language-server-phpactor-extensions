@@ -194,6 +194,7 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
             return true;
         } catch (NotFound $notFound) {
         }
+
         return false;
     }
 
