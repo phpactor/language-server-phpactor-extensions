@@ -49,17 +49,17 @@ class OffsetExtractorTest extends TestCase
         $this->assertIsArray($textEdit);
         $this->assertEquals(['start' => 12, 'end' => 16], $textEdit);
         $this->assertEquals("Test string with selector", $newSource);
-	}
-	
-	public function testRangeWithCreator(): void
+    }
+    
+    public function testRangeWithCreator(): void
     {
         $extractor = new OffsetExtractor();
-        $extractor->registerRange("textEdit", "{{", "}}", function(int $start, int $end, string $source){
-			return new Range(
-				PositionConverter::byteOffsetToPosition(ByteOffset::fromInt($start), $source),
-				PositionConverter::byteOffsetToPosition(ByteOffset::fromInt($end), $source),
-			);
-		});
+        $extractor->registerRange("textEdit", "{{", "}}", function (int $start, int $end, string $source) {
+            return new Range(
+                PositionConverter::byteOffsetToPosition(ByteOffset::fromInt($start), $source),
+                PositionConverter::byteOffsetToPosition(ByteOffset::fromInt($end), $source),
+            );
+        });
         list(
             "textEdit" => $textEdit,
             "newSource" => $newSource
