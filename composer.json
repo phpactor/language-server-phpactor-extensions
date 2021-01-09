@@ -72,9 +72,9 @@
     "prefer-stable": true,
     "scripts": {
         "integrate": [
-            "./vendor/bin/phpunit",
+            "./vendor/bin/php-cs-fixer fix",
             "./vendor/bin/phpstan analyze",
-            "./vendor/bin/php-cs-fixer fix"
+            "./vendor/bin/phpunit"
         ]
     }
 }

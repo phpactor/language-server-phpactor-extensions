@@ -18,8 +18,8 @@ class VariableRenamer implements Renamer2
     /**
      * {@inheritDoc}
      */
-    public function rename(TextDocument $textDocument, ByteOffset $offset, string $newName): Generator
+    public function rename(TextDocument $textDocument, ByteOffset $offset, string $newName): ?Generator
     {
-        return;
+        return null;
     }
 }

@@ -11,5 +11,5 @@ interface Renamer2
     /**
      * @return \Generator<RenameResult>
      */
-    public function rename(TextDocument $textDocument, ByteOffset $offset, string $newName): \Generator;
+    public function rename(TextDocument $textDocument, ByteOffset $offset, string $newName): ?\Generator;
 }
