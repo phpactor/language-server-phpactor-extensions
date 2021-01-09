@@ -3,12 +3,11 @@
 namespace Phpactor\Extension\LanguageServer\Tests\ridge\Converter;
 
 use Generator;
+use Phpactor\Extension\LanguageServerBridge\TextDocument\FilesystemWorkspaceLocator;
 use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\Range;
-use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerBridge\Tests\IntegrationTestCase;
-use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\TextDocument\Location;
 use Phpactor\TextDocument\Locations;
 use Phpactor\LanguageServerProtocol\Location as LspLocation;
@@ -38,9 +37,7 @@ class LocationConverterTest extends IntegrationTestCase
             ))
         ];
 
-        $workspace = new Workspace();
-
-        $converter = new LocationConverter($workspace);
+        $converter = new LocationConverter(new FilesystemWorkspaceLocator());
 
         self::assertEquals($expected, $converter->toLspLocations($locations));
     }
@@ -61,18 +58,16 @@ class LocationConverterTest extends IntegrationTestCase
             ))
         ];
 
-        $workspace = new Workspace();
-        $converter = new LocationConverter($workspace);
+        $converter = new LocationConverter(new FilesystemWorkspaceLocator());
         self::assertEquals($expected, $converter->toLspLocations($locations));
     }
 
     /**
      * @dataProvider provideDiskLocations
      * @dataProvider provideMultibyte
-     * @dataProvider provideWorkspaceLocations
      * @dataProvider provideOutOfRange
      */
-    public function testLocationToLspLocation(string $text, ?string $workspaceText, int $offset, Range $expectedRange): void
+    public function testLocationToLspLocation(string $text, int $offset, Range $expectedRange): void
     {
         $this->workspace()->put('test.php', $text);
 
@@ -80,17 +75,10 @@ class LocationConverterTest extends IntegrationTestCase
 
         $uri = 'file://' . $this->workspace()->path('test.php');
 
-        $workspace = new Workspace();
-
-        if ($workspaceText !== null) {
-            $textDocument = new TextDocumentItem($uri, 'php', 1, $workspaceText);
-            $workspace->open($textDocument);
-        }
-
         $expected = new LspLocation($uri, $expectedRange);
 
-        self::assertEquals($expected, (new LocationConverter($workspace))->toLspLocation($location));
-        ;
+        $converter = new LocationConverter(new FilesystemWorkspaceLocator());
+        self::assertEquals($expected, $converter->toLspLocation($location));
     }
 
     /**
@@ -100,7 +88,6 @@ class LocationConverterTest extends IntegrationTestCase
     {
         yield 'out of upper range' => [
             '12345',
-            null,
             10,
             $this->createRange(0, 5, 0, 5)
         ];
@@ -113,21 +100,18 @@ class LocationConverterTest extends IntegrationTestCase
     {
         yield '4 byte char 1st char' => [
             '😼😼😼😼😼',
-            null,
             4,
             $this->createRange(0, 4, 0, 4)
         ];
 
         yield '4 byte char 2nd char' => [
             '😼😼😼😼😼',
-            null,
             5,
             $this->createRange(0, 8, 0, 8)
         ];
 
         yield '4 byte char 4th char' => [
             '😼😼😼😼😼',
-            null,
             16,
             $this->createRange(0, 16, 0, 16)
         ];
@@ -140,43 +124,20 @@ class LocationConverterTest extends IntegrationTestCase
     {
         yield 'single line' => [
             '12345678',
-            null,
             2,
             $this->createRange(0, 2, 0, 2)
         ];
 
         yield 'second line' => [
             "12\n345\n678",
-            null,
             4,
             $this->createRange(1, 1, 1, 1)
         ];
 
         yield 'third line first char' => [
             "12\n345\n678",
-            null,
             8,
             $this->createRange(2, 1, 2, 1)
-        ];
-    }
-
-    /**
-     * @return Generator<mixed>
-     */
-    public function provideWorkspaceLocations(): Generator
-    {
-        yield 'workspace same as disk' => [
-            '12345678',
-            '12345678',
-            7,
-            $this->createRange(0, 7, 0, 7)
-        ];
-
-        yield 'workspace different' => [
-            "12\n345\n678",
-            "12345678",
-            7,
-            $this->createRange(0, 7, 0, 7)
         ];
     }
 

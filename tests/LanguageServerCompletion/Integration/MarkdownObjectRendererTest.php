@@ -200,7 +200,6 @@ EOT
                 return $reflector->reflectClassesIn('<?php class Foobar extends Foobar {}')->first();
             },
             'class_reflection5.md',
-            true
         ];
 
         yield 'deprecated class' => [

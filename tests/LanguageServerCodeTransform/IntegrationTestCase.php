@@ -59,9 +59,13 @@ class IntegrationTestCase extends TestCase
             TestLanguageServerSessionExtension::class,
         ], array_merge([
             FilePathResolverExtension::PARAM_APPLICATION_ROOT => __DIR__ .'/../../',
+            WorseReflectionExtension::PARAM_STUB_DIR => __DIR__. '/Empty',
+            //WorseReflectionExtension::PARAM_STUB_CACHE_DIR => __DIR__ . '/Workspace/wr-cache',
+            IndexerExtension::PARAM_STUB_PATHS => [__DIR__. '/Stub'],
             CodeTransformExtension::PARAM_TEMPLATE_PATHS => [],
             FilePathResolverExtension::PARAM_PROJECT_ROOT => $this->workspace()->path(),
             IndexerExtension::PARAM_INDEX_PATH => $this->workspace()->path('index'),
+            IndexerExtension::PARAM_ENABLED_WATCHERS => [],
             LanguageServerExtension::PARAM_DIAGNOSTIC_SLEEP_TIME => 0,
         ], $config));
 

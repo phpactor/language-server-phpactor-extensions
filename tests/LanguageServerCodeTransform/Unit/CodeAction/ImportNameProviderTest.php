@@ -14,6 +14,8 @@ use Phpactor\LanguageServer\LanguageServerBuilder;
 use Phpactor\LanguageServer\Test\LanguageServerTester;
 use Phpactor\LanguageServer\Test\ProtocolFactory;
 use Phpactor\TestUtils\ExtractOffset;
+use function Amp\Promise\wait;
+use function Amp\delay;
 
 class ImportNameProviderTest extends IntegrationTestCase
 {
@@ -25,6 +27,7 @@ class ImportNameProviderTest extends IntegrationTestCase
     {
         $this->workspace()->reset();
         $this->workspace()->loadManifest($manifest);
+
         $tester = $this->container([
             LanguageServerCodeTransformExtension::PARAM_IMPORT_GLOBALS => $imprtGlobals
         ])->get(LanguageServerBuilder::class)->tester(
@@ -37,6 +40,9 @@ class ImportNameProviderTest extends IntegrationTestCase
         [ $source, $offset ] = ExtractOffset::fromSource($subject);
 
         $tester->textDocument()->open('file:///foobar', $source);
+
+        // give the indexer a chance to index
+        wait(delay(25));
 
         $result = $tester->requestAndWait(CodeActionRequest::METHOD, new CodeActionParams(
             ProtocolFactory::textDocumentIdentifier('file:///foobar'),
@@ -89,16 +95,15 @@ EOT
         , 0, 1
         ];
 
-        // this test fails on the main phpactor integration tests
-//        yield 'code action and diagnostic for missing global class name with import globals' => [
-//            <<<'EOT'
-        //// File: subject.php
-        //<?php namespace Foobar; function foobar(): Generator { yield 12; }'
-        //// File: Generator.php
-        //<?php class Generator {}
-        //EOT
-//        , 1, 1, true
-//        ];
+        yield 'code action and diagnostic for missing global class name with import globals' => [
+            <<<'EOT'
+// File: subject.php
+<?php namespace Foobar; function foobar(): Generator { yield 12; }'
+// File: Generator.php
+<?php class Generator {}
+EOT
+        , 1, 1, true
+        ];
 
         yield 'code action and diagnostic for missing global class name without import globals' => [
             <<<'EOT'
@@ -142,8 +147,6 @@ EOT
 
         yield 'built in global funtion' => [
             <<<'EOT'
-// File: functions.php
-<?php function explode() {} function array_keys(){}
 // File: subject.php
 <?php
 
@@ -158,7 +161,6 @@ EOT
         yield 'built in global funtion with import globals' => [
             <<<'EOT'
 // File: functions.php
-<?php function explode() {} function array_keys(){}
 // File: subject.php
 <?php
 
