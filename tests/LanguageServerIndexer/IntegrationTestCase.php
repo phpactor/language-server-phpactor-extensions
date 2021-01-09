@@ -50,6 +50,7 @@ class IntegrationTestCase extends TestCase
             LoggingExtension::PARAM_ENABLED=> true,
             LoggingExtension::PARAM_PATH=> 'php://stderr',
             WorseReflectionExtension::PARAM_ENABLE_CACHE=> false,
+            IndexerExtension::PARAM_ENABLED_WATCHERS => [],
         ], $config));
 
         return $container;

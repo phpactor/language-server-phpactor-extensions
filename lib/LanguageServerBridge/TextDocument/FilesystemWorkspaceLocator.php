@@ -7,7 +7,6 @@ use Phpactor\TextDocument\TextDocument;
 use Phpactor\TextDocument\TextDocumentBuilder;
 use Phpactor\TextDocument\TextDocumentLocator;
 use Phpactor\TextDocument\TextDocumentUri;
-use Phpactor\TextDocument\Workspace;
 
 class FilesystemWorkspaceLocator implements TextDocumentLocator
 {

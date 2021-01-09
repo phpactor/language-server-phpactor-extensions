@@ -25,6 +25,7 @@ class ImportNameProviderTest extends IntegrationTestCase
     {
         $this->workspace()->reset();
         $this->workspace()->loadManifest($manifest);
+
         $tester = $this->container([
             LanguageServerCodeTransformExtension::PARAM_IMPORT_GLOBALS => $imprtGlobals
         ])->get(LanguageServerBuilder::class)->tester(

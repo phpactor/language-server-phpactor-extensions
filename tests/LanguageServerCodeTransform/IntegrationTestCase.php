@@ -62,6 +62,7 @@ class IntegrationTestCase extends TestCase
             CodeTransformExtension::PARAM_TEMPLATE_PATHS => [],
             FilePathResolverExtension::PARAM_PROJECT_ROOT => $this->workspace()->path(),
             IndexerExtension::PARAM_INDEX_PATH => $this->workspace()->path('index'),
+            IndexerExtension::PARAM_ENABLED_WATCHERS => [],
             LanguageServerExtension::PARAM_DIAGNOSTIC_SLEEP_TIME => 0,
         ], $config));
 

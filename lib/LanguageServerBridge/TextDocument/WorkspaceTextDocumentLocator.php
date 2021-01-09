@@ -3,14 +3,12 @@
 namespace Phpactor\Extension\LanguageServerBridge\TextDocument;
 
 use Phpactor\Extension\LanguageServerBridge\Converter\TextDocumentConverter;
-use Phpactor\LanguageServerProtocol\VersionedTextDocumentIdentifier;
 use Phpactor\LanguageServer\Core\Workspace\Exception\UnknownDocument;
 use Phpactor\LanguageServer\Core\Workspace\Workspace as PhpactorWorkspace;
 use Phpactor\TextDocument\Exception\TextDocumentNotFound;
 use Phpactor\TextDocument\TextDocument;
 use Phpactor\TextDocument\TextDocumentLocator;
 use Phpactor\TextDocument\TextDocumentUri;
-use Phpactor\TextDocument\Workspace;
 
 class WorkspaceTextDocumentLocator implements TextDocumentLocator
 {
