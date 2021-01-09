@@ -183,7 +183,7 @@ class Renamer
         return $this->locationsToWorkspaceEdit($locations, $oldFqn, $oldName, $newName);
     }
     /**
-     * Given the defintion location returns the location of the name token and the 
+     * Given the defintion location returns the location of the name token and the
      * FQN of the type if one is being renamed (classes, interfaces or traits)
      */
     private function getDefinitionNameLocation(DefinitionLocation $location, string $oldName): array // NOSONAR
