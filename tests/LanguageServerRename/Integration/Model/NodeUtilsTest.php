@@ -118,7 +118,7 @@ class NodeUtilsTest extends TestCase
         ];
 
         yield 'Property' => [
-            '<?php class MyClass { public $myP<>rop; }',
+            '<?php class MyClass { <>public $myProp; }',
             new Token(TokenKind::VariableName, 28, 29, 8),
             '$myProp',
             Range::fromArray([

@@ -226,7 +226,7 @@ class Renamer
                 $rename = $r;
             }
 
-            $nodeNameText = $this->nodeUtils->getNodeNameText($node, $documentContent);
+            $nodeNameText = $this->nodeUtils->getNodeNameText($node, $documentContent, $oldName);
             if ($nodeNameText !== $oldName) {
                 continue;
             }

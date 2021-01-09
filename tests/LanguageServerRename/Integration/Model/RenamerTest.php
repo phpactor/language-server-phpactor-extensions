@@ -358,6 +358,15 @@ class RenamerTest extends TestCase
             $uri,
             $newName
         ];
+
+        yield [
+            'Rename property' =>
+            '<?php class Class1 { <d>public ${{name1}}; function method1(){ $this-><r>{{na<>me1}} = 4; } }',
+            $uri,
+            $newName
+        ];
+
+        
     }
 
     private static function offsetsFromSource(string $source, ?string $uri): array

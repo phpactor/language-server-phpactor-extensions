@@ -22,9 +22,9 @@ use Phpactor\LanguageServerProtocol\Range;
 
 class NodeUtils
 {
-    public function getNodeNameText(Node $node, string $documentContent): ?string
+    public function getNodeNameText(Node $node, string $documentContent, string $name = null): ?string
     {
-        $token = $this->getNodeNameToken($node);
+        $token = $this->getNodeNameToken($node, $name);
         if ($token === null) {
             return null;
         }
