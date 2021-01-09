@@ -2,8 +2,6 @@
 
 namespace Phpactor\Extension\LanguageServerRename\Tests;
 
-use function array_keys;
-
 class OffsetExtractor
 {
     /** @var array */
@@ -78,46 +76,4 @@ class OffsetExtractor
 
         return $retVal;
     }
-
-    // public function offsetsFromSource(string $source, ?string $uri): array
-    // {
-    //     $textDocumentUri = $uri !== null ? TextDocumentUri::fromString($uri) : null;
-    //     $results = preg_split("/(<>|<d>|<r>|{{|«|}}|»)/u", $source, null, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
-        
-    //     $referenceLocations = [];
-    //     $definitionLocation = null;
-    //     $selectionOffset = null;
-    //     $ranges = [];
-    //     $currentResultStartOffset = null;
-    //     if (is_array($results)) {
-    //         $newSource = "";
-    //         $offset = 0;
-    //         foreach ($results as $result) {
-    //             if ($result == "<>") {
-    //                 $selectionOffset = $offset;
-    //             } elseif ($result == "<d>") {
-    //                 $definitionLocation = new DefinitionLocation($textDocumentUri, ByteOffset::fromInt($offset));
-    //             } elseif ($result == "<r>") {
-    //                 $referenceLocations[] = PotentialLocation::surely(
-    //                     new Location($textDocumentUri, ByteOffset::fromInt($offset))
-    //                 );
-    //             } elseif ($result == "{{" || $result == "«") {
-    //                 $currentResultStartOffset = $offset;
-    //             } elseif ($result == "}}" || $result == "»") {
-    //                 $ranges[] =
-    //                     new Range(
-    //                         PositionConverter::byteOffsetToPosition(ByteOffset::fromInt($currentResultStartOffset), $source),
-    //                         PositionConverter::byteOffsetToPosition(ByteOffset::fromInt($offset), $source)
-    //                     );
-    //             } else {
-    //                 $newSource .= $result;
-    //                 $offset += mb_strlen($result);
-    //             }
-    //         }
-    //     } else {
-    //         throw new \Exception('No selection.');
-    //     }
-        
-    //     return [$newSource, $selectionOffset, $definitionLocation, $referenceLocations, $ranges];
-    // }
 }
