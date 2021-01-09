@@ -15,11 +15,9 @@ use Microsoft\PhpParser\Node\QualifiedName;
 use Microsoft\PhpParser\Node\Statement\ClassDeclaration;
 use Microsoft\PhpParser\Node\Statement\InterfaceDeclaration;
 use Microsoft\PhpParser\Node\Statement\TraitDeclaration;
-use Microsoft\PhpParser\Node\UseVariableName;
 use Microsoft\PhpParser\Parser;
 use Microsoft\PhpParser\Token;
 use Phpactor\CodeTransform\Domain\Refactor\RenameVariable;
-use Phpactor\CodeTransform\Domain\SourceCode;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\Range;
@@ -114,8 +112,9 @@ class Renamer
             ->language($textDocument->languageId ?? 'php')
             ->build();
 
-        if ($this->canRenameNode($node))
+        if ($this->canRenameNode($node)) {
             return $this->renameNode($phpactorDocument, $offset, $node, $this->nodeUtils->getNodeNameText($node, $textDocument->text), $newName);
+        }
         
         return null;
     }
@@ -205,8 +204,9 @@ class Renamer
                 new VersionedTextDocumentIdentifier($uri, $this->getDocumentVersion($uri)),
                 $textEdits
             );
-            if($renameOperation !== null)
+            if ($renameOperation !== null) {
                 $documentEdits[] = $renameOperation;
+            }
         }
 
         return new WorkspaceEdit(null, $documentEdits);
@@ -222,7 +222,7 @@ class Renamer
             /** @var Location $location */
             $node = $rootNode->getDescendantNodeAtPosition($location->offset()->toInt());
             
-            if(($r = $this->renameFileIfNeeded($node, $documentUri, $oldName, $newName)) !== null){
+            if (($r = $this->renameFileIfNeeded($node, $documentUri, $oldName, $newName)) !== null) {
                 $rename = $r;
             }
 
@@ -249,25 +249,25 @@ class Renamer
 
     private function renameFileIfNeeded(Node $node, string $documentUri, string $oldName, string $newName): ?RenameFile
     {
-        if(
+        if (
             false === $node instanceof ClassDeclaration
             && false === $node instanceof InterfaceDeclaration
             && false === $node instanceof TraitDeclaration
-        ){
+        ) {
             return null;
         }
         
         $parts = explode("/", $documentUri);
         $fileName = array_pop($parts);
         $extension = null;
-        if(($lastDot = strrpos($fileName, ".")) !== false){
+        if (($lastDot = strrpos($fileName, ".")) !== false) {
             $extension = mb_substr($fileName, $lastDot);
             $fileName = mb_substr($fileName, 0, $lastDot);
         }
-        if($fileName == $oldName){
+        if ($fileName == $oldName) {
             return new RenameFile(
-                'rename', 
-                $documentUri, 
+                'rename',
+                $documentUri,
                 implode("/", $parts) ."/{$newName}{$extension}"
             );
         }
@@ -298,15 +298,15 @@ class Renamer
     private function canRenameNode(Node $node): bool
     {
         return
-            $node instanceof MethodDeclaration 
-            || $node instanceof ClassDeclaration 
-            || $node instanceof InterfaceDeclaration 
-            || $node instanceof TraitDeclaration 
-            || $node instanceof QualifiedName 
-            || $node instanceof ConstElement 
+            $node instanceof MethodDeclaration
+            || $node instanceof ClassDeclaration
+            || $node instanceof InterfaceDeclaration
+            || $node instanceof TraitDeclaration
+            || $node instanceof QualifiedName
+            || $node instanceof ConstElement
             || ($node instanceof ScopedPropertyAccessExpression && $node->memberName instanceof Token)
-            || ($node instanceof Variable && $node->getFirstAncestor(PropertyDeclaration::class)) 
-            || ($node instanceof MemberAccessExpression && $node->memberName instanceof Token) 
+            || ($node instanceof Variable && $node->getFirstAncestor(PropertyDeclaration::class))
+            || ($node instanceof MemberAccessExpression && $node->memberName instanceof Token)
             || ($node instanceof Variable && $node->getFirstAncestor(PropertyDeclaration::class) === null)
             || $node instanceof Parameter
             ;

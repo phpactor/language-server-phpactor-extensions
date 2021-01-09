@@ -29,8 +29,9 @@ class NodeUtils
             return null;
         }
         $text = (string)$token->getText($documentContent);
-        if(mb_substr($text, 0, 1) == '$')
+        if (mb_substr($text, 0, 1) == '$') {
             return mb_substr($text, 1);
+        }
         return $text;
     }
     

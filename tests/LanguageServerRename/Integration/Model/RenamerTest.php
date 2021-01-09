@@ -7,7 +7,6 @@ use Generator;
 use Microsoft\PhpParser\Parser;
 use PHPUnit\Framework\TestCase;
 use Phpactor\CodeTransform\Domain\Refactor\RenameVariable;
-use Phpactor\CodeTransform\Domain\SourceCode;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\LanguageServerRename\Model\NodeUtils;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
@@ -26,16 +25,11 @@ use Phpactor\ReferenceFinder\DefinitionLocator;
 use Phpactor\ReferenceFinder\Exception\CouldNotLocateDefinition;
 use Phpactor\ReferenceFinder\PotentialLocation;
 use Phpactor\ReferenceFinder\ReferenceFinder;
-use Phpactor\TestUtils\ExtractOffset;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\Location;
-use Phpactor\TextDocument\TextDocument;
-use Phpactor\TextDocument\TextDocumentLanguage;
 use Phpactor\TextDocument\TextDocumentUri;
 use Prophecy\Argument;
 use Prophecy\Prophet;
-use Prophecy\Prophecy\MethodProphecy;
-use function preg_split;
 
 class RenamerTest extends TestCase
 {
@@ -57,7 +51,7 @@ class RenamerTest extends TestCase
             public function request(string $method, array $params): Promise
             {
                 return new class implements Promise {
-					 // @phpstan-ignore-next-line
+                    // @phpstan-ignore-next-line
                     public function onResolve(callable $onResolved)
                     {
                     }
@@ -67,12 +61,13 @@ class RenamerTest extends TestCase
 
         list($source, $selectionOffset, , , $ranges) = self::offsetsFromSource($source, null);
         $docItem = new TextDocumentItem("file:///test/testDoc", "php", 1, $source);
-		
-		$rangesCount = count($ranges);
-		if($rangesCount != 1)
-			throw new \Exception("There must be exactly one expected range in the source, found {$rangesCount}.");
-		
-		$expectedRange = $ranges[0];
+        
+        $rangesCount = count($ranges);
+        if ($rangesCount != 1) {
+            throw new \Exception("There must be exactly one expected range in the source, found {$rangesCount}.");
+        }
+        
+        $expectedRange = $ranges[0];
 
         $renamer = new Renamer(
             $workspace->reveal(), // @phpstan-ignore-line
@@ -87,18 +82,18 @@ class RenamerTest extends TestCase
         $actualRange = $renamer->prepareRename(
             $docItem,
             PositionConverter::intByteOffsetToPosition((int)$selectionOffset, $source)
-		);
+        );
         $this->assertEquals($actualRange, $expectedRange);
     }
 
     public function providePrepareRename(): Generator
     {
-		// {{ .. }} -> the expected rename range
-		// <> -> the current cursor position
+        // {{ .. }} -> the expected rename range
+        // <> -> the current cursor position
         yield [
             'Rename class (definition)' =>
             '<?php class {{Clas<>s1}} {}'
-		];
+        ];
 
         yield [
             'Rename class (extends)' =>
@@ -109,8 +104,8 @@ class RenamerTest extends TestCase
             'Rename class (typehint)' =>
             '<?php class Class1 { function f({{Cla<>ss2}} $arg) {} }'
         ];
-		
-		yield [
+        
+        yield [
             'Rename interface (definition)' =>
             '<?php interface {{Clas<>s1}} {}'
         ];
@@ -133,68 +128,67 @@ class RenamerTest extends TestCase
         yield [
             'Rename static method (access)' =>
             '<?php class Class1 { function method2(){ self::{{meth<>od1}}(); } }'
-		];
-		
+        ];
+        
         yield [
             'Rename method (inside string)' =>
             '<?php class Class1 { function method2(){ $var1 = "a string {$this->{{meth<>od1}}()}"; } }'
-		];
-		
-		yield [
+        ];
+        
+        yield [
             'Rename property (definition)' =>
             '<?php class Class1 { public ${{pro<>p1}}; }'
-		];
-		
-		yield [
+        ];
+        
+        yield [
             'Rename property (definition)' =>
             '<?php class Class1 { public ${{pro<>p1}}; }'
-		];
-		
-		yield [
+        ];
+        
+        yield [
             'Rename property (access)' =>
             '<?php class Class1 { public $prop1; function method1() { $this->{{pr<>op1}} = 2; } }'
-		];
-		
-		yield [
+        ];
+        
+        yield [
             'Rename property (access  inside string)' =>
             '<?php class Class1 { public $prop1; function method1() { $var1 = "The value is {$this->{{pr<>op1}}}"; } }'
-		];
-		
-		yield [
+        ];
+        
+        yield [
             'Rename const (definition)' =>
             '<?php class Class1 { const {{CONS<>T1}}; } }'
-		];
-		
-		yield [
+        ];
+        
+        yield [
             'Rename const (access)' =>
             '<?php class Class1 { public function method1(){ $var1 = Class3::{{CO<>NST14}}; } }'
-		];
+        ];
 
-		yield [
+        yield [
             'Rename static property (definition)' =>
             '<?php class Class1 { public static ${{st<>aticProp}}; } }'
-		];
+        ];
 
-		yield [
+        yield [
             'Rename static property (reference)' =>
             '<?php class Class1 { public function method1(){ $var1 = self::${{stati<>cProp}}; } }'
-		];
+        ];
 
-		yield [
+        yield [
             'Rename argument' =>
             '<?php class Class1 { public function method1(${{a<>rg1}}){ } }'
-		];
+        ];
 
-		yield [
+        yield [
             'Rename variable' =>
             '<?php class Class1 { public function method1(){ ${{va<>r1}} = 5; } }'
-		];
+        ];
 
-		yield [
+        yield [
             'Rename variable 2' =>
             '<?php class Class1 { public function method1(){ $${{va<>r1}} = 5; } }'
-		];
-		
+        ];
     }
 
     /**
@@ -202,22 +196,22 @@ class RenamerTest extends TestCase
      */
     public function testRename(string $source, string $uri, string $newName, ?string $renamedUri = null): void
     {
-		list(
-			$source, 
-			$selectionOffset, 
-			$definitionLocation, 
-			$referenceLocations, 
-			$ranges
-		) = self::offsetsFromSource($source, $uri);
-		
+        list(
+            $source,
+            $selectionOffset,
+            $definitionLocation,
+            $referenceLocations,
+            $ranges
+        ) = self::offsetsFromSource($source, $uri);
+        
         $refGenerator = function () use ($referenceLocations) {
             foreach ($referenceLocations as $location) {
                 yield $location;
             }
-		};
-		
-		$textEdits = array_map(function(Range $range) use ($newName) {
-			return new TextEdit($range, $newName);
+        };
+        
+        $textEdits = array_map(function (Range $range) use ($newName) {
+            return new TextEdit($range, $newName);
         }, $ranges);
         
         
@@ -228,14 +222,14 @@ class RenamerTest extends TestCase
             ),
         ];
 
-        if(!empty($renamedUri)) {
+        if (!empty($renamedUri)) {
             $changes[] = new RenameFile("rename", $uri, $renamedUri, null);
         }
 
-		$expectedWorkspaceEdit = new WorkspaceEdit(
-			null,
-			$changes
-		);
+        $expectedWorkspaceEdit = new WorkspaceEdit(
+            null,
+            $changes
+        );
 
         $docItem = new TextDocumentItem($uri, "php", 1, $source);
 
@@ -257,8 +251,8 @@ class RenamerTest extends TestCase
         } else {
             $methodProphecy->willThrow(new CouldNotLocateDefinition());
         }
-		$renameVariable = $prophet->prophesize(RenameVariable::class);
-		
+        $renameVariable = $prophet->prophesize(RenameVariable::class);
+        
         $apiClient = new ClientApi(new class implements RpcClient {
             public function notification(string $method, array $params): void
             {
@@ -289,9 +283,9 @@ class RenamerTest extends TestCase
             $docItem,
             PositionConverter::intByteOffsetToPosition((int)$selectionOffset, $source),
             "newName"
-		);
-		
-		$this->assertEquals($expectedWorkspaceEdit, $actualEdit);
+        );
+        
+        $this->assertEquals($expectedWorkspaceEdit, $actualEdit);
     }
 
     public function provideRename(): Generator
@@ -300,20 +294,20 @@ class RenamerTest extends TestCase
         $uri = "file:///test/Class1.php";
         $renamedUri = "file:///test/$newName.php";
 
-		// {{ .. }} -> the expected rename range
-		// « .. » -> the expected rename range. That symbol is used when {{ }} are adjacent to other braces
-		// <d> -> the definition location
-		// <r> -> a reference location
-		// <> -> the current cursor position
+        // {{ .. }} -> the expected rename range
+        // « .. » -> the expected rename range. That symbol is used when {{ }} are adjacent to other braces
+        // <d> -> the definition location
+        // <r> -> a reference location
+        // <> -> the current cursor position
         yield [
             'Rename class (definition)' =>
             '<?php class <d>{{Clas<>s1}} { function method1(<r>{{Class1}} $arg1){} }',
             $uri,
             $newName,
             $renamedUri
-		];
-		
-		yield [
+        ];
+        
+        yield [
             'Rename class (reference)' =>
             '<?php class <d>{{Class1}} { function method1(<r>{{Cl<>ass1}} $arg1){} }',
             $uri,
@@ -346,23 +340,23 @@ class RenamerTest extends TestCase
         
         yield [
             'Rename trait (use)' =>
-            '<?php trait <d>{{Trat1}} {}; class Class1 { use <r>{{Tra<>it1}}; }',
+            '<?php trait <d>{{Trait1}} {}; class Class1 { use <r>{{Tra<>it1}}; }',
             $uri,
             $newName,
-		];
-		
-		yield [
+        ];
+        
+        yield [
             'Rename parameter' =>
             '<?php class Class1 { function method1(<d>${{ar<>g1}}){ $var5 = <r>${{arg1}}; } }',
             $uri,
-			$newName
-		];
-		
-		yield [
+            $newName
+        ];
+        
+        yield [
             'Rename variable' =>
             '<?php class Class1 { function method1(){ <d>${{va<>r1}} = 5; $var2 = <r>${{var1}} + 5; } }',
             $uri,
-			$newName
+            $newName
         ];
     }
 
@@ -374,8 +368,8 @@ class RenamerTest extends TestCase
         $referenceLocations = [];
         $definitionLocation = null;
         $selectionOffset = null;
-		$ranges = [];
-		$currentResultStartOffset = null;
+        $ranges = [];
+        $currentResultStartOffset = null;
         if (is_array($results)) {
             $newSource = "";
             $offset = 0;
@@ -391,20 +385,20 @@ class RenamerTest extends TestCase
                 } elseif ($result == "{{" || $result == "«") {
                     $currentResultStartOffset = $offset;
                 } elseif ($result == "}}" || $result == "»") {
-					$ranges[] = 
-						new Range(
-							PositionConverter::byteOffsetToPosition(ByteOffset::fromInt($currentResultStartOffset), $source),
-							PositionConverter::byteOffsetToPosition(ByteOffset::fromInt($offset), $source)
-						);
+                    $ranges[] =
+                        new Range(
+                            PositionConverter::byteOffsetToPosition(ByteOffset::fromInt($currentResultStartOffset), $source),
+                            PositionConverter::byteOffsetToPosition(ByteOffset::fromInt($offset), $source)
+                        );
                 } else {
-					$newSource .= $result;
+                    $newSource .= $result;
                     $offset += mb_strlen($result);
                 }
             }
         } else {
             throw new \Exception('No selection.');
-		}
-		
+        }
+        
         return [$newSource, $selectionOffset, $definitionLocation, $referenceLocations, $ranges];
     }
 }
