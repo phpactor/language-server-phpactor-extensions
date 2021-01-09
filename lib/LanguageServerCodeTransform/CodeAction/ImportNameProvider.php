@@ -188,7 +188,7 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
         }
 
         try {
-            $this->functionReflector->sourceCodeForFunction(
+            $s = $this->functionReflector->sourceCodeForFunction(
                 $unresolvedName->name()->head()->__toString()
             );
             return true;

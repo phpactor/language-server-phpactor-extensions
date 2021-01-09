@@ -142,8 +142,6 @@ EOT
 
         yield 'built in global funtion' => [
             <<<'EOT'
-// File: functions.php
-<?php function explode() {} function array_keys(){}
 // File: subject.php
 <?php
 
