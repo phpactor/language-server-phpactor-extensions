@@ -41,7 +41,9 @@ class ImportNameProviderTest extends IntegrationTestCase
 
         $tester->textDocument()->open('file:///foobar', $source);
 
-        wait(delay(10));
+        // give the indexer a chance to index
+        wait(delay(25));
+
         $result = $tester->requestAndWait(CodeActionRequest::METHOD, new CodeActionParams(
             ProtocolFactory::textDocumentIdentifier('file:///foobar'),
             new Range(

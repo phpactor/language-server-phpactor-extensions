@@ -47,7 +47,7 @@ class IntegrationTestCase extends TestCase
             FilePathResolverExtension::PARAM_APPLICATION_ROOT => __DIR__ . '/../',
             FilePathResolverExtension::PARAM_PROJECT_ROOT => $this->workspace()->path(),
             IndexerExtension::PARAM_INDEX_PATH => $this->workspace()->path('/cache'),
-            LoggingExtension::PARAM_ENABLED=> true,
+            LoggingExtension::PARAM_ENABLED=> false,
             LoggingExtension::PARAM_PATH=> 'php://stderr',
             WorseReflectionExtension::PARAM_ENABLE_CACHE=> false,
             IndexerExtension::PARAM_ENABLED_WATCHERS => [],
