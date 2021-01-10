@@ -22,19 +22,14 @@ class RenameHandler implements Handler, CanRegisterCapabilities
      */
     private $workspace;
     /**
-     * @var Parser
-     */
-    private $parser;
-    /**
      * @var Renamer
      */
     private $renamer;
 
 
-    public function __construct(Workspace $workspace, Parser $parser, Renamer $renamer)
+    public function __construct(Workspace $workspace, Renamer $renamer)
     {
         $this->workspace = $workspace;
-        $this->parser = $parser;
         $this->renamer = $renamer;
     }
     /**

@@ -22,18 +22,21 @@ class LanguageServerRenameExtension implements Extension
      */
     public function load(ContainerBuilder $container)
     {
+        $container->register(Renamer::class, function (Container $container) {
+            return new Renamer(
+                $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
+                $container->get('worse_reflection.tolerant_parser'),
+                $container->get(ReferenceFinder::class),
+                $container->get(ReferenceFinderExtension::SERVICE_DEFINITION_LOCATOR),
+                $container->get(ClientApi::class),
+                new NodeUtils(),
+            );
+        });
+
         $container->register(RenameHandler::class, function (Container $container) {
             return new RenameHandler(
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
-                new Parser(),
-                new Renamer(
-                    $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
-                    new Parser(),
-                    $container->get(ReferenceFinder::class),
-                    $container->get(ReferenceFinderExtension::SERVICE_DEFINITION_LOCATOR),
-                    $container->get(ClientApi::class),
-                    new NodeUtils(),
-                )
+                $container->get(Renamer::class)
             );
         }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [] ]);
     }

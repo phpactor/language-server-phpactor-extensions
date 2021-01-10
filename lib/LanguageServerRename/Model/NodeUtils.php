@@ -69,23 +69,40 @@ class NodeUtils
     {
         if ($node instanceof ClassDeclaration) {
             return $node->name;
-        } elseif ($node instanceof MethodDeclaration) {
+        } 
+        if ($node instanceof MethodDeclaration) {
             return $node->name;
-        } elseif ($node instanceof InterfaceDeclaration) {
+        } 
+        
+        if ($node instanceof InterfaceDeclaration) {
             return $node->name;
-        } elseif ($node instanceof TraitDeclaration) {
+        } 
+        
+        if ($node instanceof TraitDeclaration) {
             return $node->name;
-        } elseif ($node instanceof QualifiedName && ($nameToken = $node->getLastNamePart()) !== null) {
+        } 
+        
+        if ($node instanceof QualifiedName && ($nameToken = $node->getLastNamePart()) !== null) {
             return $nameToken;
-        } elseif ($node instanceof ScopedPropertyAccessExpression && $node->memberName instanceof Token) {
+        } 
+        
+        if ($node instanceof ScopedPropertyAccessExpression && $node->memberName instanceof Token) {
             return $node->memberName;
-        } elseif ($node instanceof Variable && $node->name instanceof Token && $node->getFirstAncestor(PropertyDeclaration::class)) {
+        } 
+        
+        if ($node instanceof Variable && $node->name instanceof Token && $node->getFirstAncestor(PropertyDeclaration::class)) {
             return $node->name;
-        } elseif ($node instanceof ConstElement) {
+        } 
+        
+        if ($node instanceof ConstElement) {
             return $node->name;
-        } elseif ($node instanceof Parameter) {
+        } 
+        
+        if ($node instanceof Parameter) {
             return $node->variableName;
-        } elseif ($node instanceof Variable) {
+        } 
+        
+        if ($node instanceof Variable) {
             while ($node->name instanceof Variable) {
                 $node = $node->name;
             }
@@ -93,9 +110,13 @@ class NodeUtils
                 return $node->name;
             }
             return null;
-        } elseif ($node instanceof MemberAccessExpression) {
+        } 
+        
+        if ($node instanceof MemberAccessExpression) {
             return $node->memberName;
-        } elseif ($node instanceof ClassConstDeclaration) {
+        } 
+        
+        if ($node instanceof ClassConstDeclaration) {
             if (!empty($name)) {
                 foreach ($node->constElements->getElements() as $element) {
                     if ($element instanceof ConstElement && $element->getName() == $name) {
@@ -104,7 +125,9 @@ class NodeUtils
                 }
             }
             return null;
-        } elseif ($node instanceof PropertyDeclaration) {
+        } 
+        
+        if ($node instanceof PropertyDeclaration) {
             if (!empty($name)) {
                 foreach ($node->propertyElements->getElements() as $nodeOrToken) {
                     /** @var Node|Token $nodeOrToken */

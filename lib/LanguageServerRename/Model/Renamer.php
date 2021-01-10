@@ -94,7 +94,7 @@ class Renamer
 
     public function prepareRename(TextDocumentItem $textDocument, Position $position): ?Range
     {
-        [ $offset, $node ] = $this->documentAndPositionToNodeAndOffset($textDocument, $position);
+        [ $offset, $node ] = $this->getDocumentRootNode($textDocument, $position);
         
         if ($this->canRenameNode($node)) {
             return $this->nodeUtils->getNodeNameRange($node);
@@ -105,8 +105,8 @@ class Renamer
 
     public function rename(TextDocumentItem $textDocument, Position $position, string $newName): ?WorkspaceEdit
     {
-        /** @var Node $node */
-        [ $offset, $node ] = $this->documentAndPositionToNodeAndOffset($textDocument, $position);
+        $offset = PositionConverter::positionToByteOffset($position, $textDocument->text);
+        $node = $this->getDocumentRootNode($textDocument, $offset);
         
         $phpactorDocument = TextDocumentBuilder::create($textDocument->text)
             ->uri($textDocument->uri)
@@ -121,13 +121,10 @@ class Renamer
         return null;
     }
 
-    private function documentAndPositionToNodeAndOffset(TextDocumentItem $textDocument, Position $position): array
+    private function getDocumentRootNode(TextDocumentItem $textDocument, ByteOffset $offset): Node
     {
-        $offset = PositionConverter::positionToByteOffset($position, $textDocument->text);
-        
         $rootNode = $this->parser->parseSourceFile($textDocument->text);
-        $node = $rootNode->getDescendantNodeAtPosition($offset->toInt());
-        return [$offset, $node];
+        return $rootNode->getDescendantNodeAtPosition($offset->toInt());
     }
     
     private function renameNode(TextDocument $phpactorDocument, ByteOffset $offset, Node $node, string $oldName, string $newName): ?WorkspaceEdit
