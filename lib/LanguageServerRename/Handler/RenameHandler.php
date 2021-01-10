@@ -3,7 +3,6 @@
 namespace Phpactor\Extension\LanguageServerRename\Handler;
 
 use Amp\Promise;
-use Microsoft\PhpParser\Parser;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
 use Phpactor\LanguageServerProtocol\PrepareRenameParams;
 use Phpactor\LanguageServerProtocol\PrepareRenameRequest;

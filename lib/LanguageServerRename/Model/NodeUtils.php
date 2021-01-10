@@ -69,38 +69,38 @@ class NodeUtils
     {
         if ($node instanceof ClassDeclaration) {
             return $node->name;
-        } 
+        }
         if ($node instanceof MethodDeclaration) {
             return $node->name;
-        } 
+        }
         
         if ($node instanceof InterfaceDeclaration) {
             return $node->name;
-        } 
+        }
         
         if ($node instanceof TraitDeclaration) {
             return $node->name;
-        } 
+        }
         
         if ($node instanceof QualifiedName && ($nameToken = $node->getLastNamePart()) !== null) {
             return $nameToken;
-        } 
+        }
         
         if ($node instanceof ScopedPropertyAccessExpression && $node->memberName instanceof Token) {
             return $node->memberName;
-        } 
+        }
         
         if ($node instanceof Variable && $node->name instanceof Token && $node->getFirstAncestor(PropertyDeclaration::class)) {
             return $node->name;
-        } 
+        }
         
         if ($node instanceof ConstElement) {
             return $node->name;
-        } 
+        }
         
         if ($node instanceof Parameter) {
             return $node->variableName;
-        } 
+        }
         
         if ($node instanceof Variable) {
             while ($node->name instanceof Variable) {
@@ -110,11 +110,11 @@ class NodeUtils
                 return $node->name;
             }
             return null;
-        } 
+        }
         
         if ($node instanceof MemberAccessExpression) {
             return $node->memberName;
-        } 
+        }
         
         if ($node instanceof ClassConstDeclaration) {
             if (!empty($name)) {
@@ -125,7 +125,7 @@ class NodeUtils
                 }
             }
             return null;
-        } 
+        }
         
         if ($node instanceof PropertyDeclaration) {
             if (!empty($name)) {

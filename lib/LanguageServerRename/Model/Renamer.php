@@ -94,7 +94,8 @@ class Renamer
 
     public function prepareRename(TextDocumentItem $textDocument, Position $position): ?Range
     {
-        [ $offset, $node ] = $this->getDocumentRootNode($textDocument, $position);
+        $offset = PositionConverter::positionToByteOffset($position, $textDocument->text);
+        $node = $this->getDocumentRootNode($textDocument, $offset);
         
         if ($this->canRenameNode($node)) {
             return $this->nodeUtils->getNodeNameRange($node);
