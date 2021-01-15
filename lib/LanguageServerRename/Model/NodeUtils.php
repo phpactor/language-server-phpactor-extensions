@@ -145,21 +145,21 @@ class NodeUtils
 
         if ($node instanceof ForeachStatement && !empty($name)) {
             assert($node instanceof ForeachStatement);
-            if(
+            if (
                 $node->foreachKey !== null &&
-                $node->foreachKey->expression instanceof Variable && 
-                $node->foreachKey->expression->name instanceof Token && 
+                $node->foreachKey->expression instanceof Variable &&
+                $node->foreachKey->expression->name instanceof Token &&
                 $node->foreachKey->expression->getName() == $name
-            ){
+            ) {
                 return $node->foreachKey->expression->name;
             }
             
-            if(
+            if (
                 $node->foreachValue !== null &&
-                $node->foreachValue->expression instanceof Variable && 
-                $node->foreachValue->expression->name instanceof Token && 
+                $node->foreachValue->expression instanceof Variable &&
+                $node->foreachValue->expression->name instanceof Token &&
                 $node->foreachValue->expression->getName() == $name
-            ){
+            ) {
                 return $node->foreachValue->expression->name;
             }
         }
