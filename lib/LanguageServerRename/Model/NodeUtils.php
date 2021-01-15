@@ -13,6 +13,7 @@ use Microsoft\PhpParser\Node\Parameter;
 use Microsoft\PhpParser\Node\PropertyDeclaration;
 use Microsoft\PhpParser\Node\QualifiedName;
 use Microsoft\PhpParser\Node\Statement\ClassDeclaration;
+use Microsoft\PhpParser\Node\Statement\ForeachStatement;
 use Microsoft\PhpParser\Node\Statement\InterfaceDeclaration;
 use Microsoft\PhpParser\Node\Statement\TraitDeclaration;
 use Microsoft\PhpParser\Token;
@@ -22,9 +23,9 @@ use Phpactor\LanguageServerProtocol\Range;
 
 class NodeUtils
 {
-    public function getNodeNameText(Node $node): ?string
+    public function getNodeNameText(Node $node, ?string $name = null): ?string
     {
-        $token = $this->getNodeNameToken($node);
+        $token = $this->getNodeNameToken($node, $name);
         if ($token === null) {
             return null;
         }
@@ -140,6 +141,27 @@ class NodeUtils
                 }
             }
             return null;
+        }
+
+        if ($node instanceof ForeachStatement && !empty($name)) {
+            assert($node instanceof ForeachStatement);
+            if(
+                $node->foreachKey !== null &&
+                $node->foreachKey->expression instanceof Variable && 
+                $node->foreachKey->expression->name instanceof Token && 
+                $node->foreachKey->expression->getName() == $name
+            ){
+                return $node->foreachKey->expression->name;
+            }
+            
+            if(
+                $node->foreachValue !== null &&
+                $node->foreachValue->expression instanceof Variable && 
+                $node->foreachValue->expression->name instanceof Token && 
+                $node->foreachValue->expression->getName() == $name
+            ){
+                return $node->foreachValue->expression->name;
+            }
         }
         
         return null;

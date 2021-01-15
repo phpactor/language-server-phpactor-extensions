@@ -25,6 +25,7 @@ class NodeUtilsTest extends TestCase
         
         $utils = new NodeUtils();
         $node = $root->getDescendantNodeAtPosition((int)$offset);
+        
         $foundToken = $utils->getNodeNameToken($node, ltrim($expectedText, '$'));
         
         $this->assertEquals($expectedToken, $foundToken, 'length');
@@ -219,6 +220,26 @@ class NodeUtilsTest extends TestCase
             Range::fromArray([
                 'start' => ['line' => 0, 'character' => 30],
                 'end' => ['line' => 0, 'character' => 39],
+            ])
+        ];
+
+        yield 'Foreach array' => [
+            '<?php $value = 2; <>foreach($array as $key=>$value) { }',
+            new Token(TokenKind::VariableName, 35, 36, 5),
+            '$key',
+            Range::fromArray([
+                'start' => ['line' => 0, 'character' => 37],
+                'end' => ['line' => 0, 'character' => 40],
+            ])
+        ];
+
+        yield 'Foreach value' => [
+            '<?php $value = 2; <>foreach($array as $key=>$value) { }',
+            new Token(TokenKind::VariableName, 42, 42, 6),
+            '$value',
+            Range::fromArray([
+                'start' => ['line' => 0, 'character' => 43],
+                'end' => ['line' => 0, 'character' => 48],
             ])
         ];
     }

@@ -395,6 +395,12 @@ class RenamerTest extends TestCase
             $uri,
             $newName
         ];
+
+        yield 'Rename foreach variable' => [
+            '<?php $var1 = 0; <d>foreach($array as ${{value}}) { echo <r>${{val<>ue}}; }',
+            $uri,
+            $newName
+        ];
     }
 
     private static function offsetsFromSource(string $source, ?string $uri): array

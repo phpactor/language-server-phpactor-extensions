@@ -295,7 +295,7 @@ class Renamer
                 $rename = $r;
             }
 
-            $nodeNameText = $this->nodeUtils->getNodeNameText($node);
+            $nodeNameText = $this->nodeUtils->getNodeNameText($node, $oldName);
             if ($nodeNameText !== $oldName) {
                 continue;
             }
