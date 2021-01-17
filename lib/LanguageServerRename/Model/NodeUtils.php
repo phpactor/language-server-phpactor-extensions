@@ -166,10 +166,10 @@ class NodeUtils
             }
         }
 
-        if(
-            $node instanceof StringLiteral && 
-            $node->getParent() instanceof ArrayElement && 
-            $node->getParent()->elementValue instanceof Variable && 
+        if (
+            $node instanceof StringLiteral &&
+            $node->getParent() instanceof ArrayElement &&
+            $node->getParent()->elementValue instanceof Variable &&
             $node->getParent()->elementValue->name instanceof Token
         ) {
             return $node->getParent()->elementValue->name;
