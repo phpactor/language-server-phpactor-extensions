@@ -4,7 +4,6 @@ namespace Phpactor\Extension\LanguageServerRename\Tests\Unit;
 
 use Generator;
 use PHPUnit\Framework\TestCase;
-use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer\VariableRenamer;
 use Phpactor\Extension\LanguageServerRename\Tests\OffsetExtractor;
 use Phpactor\TextDocument\ByteOffset;
@@ -17,10 +16,13 @@ class VariableRenamerTest extends TestCase
     public function testPrepare(string $source): void
     {
         $offsetExtractor = new OffsetExtractor();
-        $offsetExtractor->registerPoint('selection', "<>", function(int $offset) { return ByteOffset::fromInt($offset); });
+        $offsetExtractor->registerPoint('selection', "<>", function (int $offset) {
+            return ByteOffset::fromInt($offset);
+        });
         $offsetExtractor->registerRange(
-            "expectedRange", 
-            "{{", "}}", 
+            "expectedRange",
+            "{{",
+            "}}",
             function (int $start, int $end) {
                 return new ByteOffsetRange(
                     ByteOffset::fromInt($start),
@@ -29,10 +31,10 @@ class VariableRenamerTest extends TestCase
             }
         );
 
-        [ 
-            'selection' => $selection, 
-            'expectedRange' => $expectedRange, 
-            'newSource' => $newSource 
+        [
+            'selection' => $selection,
+            'expectedRange' => $expectedRange,
+            'newSource' => $newSource
         ] = $offsetExtractor->parse($source);
         
         $document = TextDocumentBuilder::create($source)

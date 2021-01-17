@@ -53,7 +53,10 @@ class OffsetExtractor
 
         foreach ($results as $result) {
             if (isset($this->points[$result])) {
-                $retVal[$this->points[$result]] = $this->pointCreateors[$result]($offset, $newSource);
+                if (!isset($retVal[$this->points[$result]])) {
+                    $retVal[$this->points[$result]] = [];
+                }
+                $retVal[$this->points[$result]][] = $this->pointCreateors[$result]($offset, $newSource);
                 continue;
             }
             
@@ -63,7 +66,10 @@ class OffsetExtractor
             }
 
             if (isset($this->rangeCloseMarkers[$result])) {
-                $retVal[$this->rangeCloseMarkers[$result]] = $this->rangeCreateors[$result]($currentRangeStartOffset, $offset, $newSource);
+                if (!isset($retVal[$this->rangeCloseMarkers[$result]])) {
+                    $retVal[$this->rangeCloseMarkers[$result]] = [];
+                }
+                $retVal[$this->rangeCloseMarkers[$result]][] = $this->rangeCreateors[$result]($currentRangeStartOffset, $offset, $newSource);
                 continue;
             }
             

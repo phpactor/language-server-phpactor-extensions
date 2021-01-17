@@ -19,8 +19,22 @@ class OffsetExtractorTest extends TestCase
             "selection" => $selection,
             "newSource" => $newSource
         ) = $extractor->parse("Test string with<> selector");
-        $this->assertEquals(16, $selection);
+        $this->assertIsArray($selection);
+        $this->assertEquals(1, count($selection));
+        $this->assertEquals(16, $selection[0]);
         $this->assertEquals("Test string with selector", $newSource);
+    }
+
+    public function testPoints(): void
+    {
+        $extractor = new OffsetExtractor();
+        $extractor->registerPoint("selection", "<>");
+        list(
+            "selection" => $selection,
+            "newSource" => $newSource
+        ) = $extractor->parse("Test string with<> two select<>ors");
+        $this->assertEquals([16, 27], $selection);
+        $this->assertEquals("Test string with two selectors", $newSource);
     }
     
     public function testPointWithCreator(): void
@@ -33,8 +47,11 @@ class OffsetExtractorTest extends TestCase
             "selection" => $selection,
             "newSource" => $newSource
         ) = $extractor->parse("Test string with<> selector");
-        $this->assertInstanceOf(ByteOffset::class, $selection);
-        $this->assertEquals(16, $selection->toInt());
+        
+        $this->assertIsArray($selection);
+        $this->assertEquals(1, count($selection));
+        $this->assertInstanceOf(ByteOffset::class, $selection[0]);
+        $this->assertEquals(16, $selection[0]->toInt());
         $this->assertEquals("Test string with selector", $newSource);
     }
     
@@ -46,9 +63,26 @@ class OffsetExtractorTest extends TestCase
             "textEdit" => $textEdit,
             "newSource" => $newSource
         ) = $extractor->parse("Test string {{with}} selector");
-        $this->assertIsArray($textEdit);
-        $this->assertEquals(['start' => 12, 'end' => 16], $textEdit);
+        $this->assertEquals([['start' => 12, 'end' => 16]], $textEdit);
         $this->assertEquals("Test string with selector", $newSource);
+    }
+
+    public function testRanges(): void
+    {
+        $extractor = new OffsetExtractor();
+        $extractor->registerRange("textEdit", "{{", "}}");
+        list(
+            "textEdit" => $textEdit,
+            "newSource" => $newSource
+        ) = $extractor->parse("Test string {{with}} two {{selectors}}");
+        $this->assertEquals(
+            [
+                ['start' => 12, 'end' => 16],
+                ['start' => 21, 'end' => 30],
+            ],
+            $textEdit
+        );
+        $this->assertEquals("Test string with two selectors", $newSource);
     }
     
     public function testRangeWithCreator(): void
@@ -64,8 +98,8 @@ class OffsetExtractorTest extends TestCase
             "textEdit" => $textEdit,
             "newSource" => $newSource
         ) = $extractor->parse("Test string {{with}} selector");
-        $this->assertInstanceOf(Range::class, $textEdit);
-        $this->assertEquals(new Range(new Position(0, 12), new Position(0, 16)), $textEdit);
+
+        $this->assertEquals([new Range(new Position(0, 12), new Position(0, 16))], $textEdit);
         $this->assertEquals("Test string with selector", $newSource);
     }
 }
