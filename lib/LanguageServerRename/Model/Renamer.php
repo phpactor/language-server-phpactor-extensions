@@ -265,7 +265,7 @@ class Renamer
 
         $documentEdits = [];
         foreach ($locationsByUri as $uri => $locations) {
-            list($textEdits, $rename) = $this->documentLocationsToTextEdits($uri, $locations, $oldFqn, $oldName, $newName);
+            [$textEdits, $rename] = $this->documentLocationsToTextEdits($uri, $locations, $oldFqn, $oldName, $newName);
             $documentEdits[] = new TextDocumentEdit(
                 new VersionedTextDocumentIdentifier($uri, $this->getDocumentVersion($uri)),
                 $textEdits

@@ -193,13 +193,13 @@ class RenamerTest extends TestCase
      */
     public function testRename(string $source, string $uri, string $newName, ?string $renamedUri = null): void
     {
-        list(
+        [
             $source,
             $selectionOffset,
             $definitionLocation,
             $referenceLocations,
             $ranges
-        ) = self::offsetsFromSource($source, $uri);
+        ] = self::offsetsFromSource($source, $uri);
         
         $refGenerator = function () use ($referenceLocations) {
             foreach ($referenceLocations as $location) {
@@ -374,6 +374,30 @@ class RenamerTest extends TestCase
         
         yield 'Rename variable' => [
             '<?php class Class1 { function method1(){ <d>${{va<>r1}} = 5; $var2 = <r>${{var1}} + 5; } }',
+            $uri,
+            $newName
+        ];
+
+        yield 'Rename variable (in list deconstructor)' => [
+            '<?php class Class1 { function method1(){ [ <d>${{va<>r1}} ] = 5; $var2 = <r>${{var1}} + 5; } }',
+            $uri,
+            $newName
+        ];
+
+        yield 'Rename variable (in list deconstructor with key)' => [
+            '<?php class Class1 { function method1(){ [ <d>"key"=>${{va<>r1}} ] = 5; $var2 = <r>${{var1}} + 5; } }',
+            $uri,
+            $newName
+        ];
+
+        yield 'Rename variable (in list function no key)' => [
+            '<?php class Class1 { function method1(){ list(<d>${{va<>r1}}) = 5; $var2 = <r>${{var1}} + 5; } }',
+            $uri,
+            $newName
+        ];
+
+        yield 'Rename variable (in list function with key)' => [
+            '<?php class Class1 { function method1(){ list(<d>"key"=>${{va<>r1}}) = 5; $var2 = <r>${{var1}} + 5; } }',
             $uri,
             $newName
         ];

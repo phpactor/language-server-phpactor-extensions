@@ -3,6 +3,7 @@
 namespace Phpactor\Extension\LanguageServerRename\Model;
 
 use Microsoft\PhpParser\Node;
+use Microsoft\PhpParser\Node\ArrayElement;
 use Microsoft\PhpParser\Node\ClassConstDeclaration;
 use Microsoft\PhpParser\Node\ConstElement;
 use Microsoft\PhpParser\Node\Expression\MemberAccessExpression;
@@ -16,6 +17,7 @@ use Microsoft\PhpParser\Node\Statement\ClassDeclaration;
 use Microsoft\PhpParser\Node\Statement\ForeachStatement;
 use Microsoft\PhpParser\Node\Statement\InterfaceDeclaration;
 use Microsoft\PhpParser\Node\Statement\TraitDeclaration;
+use Microsoft\PhpParser\Node\StringLiteral;
 use Microsoft\PhpParser\Token;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\LanguageServerProtocol\Position;
@@ -162,6 +164,15 @@ class NodeUtils
             ) {
                 return $node->foreachValue->expression->name;
             }
+        }
+
+        if(
+            $node instanceof StringLiteral && 
+            $node->getParent() instanceof ArrayElement && 
+            $node->getParent()->elementValue instanceof Variable && 
+            $node->getParent()->elementValue->name instanceof Token
+        ) {
+            return $node->getParent()->elementValue->name;
         }
         
         return null;
