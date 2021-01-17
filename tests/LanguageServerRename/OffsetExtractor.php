@@ -51,6 +51,13 @@ class OffsetExtractor
         $offset = 0;
         $currentRangeStartOffset = 0;
 
+        foreach($this->points as $marker=>$name){
+            $retVal[$name] = [];
+        }
+        foreach($this->rangeCloseMarkers as $marker=>$name){
+            $retVal[$name] = [];
+        }
+
         foreach ($results as $result) {
             if (isset($this->points[$result])) {
                 if (!isset($retVal[$this->points[$result]])) {

@@ -7,11 +7,12 @@ use Microsoft\PhpParser\Node\Expression\Variable;
 use Microsoft\PhpParser\Node\Parameter;
 use Microsoft\PhpParser\Node\PropertyDeclaration;
 use Microsoft\PhpParser\Parser;
-use Phpactor\Extension\LanguageServerRename\Model\NodeUtils;
+use Phpactor\Extension\LanguageServerRename\Model\NodeUtils2;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer2;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\ByteOffsetRange;
 use Phpactor\TextDocument\TextDocument;
+use Phpactor\TextDocument\TextDocumentLocator;
 
 class VariableRenamer implements Renamer2
 {
@@ -20,33 +21,38 @@ class VariableRenamer implements Renamer2
      */
     private $parser;
     /**
-     * @var NodeUtils
+     * @var NodeUtils2
      */
     private $nodeUtils;
+    /**
+     * @var TextDocumentLocator
+     */
+    private $locator;
 
 
 
-    public function __construct(Parser $parser, NodeUtils $nodeUtils)
+    public function __construct(Parser $parser, NodeUtils2 $nodeUtils, TextDocumentLocator $locator)
     {
         $this->parser = $parser;
         $this->nodeUtils = $nodeUtils;
+        $this->locator = $locator;
     }
 
     public function prepareRename(TextDocument $textDocument, ByteOffset $offset): ?ByteOffsetRange
     {
         $rootNode = $this->parser->parseSourceFile((string)$textDocument);
         $node = $rootNode->getDescendantNodeAtPosition($offset->toInt());
-
+        
         if (
             (
                 $node instanceof Variable &&
-                $node->getFirstAncestor(PropertyDeclaration::class) === null
+                null === $node->getFirstAncestor(PropertyDeclaration::class)
             )
             || $node instanceof Parameter
         ) {
-            return $this->nodeUtils->getNodeNameRange($node);
+            [ $range ] = $this->nodeUtils->getNodeNameRanges($node);
+            return $range;
         }
-
         return null;
     }
 
