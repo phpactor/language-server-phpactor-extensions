@@ -13,8 +13,6 @@ use Phpactor\Extension\LanguageServerRename\Model\RenameLocationGroup;
 use Phpactor\Extension\LanguageServerRename\Model\RenameLocationsProvider;
 use Phpactor\Extension\LanguageServerRename\Model\RenameResult;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer2;
-use Phpactor\ReferenceFinder\DefinitionLocator;
-use Phpactor\ReferenceFinder\Exception\CouldNotLocateDefinition;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\ByteOffsetRange;
 use Phpactor\TextDocument\Location;
