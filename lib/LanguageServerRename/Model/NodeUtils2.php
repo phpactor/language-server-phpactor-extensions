@@ -12,13 +12,14 @@ use Microsoft\PhpParser\Node\Expression\Variable;
 use Microsoft\PhpParser\Node\MethodDeclaration;
 use Microsoft\PhpParser\Node\Parameter;
 use Microsoft\PhpParser\Node\PropertyDeclaration;
-use Microsoft\PhpParser\Node\QualifiedName as MicrosoftQualifiedName;
+use Microsoft\PhpParser\Node\QualifiedName;
 use Microsoft\PhpParser\Node\Statement\ClassDeclaration;
 use Microsoft\PhpParser\Node\Statement\ForeachStatement;
 use Microsoft\PhpParser\Node\Statement\InterfaceDeclaration;
 use Microsoft\PhpParser\Node\Statement\TraitDeclaration;
 use Microsoft\PhpParser\Node\StringLiteral;
 use Microsoft\PhpParser\Token;
+use Microsoft\PhpParser\TokenKind;
 use Phpactor\TextDocument\ByteOffsetRange;
 
 class NodeUtils2
@@ -42,22 +43,35 @@ class NodeUtils2
     /** @return ByteOffsetRange[] */
     public function getNodeNameRanges(Node $node): array
     {
-        $tokens = $this->getNodeNameTokens($node);
         $fileContents = $node->getFileContents();
 
         $ranges = [];
-        foreach ($tokens as $token) {
-            $range = $this->getTokenRange($token);
-            if (mb_substr((string)$token->getText($fileContents), 0, 1) == '$') {
-                $range = ByteOffsetRange::fromInts(
-                    $range->start()->toInt() + 1,
-                    $range->end()->toInt()
-                );
-            }
-            $ranges[] = $range;
+        foreach ($this->getNodeNameTokens($node) as $token) {
+            $ranges[] = $this->getTokenNameRange($token, $fileContents);
         }
         
         return $ranges;
+    }
+
+    public function getTokenNameRange(Token $token, string $fileContents): ByteOffsetRange
+    {
+        $range = $this->getTokenRange($token);
+        if (mb_substr((string)$token->getText($fileContents), 0, 1) == '$') {
+            $range = ByteOffsetRange::fromInts(
+                $range->start()->toInt() + 1,
+                $range->end()->toInt()
+            );
+        }
+        return $range;
+    }
+
+    public function getRangeText(ByteOffsetRange $range, string $source): string
+    {
+        return substr(
+            $source,
+            $range->start()->toInt(),
+            $range->end()->toInt() - $range->start()->toInt()
+        );
     }
     
     public function getTokenRange(Token $token): ByteOffsetRange
@@ -82,8 +96,22 @@ class NodeUtils2
             return [ $node->name ];
         }
 
-        if ($node instanceof MicrosoftQualifiedName && ($nameToken = $node->getLastNamePart()) !== null) {
-            return [ $nameToken ];
+        if ($node instanceof QualifiedName) {
+            $names = [];
+            // if(($nameToken = $node->getLastNamePart()) !== null)
+            //     $names[] = $nameToken;
+            $names[] = new Token(
+                TokenKind::QualifiedName,
+                $node->getFullStart(),
+                $node->getStart(),
+                $node->getEndPosition() - $node->getFullStart()
+            );
+            
+            if ($node->getParent() instanceof Parameter) {
+                $names[] = $node->getParent()->variableName;
+            }
+            
+            return $names;
         }
 
         if ($node instanceof MethodDeclaration && $node->name !== null) {

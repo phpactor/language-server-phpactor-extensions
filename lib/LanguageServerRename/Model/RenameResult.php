@@ -21,4 +21,14 @@ class RenameResult
         $this->textEdits = $textEdits;
         $this->documentUri = $documentUri;
     }
+
+    public function textEdits(): TextEdits
+    {
+        return $this->textEdits;
+    }
+
+    public function documentUri(): TextDocumentUri
+    {
+        return $this->documentUri;
+    }
 }
