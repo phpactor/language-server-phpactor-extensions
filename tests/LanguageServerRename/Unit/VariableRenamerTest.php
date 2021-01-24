@@ -161,6 +161,12 @@ class VariableRenamerTest extends TestCase
             ->uri($textDocumentUri)
             ->build();
 
+        // foreach($references as $key=>$value)
+        // {
+        //     $arg = $value + 5;
+        //     $arg2 = $key + 3;
+        // }
+
         $renamer = new VariableRenamer(
             new Parser(),
             new NodeUtils(),
@@ -255,12 +261,28 @@ class VariableRenamerTest extends TestCase
             '<?php class Class1 { function method1(){ list(<d>"key"=>${{va<>r1}}) = 5; $var2 = <r>${{var1}} + 5; } }'
         ];
 
+        yield 'Rename variable (as foreach array)' => [
+            '<?php class Class1 { function method1(){ <d>${{var}} = []; foreach(<r>${{v<>ar}} as $val) { } } }'
+        ];
+
+        yield 'Rename variable (as foreach value)' => [
+            '<?php class Class1 { function method1(){ $var = []; <d>foreach($var as ${{val}}) { <r>${{v<>al}} += 5; } } }'
+        ];
+
+        yield 'Rename variable (as foreach key)' => [
+            '<?php class Class1 { function method1(){ $var = []; <d>foreach($var as ${{key}}=>$val) { <r>${{k<>ey}} += 5; } } }'
+        ];
+
         yield 'Rename argument' => [
             '<?php class Class1 { function method1(<d>Class2 ${{ar<>g1}}){ <r>${{arg1}} = 5; $var2 = <r>${{arg1}} + 5; } }'
         ];
 
         yield 'Rename argument (no hint)' => [
             '<?php class Class1 { function method1(<d>${{ar<>g1}}){ <r>${{arg1}} = 5; $var2 = <r>${{arg1}} + 5; } }'
+        ];
+
+        yield 'Rename foreach variable' => [
+            '<?php $var1 = 0; <d>foreach($array as ${{value}}) { echo <r>${{val<>ue}}; }'
         ];
     }
 }
