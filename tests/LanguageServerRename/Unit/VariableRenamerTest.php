@@ -5,7 +5,7 @@ namespace Phpactor\Extension\LanguageServerRename\Tests\Unit;
 use Generator;
 use Microsoft\PhpParser\Parser;
 use PHPUnit\Framework\TestCase;
-use Phpactor\Extension\LanguageServerRename\Model\NodeUtils2;
+use Phpactor\Extension\LanguageServerRename\Model\NodeUtils;
 use Phpactor\Extension\LanguageServerRename\Model\RenameLocationsProvider;
 use Phpactor\Extension\LanguageServerRename\Model\RenameResult;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer\VariableRenamer;
@@ -61,7 +61,7 @@ class VariableRenamerTest extends TestCase
         
         $variableRenamer = new VariableRenamer(
             new Parser(),
-            new NodeUtils2(),
+            new NodeUtils(),
             InMemoryDocumentLocator::fromTextDocuments([]),
             new RenameLocationsProvider(
                 new class() implements ReferenceFinder {
@@ -163,7 +163,7 @@ class VariableRenamerTest extends TestCase
 
         $renamer = new VariableRenamer(
             new Parser(),
-            new NodeUtils2(),
+            new NodeUtils(),
             InMemoryDocumentLocator::fromTextDocuments([
                 $textDocumentUri => $textDocument
             ]),

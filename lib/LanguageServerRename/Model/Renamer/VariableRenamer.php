@@ -4,15 +4,20 @@ namespace Phpactor\Extension\LanguageServerRename\Model\Renamer;
 
 use Generator;
 use Microsoft\PhpParser\Node;
+use Microsoft\PhpParser\Node\ArrayElement;
 use Microsoft\PhpParser\Node\Expression\Variable;
 use Microsoft\PhpParser\Node\Parameter;
 use Microsoft\PhpParser\Node\PropertyDeclaration;
+use Microsoft\PhpParser\Node\QualifiedName;
+use Microsoft\PhpParser\Node\Statement\ForeachStatement;
+use Microsoft\PhpParser\Node\StringLiteral;
 use Microsoft\PhpParser\Parser;
-use Phpactor\Extension\LanguageServerRename\Model\NodeUtils2;
+use Microsoft\PhpParser\Token;
+use Phpactor\Extension\LanguageServerRename\Model\NodeUtils;
 use Phpactor\Extension\LanguageServerRename\Model\RenameLocationGroup;
 use Phpactor\Extension\LanguageServerRename\Model\RenameLocationsProvider;
 use Phpactor\Extension\LanguageServerRename\Model\RenameResult;
-use Phpactor\Extension\LanguageServerRename\Model\Renamer2;
+use Phpactor\Extension\LanguageServerRename\Model\Renamer;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\ByteOffsetRange;
 use Phpactor\TextDocument\Location;
@@ -22,22 +27,20 @@ use Phpactor\TextDocument\TextDocumentUri;
 use Phpactor\TextDocument\TextEdit;
 use Phpactor\TextDocument\TextEdits;
 
-class VariableRenamer implements Renamer2
+class VariableRenamer implements Renamer
 {
     /** @var Parser */
     private $parser;
-    /** @var NodeUtils2 */
+    /** @var NodeUtils */
     private $nodeUtils;
     /** @var TextDocumentLocator */
     private $locator;
-    /** @var Node */
-    private $preparedNode;
     /** @var RenameLocationsProvider */
     private $locationsProvider;
 
     public function __construct(
         Parser $parser,
-        NodeUtils2 $nodeUtils,
+        NodeUtils $nodeUtils,
         TextDocumentLocator $locator,
         RenameLocationsProvider $locationsProvider
     ) {
@@ -47,7 +50,7 @@ class VariableRenamer implements Renamer2
         $this->locationsProvider = $locationsProvider;
     }
 
-    public function prepareRename(TextDocument $textDocument, ByteOffset $offset): ?ByteOffsetRange
+    private function getValidNode(TextDocument $textDocument, ByteOffset $offset): ?Node
     {
         $rootNode = $this->parser->parseSourceFile((string)$textDocument);
         $node = $rootNode->getDescendantNodeAtPosition($offset->toInt());
@@ -59,9 +62,17 @@ class VariableRenamer implements Renamer2
             )
             || $node instanceof Parameter
         ) {
-            $this->preparedNode = $node;
-            [ $range ] = $this->nodeUtils->getNodeNameRanges($node);
-            return $range;
+            return $node;
+        }
+        return null;
+    }
+
+    public function prepareRename(TextDocument $textDocument, ByteOffset $offset): ?ByteOffsetRange
+    {
+        if(($node = $this->getValidNode($textDocument, $offset)) !== null)
+        {
+            [ $token ] = $this->getNodeNameTokens($node);
+            return $this->nodeUtils->getTokenNameRange($token, (string)$textDocument);
         }
         return null;
     }
@@ -70,7 +81,11 @@ class VariableRenamer implements Renamer2
      */
     public function rename(TextDocument $textDocument, ByteOffset $offset, string $newName): Generator
     {
-        [ $oldName ] = $this->nodeUtils->getNodeNameTexts($this->preparedNode);
+        if(($node = $this->getValidNode($textDocument, $offset)) === null)
+            return null;
+
+        [ $token ] = $this->getNodeNameTokens($node);
+        $oldName = $this->nodeUtils->getTokenNameText($token, (string)$textDocument);
 
         foreach ($this->locationsProvider->provideLocations($textDocument, $offset) as $locationGroup) {
             /** @var RenameLocationGroup $locationGroup */
@@ -87,10 +102,11 @@ class VariableRenamer implements Renamer2
         $rootNode = $this->parser->parseSourceFile($this->locator->get($textDocumentUri));
         foreach ($locations as $location) {
             $node = $rootNode->getDescendantNodeAtPosition($location->offset()->toInt());
-            $ranges = $this->nodeUtils->getNodeNameRanges($node);
+            $tokens = $this->getNodeNameTokens($node);
 
-            foreach ($ranges as $range) {
-                $rangeText = $this->nodeUtils->getRangeText($range, $rootNode->getFileContents());
+            foreach ($tokens as $token) {
+                $range = $this->nodeUtils->getTokenNameRange($token, $rootNode->getFileContents());
+                $rangeText = $this->nodeUtils->getTokenNameText($token, $rootNode->getFileContents());
 
                 if ($rangeText == $oldName) {
                     $textEdits[] = TextEdit::create($range->start(), $range->end()->toInt() - $range->start()->toInt(), $newName);
@@ -99,5 +115,60 @@ class VariableRenamer implements Renamer2
             }
         }
         return TextEdits::fromTextEdits($textEdits);
+    }
+
+    /** @return Token[] */
+    public function getNodeNameTokens(Node $node): array
+    {
+        if ($node instanceof QualifiedName && $node->getParent() instanceof Parameter) {
+            // an argument with a type hint
+            return $this->getNodeNameTokens($node->getParent());
+        }
+
+        if ($node instanceof Variable) {
+            while ($node->name instanceof Variable) {
+                $node = $node->name;
+            }
+            if ($node->name instanceof Token) {
+                return [ $node->name ];
+            }
+            return [];
+        }
+
+        if ($node instanceof Parameter) {
+            return [ $node->variableName ];
+        }
+
+        if ($node instanceof ForeachStatement) {
+            assert($node instanceof ForeachStatement);
+            $names = [];
+            if (
+                $node->foreachKey !== null &&
+                $node->foreachKey->expression instanceof Variable &&
+                $node->foreachKey->expression->name instanceof Token
+            ) {
+                $names[] = $node->foreachKey->expression->name;
+            }
+            
+            if (
+                $node->foreachValue !== null &&
+                $node->foreachValue->expression instanceof Variable &&
+                $node->foreachValue->expression->name instanceof Token
+            ) {
+                $names[] = $node->foreachValue->expression->name;
+            }
+            return $names;
+        }
+        
+        if (
+            $node instanceof StringLiteral &&
+            $node->getParent() instanceof ArrayElement &&
+            $node->getParent()->elementValue instanceof Variable &&
+            $node->getParent()->elementValue->name instanceof Token
+        ) {
+            return [$node->getParent()->elementValue->name ];
+        }
+
+        return [];
     }
 }

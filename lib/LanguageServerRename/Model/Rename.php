@@ -14,7 +14,7 @@ use Phpactor\TextDocument\TextDocumentUri;
 class Rename
 {
     /**
-     * @var Renamer2[]
+     * @var Renamer[]
      */
     private $renamers;
 
@@ -23,7 +23,7 @@ class Rename
      */
     private $parser;
     /**
-     * @var ?Renamer2
+     * @var ?Renamer
      */
     private $preparedRenamer;
     /**
@@ -36,7 +36,7 @@ class Rename
     private $preparedRenamerByteOffset;
 
     /**
-     * @param Renamer2[] $renamers
+     * @param Renamer[] $renamers
      */
     public function __construct(array $renamers, Parser $parser)
     {

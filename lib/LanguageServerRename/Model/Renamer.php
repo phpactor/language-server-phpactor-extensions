@@ -5,7 +5,7 @@ use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\ByteOffsetRange;
 use Phpactor\TextDocument\TextDocument;
 
-interface Renamer2
+interface Renamer
 {
     public function prepareRename(TextDocument $textDocument, ByteOffset $offset): ?ByteOffsetRange;
     /**
