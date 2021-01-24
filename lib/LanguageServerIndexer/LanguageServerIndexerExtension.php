@@ -21,12 +21,12 @@ class LanguageServerIndexerExtension implements Extension
     /**
      * {@inheritDoc}
      */
-    public function load(ContainerBuilder $container)
+    public function load(ContainerBuilder $container): void
     {
         $this->registerSessionHandler($container);
     }
 
-    public function configure(Resolver $schema)
+    public function configure(Resolver $schema): void
     {
     }
 

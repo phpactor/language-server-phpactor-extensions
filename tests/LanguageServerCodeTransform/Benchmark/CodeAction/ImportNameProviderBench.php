@@ -29,63 +29,63 @@ class ImportNameProviderBench extends IntegrationTestCase
         $this->workspace()->reset();
         $this->workspace()->loadManifest(
             <<<'EOT'
-// File: Barfoo.php
-<?php
-class Barfoo
-{
-}
-// File: subject.php
-<?php
-;
-bin2hex;
-gmdate;
-json_decode;
-json_last_error_msg;
-random_bytes;
-sha1;
-sprintf;
+                // File: Barfoo.php
+                <?php
+                class Barfoo
+                {
+                }
+                // File: subject.php
+                <?php
+                ;
+                bin2hex;
+                gmdate;
+                json_decode;
+                json_last_error_msg;
+                random_bytes;
+                sha1;
+                sprintf;
 
-class Barbar
-{
-    public function bar()
-    {
-        base64_encode();
-        json_decode();
-        gmdate();
-        json_last_error_msg();
-        random_bytes();
-        sha1();
-        sprintf();
-        base64_encode();
-        json_decode();
-        gmdate();
-        json_last_error_msg();
-        random_bytes();
-        sha1();
-        sprintf();
-    }
-    public function doSomething(): Barfoo
-    {
-        return array_map(function (string $string) {
-            return sprintf('%s string', $string);
-        }, explode(",", "foo,bar,baz"));
-    }
+                class Barbar
+                {
+                    public function bar()
+                    {
+                        base64_encode();
+                        json_decode();
+                        gmdate();
+                        json_last_error_msg();
+                        random_bytes();
+                        sha1();
+                        sprintf();
+                        base64_encode();
+                        json_decode();
+                        gmdate();
+                        json_last_error_msg();
+                        random_bytes();
+                        sha1();
+                        sprintf();
+                    }
+                    public function doSomething(): Barfoo
+                    {
+                        return array_map(function (string $string) {
+                            return sprintf('%s string', $string);
+                        }, explode(",", "foo,bar,baz"));
+                    }
 
-    public function doSomethingElse(): Barfoo
-    {
-        return array_map(function (string $string) {
-            return sprintf('%s string', $string);
-        }, explode(",", "foo,bar,baz"));
-    }
+                    public function doSomethingElse(): Barfoo
+                    {
+                        return array_map(function (string $string) {
+                            return sprintf('%s string', $string);
+                        }, explode(",", "foo,bar,baz"));
+                    }
 
-    public function doSomethingWorse(): Barfoo
-    {
-        return array_map(function (string $string) {
-            return sprintf('%s string', $string);
-        }, explode(",", "foo,bar,baz"));
-    }
-}
-EOT
+                    public function doSomethingWorse(): Barfoo
+                    {
+                        return array_map(function (string $string) {
+                            return sprintf('%s string', $string);
+                        }, explode(",", "foo,bar,baz"));
+                    }
+                }
+                EOT
         );
         $this->provider = $this->container()->get(ImportNameProvider::class);
     }

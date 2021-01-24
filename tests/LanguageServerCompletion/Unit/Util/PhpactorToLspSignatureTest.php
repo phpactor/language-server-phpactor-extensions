@@ -12,7 +12,7 @@ use Phpactor\Extension\LanguageServerCompletion\Util\PhpactorToLspSignature;
 
 class PhpactorToLspSignatureTest extends TestCase
 {
-    public function testToLspSignature()
+    public function testToLspSignature(): void
     {
         $help = new SignatureHelp([
             new SignatureInformation('foo', [

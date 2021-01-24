@@ -24,21 +24,6 @@ use Phpactor\TestUtils\Workspace;
 
 class IntegrationTestCase extends TestCase
 {
-    protected function workspace(): Workspace
-    {
-        return Workspace::create(__DIR__ . '/Workspace');
-    }
-
-    protected function createTester(): ServerTester
-    {
-        $container = $this->container();
-        
-        $builder = $container->get(LanguageServerExtension::SERVICE_LANGUAGE_SERVER_BUILDER);
-        $this->assertInstanceOf(LanguageServerBuilder::class, $builder);
-
-        return $builder->buildServerTester();
-    }
-
     public function container(array $config = []): Container
     {
         $this->workspace()->put('index/.foo', '');
@@ -70,5 +55,19 @@ class IntegrationTestCase extends TestCase
         ], $config));
 
         return $container;
+    }
+    protected function workspace(): Workspace
+    {
+        return Workspace::create(__DIR__ . '/Workspace');
+    }
+
+    protected function createTester(): ServerTester
+    {
+        $container = $this->container();
+        
+        $builder = $container->get(LanguageServerExtension::SERVICE_LANGUAGE_SERVER_BUILDER);
+        $this->assertInstanceOf(LanguageServerBuilder::class, $builder);
+
+        return $builder->buildServerTester();
     }
 }

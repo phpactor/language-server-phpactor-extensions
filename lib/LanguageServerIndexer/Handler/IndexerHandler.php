@@ -143,7 +143,7 @@ class IndexerHandler implements Handler, ServiceProvider
 
     public function reindex(bool $soft = false): Promise
     {
-        return \Amp\call(function () use ($soft) {
+        return \Amp\call(function () use ($soft): void {
             if (false === $soft) {
                 $this->indexer->reset();
             }

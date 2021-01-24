@@ -64,7 +64,7 @@ class CompletionHandlerTest extends TestCase
         $this->assertFalse($response->result->isIncomplete);
     }
 
-    public function testHandleAnIncompleteListOfSuggestions()
+    public function testHandleAnIncompleteListOfSuggestions(): void
     {
         $tester = $this->create([
             Suggestion::create('hello'),
@@ -85,7 +85,7 @@ class CompletionHandlerTest extends TestCase
         $this->assertTrue($response->result->isIncomplete);
     }
 
-    public function testHandleSuggestionsWithRange()
+    public function testHandleSuggestionsWithRange(): void
     {
         $tester = $this->create([
             Suggestion::createWithOptions('hello', [ 'range' => PhpactorRange::fromStartAndEnd(1, 2)]),
@@ -106,7 +106,7 @@ class CompletionHandlerTest extends TestCase
         $this->assertFalse($response->result->isIncomplete);
     }
 
-    public function testCancelReturnsPartialResults()
+    public function testCancelReturnsPartialResults(): void
     {
         $tester = $this->create(
             array_map(function () {
@@ -133,7 +133,7 @@ class CompletionHandlerTest extends TestCase
         $this->assertTrue($responses[0]->result->isIncomplete);
     }
 
-    public function testHandleSuggestionsWithSnippets()
+    public function testHandleSuggestionsWithSnippets(): void
     {
         $tester = $this->create([
             Suggestion::createWithOptions('hello', [
@@ -163,7 +163,7 @@ class CompletionHandlerTest extends TestCase
         $this->assertFalse($response->result->isIncomplete);
     }
 
-    public function testHandleSuggestionsWithSnippetsWhenClientDoesNotSupportIt()
+    public function testHandleSuggestionsWithSnippetsWhenClientDoesNotSupportIt(): void
     {
         $tester = $this->create([
             Suggestion::createWithOptions('hello', [

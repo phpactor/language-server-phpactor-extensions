@@ -29,8 +29,8 @@ class IndexerHandlerTest extends IntegrationTestCase
         $this->workspace()->put(
             'Foobar.php',
             <<<'EOT'
-<?php
-EOT
+                <?php
+                EOT
         );
 
         $this->tester->initialize();
@@ -70,8 +70,8 @@ EOT
         $this->workspace()->put(
             'Foobar.php',
             <<<'EOT'
-<?php
-EOT
+                <?php
+                EOT
         );
 
         $tester = $this->container([

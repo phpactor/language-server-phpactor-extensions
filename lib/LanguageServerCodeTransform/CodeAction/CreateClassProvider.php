@@ -56,33 +56,6 @@ class CreateClassProvider implements DiagnosticsProvider, CodeActionProvider
         return new Success($this->getDiagnostics($textDocument));
     }
 
-    /**
-     * @return array<Diagnostic>
-     */
-    private function getDiagnostics(TextDocumentItem $textDocument): array
-    {
-        $node = $this->parser->parseSourceFile($textDocument->text);
-
-        if ('' !== trim($node->getFileContents())) {
-            return [];
-        }
-
-        return [
-            new Diagnostic(
-                new Range(
-                    new Position(1, 1),
-                    new Position(1, 1)
-                ),
-                sprintf(
-                    'Empty file (use create-class code action to create a new class)',
-                ),
-                DiagnosticSeverity::INFORMATION,
-                null,
-                'phpactor'
-            )
-        ];
-    }
-
     public function provideActionsFor(TextDocumentItem $textDocument, Range $range): Promise
     {
         return call(function () use ($textDocument) {
@@ -113,6 +86,33 @@ class CreateClassProvider implements DiagnosticsProvider, CodeActionProvider
 
             return $actions;
         });
+    }
+
+    /**
+     * @return array<Diagnostic>
+     */
+    private function getDiagnostics(TextDocumentItem $textDocument): array
+    {
+        $node = $this->parser->parseSourceFile($textDocument->text);
+
+        if ('' !== trim($node->getFileContents())) {
+            return [];
+        }
+
+        return [
+            new Diagnostic(
+                new Range(
+                    new Position(1, 1),
+                    new Position(1, 1)
+                ),
+                sprintf(
+                    'Empty file (use create-class code action to create a new class)',
+                ),
+                DiagnosticSeverity::INFORMATION,
+                null,
+                'phpactor'
+            )
+        ];
     }
 
     private function kind(): string

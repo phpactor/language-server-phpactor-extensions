@@ -16,7 +16,7 @@ class TestExtension implements Extension
     /**
      * {@inheritDoc}
      */
-    public function load(ContainerBuilder $container)
+    public function load(ContainerBuilder $container): void
     {
         $container->register('test.watcher.will_die', function (Container $container) {
             return new TestWatcher(new ModifiedFileQueue(), 0, new WatcherDied('No'));
@@ -30,7 +30,7 @@ class TestExtension implements Extension
     /**
      * {@inheritDoc}
      */
-    public function configure(Resolver $schema)
+    public function configure(Resolver $schema): void
     {
     }
 }
