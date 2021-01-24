@@ -9,7 +9,7 @@ use ReflectionClass;
 
 class PhpactorToLspCompletionTypeTest extends TestCase
 {
-    public function testConverts()
+    public function testConverts(): void
     {
         $reflection = new ReflectionClass(Suggestion::class);
         foreach ($reflection->getConstants() as $name => $constantValue) {

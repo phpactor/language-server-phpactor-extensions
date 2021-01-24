@@ -20,12 +20,12 @@ class LanguageServerWorseReflectionExtension implements Extension
     /**
      * {@inheritDoc}
      */
-    public function load(ContainerBuilder $container)
+    public function load(ContainerBuilder $container): void
     {
         $this->registerSourceLocator($container);
     }
 
-    public function configure(Resolver $schema)
+    public function configure(Resolver $schema): void
     {
         $schema->setDefaults([
             self::PARAM_UPDATE_INTERVAL => 100,

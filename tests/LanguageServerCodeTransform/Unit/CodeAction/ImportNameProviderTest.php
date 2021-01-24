@@ -71,117 +71,117 @@ class ImportNameProviderTest extends IntegrationTestCase
     {
         yield 'code action + diagnostic for non-imported name' => [
             <<<'EOT'
-// File: subject.php
-<?php new MissingName();'
-// File: Foobar/MissingName.php
-<?php namespace Foobar; class MissingName {}
-EOT
+                // File: subject.php
+                <?php new MissingName();'
+                // File: Foobar/MissingName.php
+                <?php namespace Foobar; class MissingName {}
+                EOT
         , 1, 1
         ];
 
         yield 'code actions + diagnostic for non-existant class' => [
             <<<'EOT'
-// File: subject.php
-<?php new MissingNameFoo();'
-EOT
+                // File: subject.php
+                <?php new MissingNameFoo();'
+                EOT
         , 0, 1
         ];
 
         yield 'code actions + diagnostic for namespaced non-existant class' => [
             <<<'EOT'
-// File: subject.php
-<?php namespace Bar; new MissingNameFoo();'
-EOT
+                // File: subject.php
+                <?php namespace Bar; new MissingNameFoo();'
+                EOT
         , 0, 1
         ];
 
         yield 'code action and diagnostic for missing global class name with import globals' => [
             <<<'EOT'
-// File: subject.php
-<?php namespace Foobar; function foobar(): Generator { yield 12; }'
-// File: Generator.php
-<?php class Generator {}
-EOT
+                // File: subject.php
+                <?php namespace Foobar; function foobar(): Generator { yield 12; }'
+                // File: Generator.php
+                <?php class Generator {}
+                EOT
         , 1, 1, true
         ];
 
         yield 'code action and diagnostic for missing global class name without import globals' => [
             <<<'EOT'
-// File: subject.php
-<?php namespace Foobar; function foobar(): Generator { yield 12; }'
-// File: Generator.php
-<?php class Generator {}
-EOT
+                // File: subject.php
+                <?php namespace Foobar; function foobar(): Generator { yield 12; }'
+                // File: Generator.php
+                <?php class Generator {}
+                EOT
         , 1, 1, false
         ];
 
         yield 'no code action or diagnostics for missing global function name' => [
             <<<'EOT'
-// File: subject.php
-<?php namespace Foobar; sprintf('foo %s', 'bar')
-EOT
+                // File: subject.php
+                <?php namespace Foobar; sprintf('foo %s', 'bar')
+                EOT
         , 0, 0
         ];
 
         yield 'no diagnostics for class declared in same namespace' => [
             <<<'EOT'
-// File: subject.php
-<?php
+                // File: subject.php
+                <?php
 
-namespace Phpactor\Extension;
+                namespace Phpactor\Extension;
 
-class Test
-{
-    public function testBar()
-    {
-        new Bar();
-    }
-}
+                class Test
+                {
+                    public function testBar()
+                    {
+                        new Bar();
+                    }
+                }
 
-class Bar
-{
-}
-EOT
+                class Bar
+                {
+                }
+                EOT
         , 0, 0
         ];
 
         yield 'built in global funtion' => [
             <<<'EOT'
-// File: subject.php
-<?php
+                // File: subject.php
+                <?php
 
-namespace Phpactor\Extension;
+                namespace Phpactor\Extension;
 
-$bar = [];
-explode(array_keys($bar));
-EOT
+                $bar = [];
+                explode(array_keys($bar));
+                EOT
         , 0, 0
         ];
 
         yield 'built in global funtion with import globals' => [
             <<<'EOT'
-// File: functions.php
-// File: subject.php
-<?php
+                // File: functions.php
+                // File: subject.php
+                <?php
 
-namespace Phpactor\Extension;
+                namespace Phpactor\Extension;
 
-$bar = [];
-explode(array_keys($bar));
-EOT
+                $bar = [];
+                explode(array_keys($bar));
+                EOT
         , 2, 2, true
         ];
 
         yield 'constant' => [
             <<<'EOT'
-// File: subject.php
-<?php
+                // File: subject.php
+                <?php
 
-namespace Phpactor\Extension;
+                namespace Phpactor\Extension;
 
-if (INF) {
-}
-EOT
+                if (INF) {
+                }
+                EOT
         , 0, 0, true
         ];
     }

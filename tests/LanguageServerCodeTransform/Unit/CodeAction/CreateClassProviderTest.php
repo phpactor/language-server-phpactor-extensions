@@ -75,18 +75,18 @@ class CreateClassProviderTest extends IntegrationTestCase
     {
         yield 'empty file' => [
             <<<'EOT'
-// File: subject.php
+                // File: subject.php
 
-EOT
+                EOT
         , 1, 1
         ];
 
         yield 'non empty file' => [
             <<<'EOT'
-// File: subject.php
-<?php
+                // File: subject.php
+                <?php
 
-EOT
+                EOT
         , 0, 0
         ];
     }

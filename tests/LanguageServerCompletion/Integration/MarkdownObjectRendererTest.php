@@ -140,27 +140,27 @@ class MarkdownObjectRendererTest extends IntegrationTestCase
             function (Reflector $reflector) {
                 return $reflector->reflectClassesIn(
                     <<<'EOT'
-<?php
+                        <?php
 
-interface DoesThis
-{
-}
-interface DoesThat
-{
-}
-abstract class SomeAbstract
-{
-}
+                        interface DoesThis
+                        {
+                        }
+                        interface DoesThat
+                        {
+                        }
+                        abstract class SomeAbstract
+                        {
+                        }
 
-class Concrete extends SomeAbstract implements DoesThis, DoesThat
-{
-    public function __construct(string $foo) {}
-    /**
-     * @param string|bool|null $bar
-     */
-    public function foobar(string $foo, $bar): SomeAbstract;
-}
-EOT
+                        class Concrete extends SomeAbstract implements DoesThis, DoesThat
+                        {
+                            public function __construct(string $foo) {}
+                            /**
+                             * @param string|bool|null $bar
+                             */
+                            public function foobar(string $foo, $bar): SomeAbstract;
+                        }
+                        EOT
                 )->get('Concrete');
             },
             'class_reflection2.md',
@@ -171,16 +171,16 @@ EOT
             function (Reflector $reflector) {
                 return $reflector->reflectClassesIn(
                     <<<'EOT'
-<?php
+                        <?php
 
-class SomeClass
-{
-    public const FOOBAR = 'bar';
-    private const NO= 'none';
-    public $foo = 'zed';
-    public function foobar(): void {}
-}
-EOT
+                        class SomeClass
+                        {
+                            public const FOOBAR = 'bar';
+                            private const NO= 'none';
+                            public $foo = 'zed';
+                            public function foobar(): void {}
+                        }
+                        EOT
                 )->get('SomeClass');
             },
             'class_reflection3.md',
@@ -221,24 +221,24 @@ EOT
             function (Reflector $reflector) {
                 return $reflector->reflectClassesIn(
                     <<<'EOT'
-<?php
+                        <?php
 
-interface DoesThis
-{
-}
-interface DoesThat
-{
-}
+                        interface DoesThis
+                        {
+                        }
+                        interface DoesThat
+                        {
+                        }
 
-/**
- * Hello documentation
- */
-interface AwesomeInterface extends DoesThis, DoesThat
-{
-    const FOOBAR = "BARFOO";
-    public function foo(): string;
-}
-EOT
+                        /**
+                         * Hello documentation
+                         */
+                        interface AwesomeInterface extends DoesThis, DoesThat
+                        {
+                            const FOOBAR = "BARFOO";
+                            public function foo(): string;
+                        }
+                        EOT
                 )->get('AwesomeInterface');
             },
             'interface_reflection1.md',
@@ -255,13 +255,13 @@ EOT
             function (Reflector $reflector) {
                 return $reflector->reflectClassesIn(
                     <<<'EOT'
-<?php
+                        <?php
 
-trait Blah
-{
-    public function foo();
-}
-EOT
+                        trait Blah
+                        {
+                            public function foo();
+                        }
+                        EOT
                 )->get('Blah');
             },
             'trait1.md',
@@ -278,16 +278,16 @@ EOT
             function (Reflector $reflector) {
                 return $reflector->reflectClassesIn(
                     <<<'EOT'
-<?php
+                        <?php
 
-/**
- * Hello documentation
- */
-class OneClass
-{
-    public function foo();
-}
-EOT
+                        /**
+                         * Hello documentation
+                         */
+                        class OneClass
+                        {
+                            public function foo();
+                        }
+                        EOT
                 )->first()->methods()->get('foo');
             },
             'method1.md',
@@ -298,19 +298,19 @@ EOT
             function (Reflector $reflector) {
                 return $reflector->reflectClassesIn(
                     <<<'EOT'
-<?php
+                        <?php
 
-class OneClass
-{
-    /**
-     * This is my method
-     *
-     * @param bool|string $foo
-     * @param Foobar[] $zed
-     */
-    public function foo(string $bar, $foo, array $zed): void;
-}
-EOT
+                        class OneClass
+                        {
+                            /**
+                             * This is my method
+                             *
+                             * @param bool|string $foo
+                             * @param Foobar[] $zed
+                             */
+                            public function foo(string $bar, $foo, array $zed): void;
+                        }
+                        EOT
                 )->first()->methods()->get('foo');
             },
             'method2.md',
@@ -321,13 +321,13 @@ EOT
             function (Reflector $reflector) {
                 return $reflector->reflectClassesIn(
                     <<<'EOT'
-<?php
+                        <?php
 
-class OneClass
-{
-    private function foo(): void;
-}
-EOT
+                        class OneClass
+                        {
+                            private function foo(): void;
+                        }
+                        EOT
                 )->first()->methods()->get('foo');
             },
             'method3.md',
@@ -338,13 +338,13 @@ EOT
             function (Reflector $reflector) {
                 return $reflector->reflectClassesIn(
                     <<<'EOT'
-<?php
+                        <?php
 
-class OneClass
-{
-    abstract public static function foo()
-}
-EOT
+                        class OneClass
+                        {
+                            abstract public static function foo()
+                        }
+                        EOT
                 )->first()->methods()->get('foo');
             },
             'method4.md',
@@ -355,15 +355,15 @@ EOT
             function (Reflector $reflector) {
                 return $reflector->reflectClassesIn(
                     <<<'EOT'
-<?php
+                        <?php
 
-/**
- * @method string foobar()
- */
-class OneClass
-{
-}
-EOT
+                        /**
+                         * @method string foobar()
+                         */
+                        class OneClass
+                        {
+                        }
+                        EOT
                 )->first()->methods()->get('foobar');
             },
             'method5.md',
@@ -374,22 +374,22 @@ EOT
             function (Reflector $reflector) {
                 return $reflector->reflectClassesIn(
                     <<<'EOT'
-<?php
+                        <?php
 
-class ParentClass
-{
-    public function foobar()
-    {
-    }
-}
+                        class ParentClass
+                        {
+                            public function foobar()
+                            {
+                            }
+                        }
 
-class OneClass extends ParentClass
-{
-    public function foobar()
-    {
-    }
-}
-EOT
+                        class OneClass extends ParentClass
+                        {
+                            public function foobar()
+                            {
+                            }
+                        }
+                        EOT
                 )->get('OneClass')->methods()->get('foobar');
             },
             'method6.md',
@@ -400,22 +400,22 @@ EOT
             function (Reflector $reflector) {
                 return $reflector->reflectClassesIn(
                     <<<'EOT'
-<?php
+                        <?php
 
-interface ClassInterface
-{
-    public function foobar()
-    {
-    }
-}
+                        interface ClassInterface
+                        {
+                            public function foobar()
+                            {
+                            }
+                        }
 
-class OneClass implements ClassInterface
-{
-    public function foobar()
-    {
-    }
-}
-EOT
+                        class OneClass implements ClassInterface
+                        {
+                            public function foobar()
+                            {
+                            }
+                        }
+                        EOT
                 )->get('OneClass')->methods()->get('foobar');
             },
             'method7.md',
@@ -426,18 +426,18 @@ EOT
             function (Reflector $reflector) {
                 return $reflector->reflectClassesIn(
                     <<<'EOT'
-<?php
+                        <?php
 
-class OneClass
-{
-    /**
-     * @deprecated Do not use me
-     */
-    public function foobar()
-    {
-    }
-}
-EOT
+                        class OneClass
+                        {
+                            /**
+                             * @deprecated Do not use me
+                             */
+                            public function foobar()
+                            {
+                            }
+                        }
+                        EOT
                 )->get('OneClass')->methods()->get('foobar');
             },
             'method8.md'
@@ -454,13 +454,13 @@ EOT
             function (Reflector $reflector) {
                 return $reflector->reflectClassesIn(
                     <<<'EOT'
-<?php
+                        <?php
 
-class OneClass
-{
-    public $foobar;
-}
-EOT
+                        class OneClass
+                        {
+                            public $foobar;
+                        }
+                        EOT
                 )->first()->properties()->get('foobar');
             },
             'property1.md',
@@ -471,16 +471,16 @@ EOT
             function (Reflector $reflector) {
                 return $reflector->reflectClassesIn(
                     <<<'EOT'
-<?php
+                        <?php
 
-class OneClass
-{
-    /**
-     * @var Foobar|string
-     */
-    public $foobar = "bar";
-}
-EOT
+                        class OneClass
+                        {
+                            /**
+                             * @var Foobar|string
+                             */
+                            public $foobar = "bar";
+                        }
+                        EOT
                 )->first()->properties()->get('foobar');
             },
             'property2.md',
@@ -491,13 +491,13 @@ EOT
             function (Reflector $reflector) {
                 return $reflector->reflectClassesIn(
                     <<<'EOT'
-<?php
+                        <?php
 
-class OneClass
-{
-    public string $foobar = "bar";
-}
-EOT
+                        class OneClass
+                        {
+                            public string $foobar = "bar";
+                        }
+                        EOT
                 )->first()->properties()->get('foobar');
             },
             'property3.md',
@@ -508,15 +508,15 @@ EOT
             function (Reflector $reflector) {
                 return $reflector->reflectClassesIn(
                     <<<'EOT'
-<?php
+                        <?php
 
-/**
- * @property string $foobar
- */
-class OneClass
-{
-}
-EOT
+                        /**
+                         * @property string $foobar
+                         */
+                        class OneClass
+                        {
+                        }
+                        EOT
                 )->first()->properties()->get('foobar');
             },
             'property4.md',
@@ -527,16 +527,16 @@ EOT
             function (Reflector $reflector) {
                 return $reflector->reflectClassesIn(
                     <<<'EOT'
-<?php
+                        <?php
 
-class OneClass
-{
-    /**
-     * @var mixed|foo
-     */
-    public $foobar;
-}
-EOT
+                        class OneClass
+                        {
+                            /**
+                             * @var mixed|foo
+                             */
+                            public $foobar;
+                        }
+                        EOT
                 )->first()->properties()->get('foobar');
             },
             'property5.md',
@@ -553,13 +553,13 @@ EOT
             function (Reflector $reflector) {
                 return $reflector->reflectClassesIn(
                     <<<'EOT'
-<?php
+                        <?php
 
-class OneClass
-{
-    const FOOBAR = "barfoo";
-}
-EOT
+                        class OneClass
+                        {
+                            const FOOBAR = "barfoo";
+                        }
+                        EOT
                 )->first()->constants()->get('FOOBAR');
             },
             'constant1.md',
@@ -570,13 +570,13 @@ EOT
             function (Reflector $reflector) {
                 return $reflector->reflectClassesIn(
                     <<<'EOT'
-<?php
+                        <?php
 
-class OneClass
-{
-    private const FOOBAR = ['one', 2];
-}
-EOT
+                        class OneClass
+                        {
+                            private const FOOBAR = ['one', 2];
+                        }
+                        EOT
                 )->first()->constants()->get('FOOBAR');
             },
             'constant2.md',
@@ -593,9 +593,9 @@ EOT
             function (Reflector $reflector) {
                 return $reflector->reflectFunctionsIn(
                     <<<'EOT'
-<?php
-function one() {}
-EOT
+                        <?php
+                        function one() {}
+                        EOT
                 )->first();
             },
             'function1.md',
@@ -606,9 +606,9 @@ EOT
             function (Reflector $reflector) {
                 return $reflector->reflectFunctionsIn(
                     <<<'EOT'
-<?php
-function one(string $bar, bool $baz): stdClass {}
-EOT
+                        <?php
+                        function one(string $bar, bool $baz): stdClass {}
+                        EOT
                 )->first();
             },
             'function2.md',
@@ -625,8 +625,8 @@ EOT
             function (Reflector $reflector) {
                 return $reflector->reflectOffset(
                     <<<'EOT'
-<?php
-EOT
+                        <?php
+                        EOT
                 ,
                     1
                 );
@@ -638,14 +638,14 @@ EOT
             '',
             function (Reflector $reflector) {
                 $source = <<<'EOT'
-<?php
+                    <?php
 
-$foo = 'string';
-$bar = 1234;
+                    $foo = 'string';
+                    $bar = 1234;
 
-$<>zed;
+                    $<>zed;
 
-EOT
+                    EOT
                 ;
                 [$source, $offset] = ExtractOffset::fromSource($source);
                 return $reflector->reflectOffset($source, $offset);
@@ -678,13 +678,13 @@ EOT
             function (Reflector $reflector) {
                 return new MemberDocblock($reflector->reflectClassesIn(
                     <<<'EOT'
-<?php
+                        <?php
 
-class OneClass
-{
-    public function foo();
-}
-EOT
+                        class OneClass
+                        {
+                            public function foo();
+                        }
+                        EOT
                 )->first()->methods()->get('foo'));
             },
             'member_docblock1.md',
@@ -695,16 +695,16 @@ EOT
             function (Reflector $reflector) {
                 return new MemberDocblock($reflector->reflectClassesIn(
                     <<<'EOT'
-<?php
+                        <?php
 
-class OneClass
-{
-    /**
-     * Foobar
-     */
-    public function foo();
-}
-EOT
+                        class OneClass
+                        {
+                            /**
+                             * Foobar
+                             */
+                            public function foo();
+                        }
+                        EOT
                 )->first()->methods()->get('foo'));
             },
             'member_docblock2.md',
@@ -715,23 +715,23 @@ EOT
             function (Reflector $reflector) {
                 return new MemberDocblock($reflector->reflectClassesIn(
                     <<<'EOT'
-<?php
+                        <?php
 
-class Barfoo
-{
-    /**
-     * Barfoo
-     */
-    public function foo();
-}
-class OneClass extends Barfoo
-{
-    /**
-     * Foobar
-     */
-    public function foo();
-}
-EOT
+                        class Barfoo
+                        {
+                            /**
+                             * Barfoo
+                             */
+                            public function foo();
+                        }
+                        class OneClass extends Barfoo
+                        {
+                            /**
+                             * Foobar
+                             */
+                            public function foo();
+                        }
+                        EOT
                 )->get('OneClass')->methods()->get('foo'));
             },
             'member_docblock3.md',
@@ -742,30 +742,30 @@ EOT
             function (Reflector $reflector) {
                 return new MemberDocblock($reflector->reflectClassesIn(
                     <<<'EOT'
-<?php
-class Doobar
-{
-    /**
-     * Doobar
-     */
-    public function foo();
-}
+                        <?php
+                        class Doobar
+                        {
+                            /**
+                             * Doobar
+                             */
+                            public function foo();
+                        }
 
-class Barfoo extends Doobar
-{
-    /**
-     * Barfoo
-     */
-    public function foo();
-}
-class OneClass extends Barfoo
-{
-    /**
-     * Foobar
-     */
-    public function foo();
-}
-EOT
+                        class Barfoo extends Doobar
+                        {
+                            /**
+                             * Barfoo
+                             */
+                            public function foo();
+                        }
+                        class OneClass extends Barfoo
+                        {
+                            /**
+                             * Foobar
+                             */
+                            public function foo();
+                        }
+                        EOT
                 )->get('OneClass')->methods()->get('foo'));
             },
             'member_docblock4.md',
@@ -776,21 +776,21 @@ EOT
             function (Reflector $reflector) {
                 return new MemberDocblock($reflector->reflectClassesIn(
                     <<<'EOT'
-<?php
+                        <?php
 
-interface Dong
-{
-    /**
-     * Foobar
-     */
-    public function foo();
-}
+                        interface Dong
+                        {
+                            /**
+                             * Foobar
+                             */
+                            public function foo();
+                        }
 
-class OneClass implements Dong
-{
-    public function foo();
-}
-EOT
+                        class OneClass implements Dong
+                        {
+                            public function foo();
+                        }
+                        EOT
                 )->get('OneClass')->methods()->get('foo'));
             },
             'member_docblock5.md',
@@ -801,29 +801,29 @@ EOT
             function (Reflector $reflector) {
                 return new MemberDocblock($reflector->reflectClassesIn(
                     <<<'EOT'
-<?php
+                        <?php
 
-interface Bong
-{
-    /**
-     * Bong
-     */
-    public function foo();
-}
+                        interface Bong
+                        {
+                            /**
+                             * Bong
+                             */
+                            public function foo();
+                        }
 
-interface Dong
-{
-    /**
-     * Foobar
-     */
-    public function foo();
-}
+                        interface Dong
+                        {
+                            /**
+                             * Foobar
+                             */
+                            public function foo();
+                        }
 
-class OneClass implements Dong, Bong
-{
-    public function foo();
-}
-EOT
+                        class OneClass implements Dong, Bong
+                        {
+                            public function foo();
+                        }
+                        EOT
                 )->get('OneClass')->methods()->get('foo'));
             },
             'member_docblock6.md',
@@ -834,34 +834,34 @@ EOT
             function (Reflector $reflector) {
                 return new MemberDocblock($reflector->reflectClassesIn(
                     <<<'EOT'
-<?php
+                        <?php
 
-interface Bong
-{
-    /**
-     * Bong
-     */
-    public function foo();
-}
+                        interface Bong
+                        {
+                            /**
+                             * Bong
+                             */
+                            public function foo();
+                        }
 
-interface Dong
-{
-    /**
-     * Foobar
-     */
-    public function foo();
-}
+                        interface Dong
+                        {
+                            /**
+                             * Foobar
+                             */
+                            public function foo();
+                        }
 
-class TwoClass implements Dong, Bong
-{
-    public function foo();
-}
+                        class TwoClass implements Dong, Bong
+                        {
+                            public function foo();
+                        }
 
-class OneClass extends TwoClass implements Dong, Bong
-{
-    public function foo();
-}
-EOT
+                        class OneClass extends TwoClass implements Dong, Bong
+                        {
+                            public function foo();
+                        }
+                        EOT
                 )->get('OneClass')->methods()->get('foo'));
             },
             'member_docblock7.md',

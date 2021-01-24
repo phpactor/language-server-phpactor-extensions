@@ -29,6 +29,11 @@ class MemberDocblock
         });
     }
 
+    public function member(): ReflectionMember
+    {
+        return $this->member;
+    }
+
     private function buildAncestors(?ReflectionClassLike $classLike, array $ancestors = []): array
     {
         if (null === $classLike) {
@@ -68,10 +73,5 @@ class MemberDocblock
         }
 
         return [];
-    }
-
-    public function member(): ReflectionMember
-    {
-        return $this->member;
     }
 }

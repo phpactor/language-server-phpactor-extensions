@@ -155,6 +155,11 @@ class ReferencesHandler implements Handler, CanRegisterCapabilities
         });
     }
 
+    public function registerCapabiltiies(ServerCapabilities $capabilities): void
+    {
+        $capabilities->referencesProvider = true;
+    }
+
     /**
      * @param Location[] $locations
      * @return LspLocation[]
@@ -164,10 +169,5 @@ class ReferencesHandler implements Handler, CanRegisterCapabilities
         return $this->locationConverter->toLspLocations(
             (new Locations($locations))->sorted()
         );
-    }
-
-    public function registerCapabiltiies(ServerCapabilities $capabilities): void
-    {
-        $capabilities->referencesProvider = true;
     }
 }

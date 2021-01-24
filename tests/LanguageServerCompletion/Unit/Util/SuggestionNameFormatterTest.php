@@ -21,7 +21,7 @@ class SuggestionNameFormatterTest extends TestCase
     /**
      * @dataProvider dataProvider
      */
-    public function testFormat(string $type, string $name, string $expected)
+    public function testFormat(string $type, string $name, string $expected): void
     {
         $suggestion = Suggestion::createWithOptions($name, ['type' => $type]);
 

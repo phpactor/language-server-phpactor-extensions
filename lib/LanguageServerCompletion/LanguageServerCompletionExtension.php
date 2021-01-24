@@ -20,7 +20,7 @@ class LanguageServerCompletionExtension implements Extension
     /**
      * {@inheritDoc}
      */
-    public function configure(Resolver $schema)
+    public function configure(Resolver $schema): void
     {
         $schema->setDefaults([
             self::PARAM_TRIM_LEADING_DOLLAR => false,
@@ -33,7 +33,7 @@ class LanguageServerCompletionExtension implements Extension
     /**
      * {@inheritDoc}
      */
-    public function load(ContainerBuilder $container)
+    public function load(ContainerBuilder $container): void
     {
         $this->registerHandlers($container);
     }

@@ -16,7 +16,7 @@ class HoverHandlerTest extends IntegrationTestCase
     /**
      * @dataProvider provideHover
      */
-    public function testHover(string $test)
+    public function testHover(string $test): void
     {
         [ $text, $offset ] = ExtractOffset::fromSource($test);
 
@@ -48,35 +48,35 @@ class HoverHandlerTest extends IntegrationTestCase
 
         yield 'method with documentation' => [
             <<<'EOT'
-<?php 
+                <?php 
 
-class A { 
-    /** 
-     * This is a method 
-     */
-    private function f<>oo():string {} 
-}
-EOT
+                class A { 
+                    /** 
+                     * This is a method 
+                     */
+                    private function f<>oo():string {} 
+                }
+                EOT
             ,
         ];
 
         yield 'method with parent documentation' => [
             <<<'EOT'
-<?php 
+                <?php 
 
-class Foobar {
-    /** 
-     * The original documentation
-     */
-    private function foo():string {} 
-}
-class A extends Foobar { 
-    /** 
-     * This is a method 
-     */
-    private function f<>oo():string {} 
-}
-EOT
+                class Foobar {
+                    /** 
+                     * The original documentation
+                     */
+                    private function foo():string {} 
+                }
+                class A extends Foobar { 
+                    /** 
+                     * This is a method 
+                     */
+                    private function f<>oo():string {} 
+                }
+                EOT
             ,
         ];
 

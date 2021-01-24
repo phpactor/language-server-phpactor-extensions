@@ -60,24 +60,6 @@ class TransformerCodeActionPovider implements DiagnosticsProvider, CodeActionPro
         return new Success($this->getDiagnostics($textDocument));
     }
 
-    /**
-     * @return array<Diagnostic>
-     */
-    private function getDiagnostics(TextDocumentItem $textDocument): array
-    {
-        $phpactorTextDocument = TextDocumentConverter::fromLspTextItem($textDocument);
-
-        return array_map(function (Diagnostic $diagnostic) {
-            $diagnostic->message = sprintf('%s (fix with "%s" code action)', $diagnostic->message, $this->title);
-            return $diagnostic;
-        }, DiagnosticsConverter::toLspDiagnostics(
-            $phpactorTextDocument,
-            $this->transformers->get($this->name)->diagnostics(
-                SourceCode::fromStringAndPath($textDocument->text, $phpactorTextDocument->uri()->path())
-            )
-        ));
-    }
-
     public function provideActionsFor(TextDocumentItem $textDocument, Range $range): Promise
     {
         return call(function () use ($textDocument) {
@@ -101,6 +83,24 @@ class TransformerCodeActionPovider implements DiagnosticsProvider, CodeActionPro
                 ])
             ];
         });
+    }
+
+    /**
+     * @return array<Diagnostic>
+     */
+    private function getDiagnostics(TextDocumentItem $textDocument): array
+    {
+        $phpactorTextDocument = TextDocumentConverter::fromLspTextItem($textDocument);
+
+        return array_map(function (Diagnostic $diagnostic) {
+            $diagnostic->message = sprintf('%s (fix with "%s" code action)', $diagnostic->message, $this->title);
+            return $diagnostic;
+        }, DiagnosticsConverter::toLspDiagnostics(
+            $phpactorTextDocument,
+            $this->transformers->get($this->name)->diagnostics(
+                SourceCode::fromStringAndPath($textDocument->text, $phpactorTextDocument->uri()->path())
+            )
+        ));
     }
 
     private function kind(): string

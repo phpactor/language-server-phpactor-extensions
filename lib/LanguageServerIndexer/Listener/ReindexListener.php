@@ -25,7 +25,7 @@ class ReindexListener implements ListenerProviderInterface
     public function getListenersForEvent(object $event): iterable
     {
         if ($event instanceof IndexReset) {
-            yield function () {
+            yield function (): void {
                 if ($this->manager->isRunning(IndexerHandler::SERVICE_INDEXER)) {
                     $this->manager->stop(IndexerHandler::SERVICE_INDEXER);
                 }

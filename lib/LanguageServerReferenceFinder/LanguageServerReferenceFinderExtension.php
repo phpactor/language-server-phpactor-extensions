@@ -26,7 +26,7 @@ class LanguageServerReferenceFinderExtension implements Extension
     /**
      * {@inheritDoc}
      */
-    public function load(ContainerBuilder $container)
+    public function load(ContainerBuilder $container): void
     {
         $container->register(GotoDefinitionHandler::class, function (Container $container) {
             return new GotoDefinitionHandler(
@@ -74,7 +74,7 @@ class LanguageServerReferenceFinderExtension implements Extension
     /**
      * {@inheritDoc}
      */
-    public function configure(Resolver $schema)
+    public function configure(Resolver $schema): void
     {
         $schema->setDefaults([
             self::PARAM_REFERENCE_TIMEOUT => 10

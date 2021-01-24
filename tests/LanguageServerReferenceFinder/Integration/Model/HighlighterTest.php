@@ -39,14 +39,14 @@ class HighlighterTest extends TestCase
     {
         yield 'none' => [
             '<?php',
-            function (Highlights $highlights) {
+            function (Highlights $highlights): void {
                 self::assertCount(0, $highlights);
             }
         ];
 
         yield 'one' => [
             '<?php $v<>ar;',
-            function (Highlights $highlights) {
+            function (Highlights $highlights): void {
                 self::assertCount(1, $highlights);
                 self::assertEquals(DocumentHighlightKind::READ, $highlights->first()->kind);
             }
@@ -54,21 +54,21 @@ class HighlighterTest extends TestCase
 
         yield 'two vars including method var' => [
             '<?php function foobar ($var) { $v<>ar; }',
-            function (Highlights $highlights) {
+            function (Highlights $highlights): void {
                 self::assertCount(2, $highlights);
             }
         ];
 
         yield 'only method var' => [
             '<?php function foobar ($v<>ar) {}',
-            function (Highlights $highlights) {
+            function (Highlights $highlights): void {
                 self::assertCount(1, $highlights);
             }
         ];
 
         yield 'write var including method var' => [
             '<?php $var = "foo"; $v<>ar;}',
-            function (Highlights $highlights) {
+            function (Highlights $highlights): void {
                 self::assertCount(2, $highlights);
                 self::assertEquals(DocumentHighlightKind::WRITE, $highlights->first()->kind);
             }
@@ -82,21 +82,21 @@ class HighlighterTest extends TestCase
     {
         yield 'property declaration' => [
             '<?php class Foobar { private $f<>oobar; }',
-            function (Highlights $highlights) {
+            function (Highlights $highlights): void {
                 self::assertCount(1, $highlights);
                 self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
             }
         ];
         yield 'property declaration 2' => [
             '<?php class Foobar { private $f<>oobar; private $barfoo;}',
-            function (Highlights $highlights) {
+            function (Highlights $highlights): void {
                 self::assertCount(1, $highlights);
                 self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
             }
         ];
         yield 'property read' => [
             '<?php class Foobar { private $f<>oobar; function bar() { return $this->foobar; }',
-            function (Highlights $highlights) {
+            function (Highlights $highlights): void {
                 self::assertCount(2, $highlights);
                 self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
                 self::assertEquals(DocumentHighlightKind::READ, $highlights->at(1)->kind);
@@ -105,7 +105,7 @@ class HighlighterTest extends TestCase
 
         yield 'property access' => [
             '<?php class Foobar { private $foobar; function bar() { return $this->foo<>bar->barfoo; }',
-            function (Highlights $highlights) {
+            function (Highlights $highlights): void {
                 self::assertCount(2, $highlights);
                 self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
                 self::assertEquals(DocumentHighlightKind::READ, $highlights->at(1)->kind);
@@ -114,7 +114,7 @@ class HighlighterTest extends TestCase
 
         yield 'property write' => [
             '<?php class Foobar { private $f<>oobar; function bar() { return $this->foobar = "barfoo"; }',
-            function (Highlights $highlights) {
+            function (Highlights $highlights): void {
                 self::assertCount(2, $highlights);
                 self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
                 self::assertEquals(DocumentHighlightKind::WRITE, $highlights->at(1)->kind);
@@ -129,7 +129,7 @@ class HighlighterTest extends TestCase
     {
         yield 'method declaration' => [
             '<?php class Foobar { public function f<>oobar() {} }',
-            function (Highlights $highlights) {
+            function (Highlights $highlights): void {
                 self::assertCount(1, $highlights);
                 self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
             }
@@ -137,7 +137,7 @@ class HighlighterTest extends TestCase
 
         yield 'method read' => [
             '<?php class Foobar { function bar() { return $this->b<>ar(); }',
-            function (Highlights $highlights) {
+            function (Highlights $highlights): void {
                 self::assertCount(2, $highlights);
                 self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
                 self::assertEquals(DocumentHighlightKind::READ, $highlights->at(1)->kind);
@@ -146,7 +146,7 @@ class HighlighterTest extends TestCase
 
         yield 'static method read' => [
             '<?php class Foobar { static function bar() { return self::b<>ar(); }',
-            function (Highlights $highlights) {
+            function (Highlights $highlights): void {
                 self::assertCount(2, $highlights);
                 self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
                 self::assertEquals(DocumentHighlightKind::READ, $highlights->at(1)->kind);
@@ -161,7 +161,7 @@ class HighlighterTest extends TestCase
     {
         yield 'class name' => [
             '<?php class Foo<>bar {}',
-            function (Highlights $highlights) {
+            function (Highlights $highlights): void {
                 self::assertCount(1, $highlights);
                 self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
             }
@@ -169,7 +169,7 @@ class HighlighterTest extends TestCase
 
         yield 'class name with fqn' => [
             '<?php class Foo<>bar {const BAR=1;} Foobar::BAR;',
-            function (Highlights $highlights) {
+            function (Highlights $highlights): void {
                 self::assertCount(2, $highlights);
                 self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
             }
@@ -183,7 +183,7 @@ class HighlighterTest extends TestCase
     {
         yield 'class constant' => [
             '<?php class Foo { const B<>AR = "";}',
-            function (Highlights $highlights) {
+            function (Highlights $highlights): void {
                 self::assertCount(1, $highlights);
                 self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
             }
@@ -191,7 +191,7 @@ class HighlighterTest extends TestCase
 
         yield 'class constants' => [
             '<?php class Foo<>bar {const BAR=1;} Foobar::BAR;',
-            function (Highlights $highlights) {
+            function (Highlights $highlights): void {
                 self::assertCount(2, $highlights);
                 self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
             }
@@ -199,7 +199,7 @@ class HighlighterTest extends TestCase
 
         yield 'class constants on reference' => [
             '<?php class Foobar {const BAR=1;} Foobar::B<>AR;',
-            function (Highlights $highlights) {
+            function (Highlights $highlights): void {
                 self::assertCount(2, $highlights);
                 self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
             }
