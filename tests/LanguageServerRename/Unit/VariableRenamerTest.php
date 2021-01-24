@@ -161,12 +161,6 @@ class VariableRenamerTest extends TestCase
             ->uri($textDocumentUri)
             ->build();
 
-        // foreach($references as $key=>$value)
-        // {
-        //     $arg = $value + 5;
-        //     $arg2 = $key + 3;
-        // }
-
         $renamer = new VariableRenamer(
             new Parser(),
             new NodeUtils(),
@@ -238,7 +232,6 @@ class VariableRenamerTest extends TestCase
     {
         yield 'Rename variable' => [
             '<?php class Class1 { function method1(){ <d>${{va<>r1}} = 5; $var2 = <r>${{var1}} + 5; } }'
-            // '<?php class Class1 { function method1(){ $var1 = 5; $var2 = $var1 + 5; } }'
         ];
 
         yield 'Rename parameter' => [
