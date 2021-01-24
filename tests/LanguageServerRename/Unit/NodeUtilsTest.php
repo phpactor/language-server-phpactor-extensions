@@ -12,7 +12,7 @@
 // use Phpactor\Extension\LanguageServerRename\Tests\OffsetExtractor;
 // use Phpactor\TextDocument\ByteOffsetRange;
 
-// class NodeUtils2Test extends TestCase
+// class NodeUtilsTest extends TestCase
 // {
 //     /** @dataProvider provideNames */
 //     public function testNameToken(string $source, array $tokenKinds, array $expectedNames): void
