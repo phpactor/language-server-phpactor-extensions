@@ -69,8 +69,7 @@ class VariableRenamer implements Renamer
 
     public function prepareRename(TextDocument $textDocument, ByteOffset $offset): ?ByteOffsetRange
     {
-        if(($node = $this->getValidNode($textDocument, $offset)) !== null)
-        {
+        if (($node = $this->getValidNode($textDocument, $offset)) !== null) {
             [ $token ] = $this->getNodeNameTokens($node);
             return $this->nodeUtils->getTokenNameRange($token, (string)$textDocument);
         }
@@ -81,8 +80,9 @@ class VariableRenamer implements Renamer
      */
     public function rename(TextDocument $textDocument, ByteOffset $offset, string $newName): Generator
     {
-        if(($node = $this->getValidNode($textDocument, $offset)) === null)
+        if (($node = $this->getValidNode($textDocument, $offset)) === null) {
             return null;
+        }
 
         [ $token ] = $this->getNodeNameTokens($node);
         $oldName = $this->nodeUtils->getTokenNameText($token, (string)$textDocument);
