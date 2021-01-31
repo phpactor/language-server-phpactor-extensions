@@ -7,7 +7,6 @@ use Phpactor\Extension\LanguageServerIndexer\Tests\Extension\TestExtension;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
 use Phpactor\Extension\ComposerAutoloader\ComposerAutoloaderExtension;
-use Phpactor\Extension\Rpc\RpcExtension;
 use Phpactor\Extension\ClassToFile\ClassToFileExtension;
 use Phpactor\Extension\WorseReflection\WorseReflectionExtension;
 use Phpactor\Extension\SourceCodeFilesystem\SourceCodeFilesystemExtension;
@@ -37,7 +36,6 @@ class IntegrationTestCase extends TestCase
             SourceCodeFilesystemExtension::class,
             WorseReflectionExtension::class,
             ClassToFileExtension::class,
-            RpcExtension::class,
             ComposerAutoloaderExtension::class,
             ReferenceFinderExtension::class,
             LanguageServerIndexerExtension::class,
