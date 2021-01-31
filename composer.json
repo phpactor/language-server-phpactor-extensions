@@ -12,7 +12,7 @@
     "require": {
         "php": "^7.3",
         "dantleech/object-renderer": "^0.1.0",
-        "phly/phly-event-dispatcher": "^1.0",
+        "phpactor/phly-event-dispatcher": "^2.0",
         "phpactor/code-transform": "^0.4.0",
         "phpactor/code-transform-extension": "^0.2.1",
         "phpactor/completion": "~0.4.3",
