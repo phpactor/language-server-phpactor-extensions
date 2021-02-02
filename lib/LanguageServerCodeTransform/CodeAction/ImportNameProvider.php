@@ -8,6 +8,8 @@ use Phpactor\CodeTransform\Domain\NameWithByteOffset;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportNameCommand;
 use Phpactor\Indexer\Model\Query\Criteria;
+use Phpactor\Indexer\Model\Record;
+use Phpactor\Indexer\Model\Record\ConstantRecord;
 use Phpactor\Indexer\Model\Record\HasFullyQualifiedName;
 use Phpactor\Indexer\Model\SearchClient;
 use Phpactor\LanguageServerProtocol\CodeAction;
@@ -150,6 +152,15 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
             ];
         }
 
+        // Remove constants for now
+        $candidates = array_filter($candidates, function (Record $record) {
+            return !$record instanceof ConstantRecord;
+        });
+
+        if (count($candidates) === 0) {
+            return [];
+        }
+
         return [
             new Diagnostic(
                 $range,
@@ -170,6 +181,7 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
         $candidates = [];
         foreach ($this->client->search(Criteria::and(
             Criteria::or(
+                Criteria::isConstant(),
                 Criteria::isClass(),
                 Criteria::isFunction()
             ),
