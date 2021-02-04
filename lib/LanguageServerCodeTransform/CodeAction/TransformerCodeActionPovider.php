@@ -71,7 +71,6 @@ class TransformerCodeActionPovider implements DiagnosticsProvider, CodeActionPro
                 CodeAction::fromArray([
                 'title' =>  $this->title,
                 'kind' => $this->kind(),
-                'diagnostics' => $this->getDiagnostics($textDocument),
                 'command' => new Command(
                     $this->title,
                     TransformCommand::NAME,
