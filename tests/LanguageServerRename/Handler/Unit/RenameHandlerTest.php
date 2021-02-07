@@ -1,6 +1,6 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerRename\Tests\Unit;
+namespace Phpactor\Extension\LanguageServerRename\Tests\Handler\Unit;
 
 use PHPUnit\Framework\TestCase;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
@@ -27,7 +27,6 @@ use Phpactor\TextDocument\TextEdits;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use function Amp\Promise\wait;
-use function iterator_to_array;
 
 class RenameHandlerTest extends TestCase
 {
@@ -161,8 +160,8 @@ class RenameHandlerTest extends TestCase
                 TextDocumentUri::fromString($uri2)
             ),
         ];
-		$renamer = $this->prophesize(Renamer::class);
-		
+        $renamer = $this->prophesize(Renamer::class);
+        
         // @phpstan-ignore-next-line
         $renamer->rename(Argument::any(), Argument::any(), Argument::any())->willYield($results);
 
@@ -172,43 +171,43 @@ class RenameHandlerTest extends TestCase
             new TextDocumentIdentifier($uri1),
             new Position(0, 1),
             'newText'
-		)));
-		
+        )));
+        
         $this->assertEquals(
             new WorkspaceEdit(
                 [
-					new TextDocumentEdit(
-						new VersionedTextDocumentIdentifier($uri1, 4),
-						[
-							new LspTextEdit(
-								new Range(
-									PositionConverter::intByteOffsetToPosition(0, $documentText1),
-									PositionConverter::intByteOffsetToPosition(1, $documentText1),
-								),
-								'newText'
-							),
-							new LspTextEdit(
-								new Range(
-									PositionConverter::intByteOffsetToPosition(1, $documentText1),
-									PositionConverter::intByteOffsetToPosition(2, $documentText1),
-								),
-								'newText'
-							)
-						]
-					),
-					new TextDocumentEdit(
-						new VersionedTextDocumentIdentifier($uri2, 0),
-						[
-							new LspTextEdit(
-								new Range(
-									PositionConverter::intByteOffsetToPosition(2, $documentText2),
-									PositionConverter::intByteOffsetToPosition(3, $documentText2),
-								),
-								'newText'
-							),
-						]
-					)
-				],
+                    new TextDocumentEdit(
+                        new VersionedTextDocumentIdentifier($uri1, 4),
+                        [
+                            new LspTextEdit(
+                                new Range(
+                                    PositionConverter::intByteOffsetToPosition(0, $documentText1),
+                                    PositionConverter::intByteOffsetToPosition(1, $documentText1),
+                                ),
+                                'newText'
+                            ),
+                            new LspTextEdit(
+                                new Range(
+                                    PositionConverter::intByteOffsetToPosition(1, $documentText1),
+                                    PositionConverter::intByteOffsetToPosition(2, $documentText1),
+                                ),
+                                'newText'
+                            )
+                        ]
+                    ),
+                    new TextDocumentEdit(
+                        new VersionedTextDocumentIdentifier($uri2, 0),
+                        [
+                            new LspTextEdit(
+                                new Range(
+                                    PositionConverter::intByteOffsetToPosition(2, $documentText2),
+                                    PositionConverter::intByteOffsetToPosition(3, $documentText2),
+                                ),
+                                'newText'
+                            ),
+                        ]
+                    )
+                ],
                 []
             ),
             $val

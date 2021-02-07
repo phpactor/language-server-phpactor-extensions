@@ -35,6 +35,7 @@ class ChainRenamer implements Renamer
         foreach ($this->renamers as $renamer) {
             if (null !== ($range = $renamer->getRenameRange($textDocument, $offset))) {
                 yield from $renamer->rename($textDocument, $offset, $newName);
+                return;
             }
         }
     }
