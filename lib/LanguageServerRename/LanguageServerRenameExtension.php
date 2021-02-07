@@ -18,21 +18,21 @@ class LanguageServerRenameExtension implements Extension
     /**
      * {@inheritDoc}
      */
-    public function load(ContainerBuilder $container)
+    public function load(ContainerBuilder $container): void
     {
         $container->register(Renamer::class, function (Container $container) {
             return new ChainRenamer(
                 [
-					new VariableRenamer()
-				]
+                    new VariableRenamer()
+                ]
             );
         });
 
         $container->register(RenameHandler::class, function (Container $container) {
             return new RenameHandler(
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
-				$container->get(TextDocumentLocator::class),
-				$container->get(Renamer::class),
+                $container->get(TextDocumentLocator::class),
+                $container->get(Renamer::class),
             );
         }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [] ]);
     }
@@ -40,7 +40,7 @@ class LanguageServerRenameExtension implements Extension
     /**
      * {@inheritDoc}
      */
-    public function configure(Resolver $schema)
+    public function configure(Resolver $schema): void
     {
     }
 }

@@ -12,14 +12,14 @@ class VariableRenamer implements Renamer
 {
     public function getRenameRange(TextDocument $textDocument, ByteOffset $offset): ?ByteOffsetRange
     {
-		return null;
+        return null;
     }
     /**
      * {@inheritDoc}
      */
     public function rename(TextDocument $textDocument, ByteOffset $offset, string $newName): Generator
     {
-		return;
-		yield;
+        return;
+        yield;
     }
 }
