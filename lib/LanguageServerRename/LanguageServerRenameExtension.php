@@ -6,6 +6,7 @@ use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
 use Phpactor\Extension\LanguageServerRename\Bridge\ChainRenamer;
+use Phpactor\Extension\LanguageServerRename\Bridge\MemberRenamer;
 use Phpactor\Extension\LanguageServerRename\Bridge\VariableRenamer;
 use Phpactor\Extension\LanguageServerRename\Handler\RenameHandler;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
@@ -23,7 +24,8 @@ class LanguageServerRenameExtension implements Extension
         $container->register(Renamer::class, function (Container $container) {
             return new ChainRenamer(
                 [
-                    new VariableRenamer()
+                    new VariableRenamer(),
+                    new MemberRenamer(),
                 ]
             );
         });
