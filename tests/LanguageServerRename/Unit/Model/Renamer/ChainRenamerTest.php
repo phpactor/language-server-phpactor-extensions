@@ -1,6 +1,6 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerRename\Tests\Model\Unit;
+namespace Phpactor\Extension\LanguageServerRename\Tests\Unit\Model\Renamer;
 
 use Generator;
 use PHPUnit\Framework\TestCase;

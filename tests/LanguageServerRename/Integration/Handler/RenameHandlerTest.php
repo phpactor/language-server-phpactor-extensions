@@ -1,6 +1,6 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerRename\Tests\Handler\Unit;
+namespace Phpactor\Extension\LanguageServerRename\Tests\Integration\Handler;
 
 use PHPUnit\Framework\TestCase;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
