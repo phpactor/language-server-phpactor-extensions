@@ -24,6 +24,8 @@ use Phpactor\TextDocument\TextEdits;
 class RenameHandlerTest extends IntegrationTestCase
 {
     const EXAMPLE_FILE = 'file:///Foobar.php';
+    const EXAMPLE_NEW_NAME = 'foobar';
+
 
     /**
      * @var LanguageServerTester
@@ -42,7 +44,7 @@ class RenameHandlerTest extends IntegrationTestCase
         self::assertTrue($result->capabilities->renameProvider->prepareProvider);
     }
 
-    public function testPrepareRenameReturnsNullIfPrepareAnything(): void
+    public function testPrepareRenameReturnsNullIfItCouldNotPrepareAnything(): void
     {
         $this->initialize(null, []);
         $this->tester->textDocument()->open(self::EXAMPLE_FILE, '<?php');
@@ -86,7 +88,7 @@ class RenameHandlerTest extends IntegrationTestCase
         $this->initialize(ByteOffsetRange::fromInts(0, 0), [
             new RenameResult(
                 TextEdits::one(
-                    TextEdit::create(ByteOffset::fromInt(1), 0, 'foobar')
+                    TextEdit::create(ByteOffset::fromInt(1), 0, self::EXAMPLE_NEW_NAME)
                 ),
                 $expectedUri,
             )
@@ -98,7 +100,7 @@ class RenameHandlerTest extends IntegrationTestCase
             new RenameParams(
                 ProtocolFactory::textDocumentIdentifier(self::EXAMPLE_FILE),
                 ProtocolFactory::position(0, 0),
-                'foobar'
+                self::EXAMPLE_NEW_NAME
             )
         );
 
@@ -109,7 +111,7 @@ class RenameHandlerTest extends IntegrationTestCase
         self::assertEquals(self::EXAMPLE_FILE, $edit->textDocument->uri);
         $edit = reset($edit->edits);
         assert($edit instanceof PhpactorTextEdit);
-        self::assertEquals('foobar', $edit->newText);
+        self::assertEquals(self::EXAMPLE_NEW_NAME, $edit->newText);
     }
 
     protected function initialize(?ByteOffsetRange $range, array $results): void
