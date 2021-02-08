@@ -39,14 +39,14 @@ class RenameHandlerTest extends IntegrationTestCase
 
     public function testRegistersCapabilities(): void
     {
-        $this->initialize(null, []);
+        $this->bootContainerWithRangeAndResults(null, []);
         $result = $this->tester->initialize();
         self::assertTrue($result->capabilities->renameProvider->prepareProvider);
     }
 
     public function testPrepareRenameReturnsNullIfItCouldNotPrepareAnything(): void
     {
-        $this->initialize(null, []);
+        $this->bootContainerWithRangeAndResults(null, []);
         $this->tester->textDocument()->open(self::EXAMPLE_FILE, '<?php');
 
         $response = $this->tester->requestAndWait(
@@ -65,7 +65,7 @@ class RenameHandlerTest extends IntegrationTestCase
     {
         $expectedCharOffset = 3;
 
-        $this->initialize(ByteOffsetRange::fromInts(0, $expectedCharOffset), [
+        $this->bootContainerWithRangeAndResults(ByteOffsetRange::fromInts(0, $expectedCharOffset), [
             new RenameResult(TextEdits::none(), TextDocumentUri::fromString('file:///foobar.php'))
         ]);
         $this->tester->textDocument()->open(self::EXAMPLE_FILE, '<?php');
@@ -85,7 +85,7 @@ class RenameHandlerTest extends IntegrationTestCase
     public function testRename(): void
     {
         $expectedUri = TextDocumentUri::fromString(self::EXAMPLE_FILE);
-        $this->initialize(ByteOffsetRange::fromInts(0, 0), [
+        $this->bootContainerWithRangeAndResults(ByteOffsetRange::fromInts(0, 0), [
             new RenameResult(
                 TextEdits::one(
                     TextEdit::create(ByteOffset::fromInt(1), 0, self::EXAMPLE_NEW_NAME)
@@ -114,7 +114,7 @@ class RenameHandlerTest extends IntegrationTestCase
         self::assertEquals(self::EXAMPLE_NEW_NAME, $edit->newText);
     }
 
-    protected function initialize(?ByteOffsetRange $range, array $results): void
+    protected function bootContainerWithRangeAndResults(?ByteOffsetRange $range, array $results): void
     {
         $container = $this->container([
             'range' => $range,
