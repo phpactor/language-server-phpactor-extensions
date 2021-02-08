@@ -17,7 +17,7 @@ class TestExtension implements Extension
      */
     public function load(ContainerBuilder $container): void
     {
-        $container->register(InMemoryRenamer::class, function (Container $container ) {
+        $container->register(InMemoryRenamer::class, function (Container $container) {
             return new InMemoryRenamer(
                 $container->getParameter('range'),
                 $container->getParameter('results'),

@@ -6,8 +6,6 @@ use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer\ChainRenamer;
-use Phpactor\Extension\LanguageServerRename\Bridge\MemberRenamer;
-use Phpactor\Extension\LanguageServerRename\Bridge\VariableRenamer;
 use Phpactor\Extension\LanguageServerRename\Handler\RenameHandler;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;

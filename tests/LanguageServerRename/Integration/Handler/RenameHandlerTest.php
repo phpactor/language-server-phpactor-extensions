@@ -20,8 +20,6 @@ use Phpactor\TextDocument\ByteOffsetRange;
 use Phpactor\TextDocument\TextDocumentUri;
 use Phpactor\TextDocument\TextEdit;
 use Phpactor\TextDocument\TextEdits;
-use function Amp\Promise\wait;
-use function Amp\delay;
 
 class RenameHandlerTest extends IntegrationTestCase
 {
@@ -37,18 +35,6 @@ class RenameHandlerTest extends IntegrationTestCase
      */
     private $renamer;
 
-    protected function initialize(?ByteOffsetRange $range, array $results): void
-    {
-        $container = $this->container([
-            'range' => $range,
-            'results' => $results,
-        ]);
-        $this->tester = $container->get(LanguageServerBuilder::class)->tester(
-            ProtocolFactory::initializeParams($this->workspace()->path())
-        );
-        $this->renamer = $container->get(InMemoryRenamer::class);
-    }
-
     public function testRegistersCapabilities(): void
     {
         $this->initialize(null, []);
@@ -61,7 +47,8 @@ class RenameHandlerTest extends IntegrationTestCase
         $this->initialize(null, []);
         $this->tester->textDocument()->open(self::EXAMPLE_FILE, '<?php');
 
-        $response = $this->tester->requestAndWait(PrepareRenameRequest::METHOD, 
+        $response = $this->tester->requestAndWait(
+            PrepareRenameRequest::METHOD,
             new PrepareRenameParams(
                 ProtocolFactory::textDocumentIdentifier(self::EXAMPLE_FILE),
                 ProtocolFactory::position(0, 0),
@@ -81,7 +68,8 @@ class RenameHandlerTest extends IntegrationTestCase
         ]);
         $this->tester->textDocument()->open(self::EXAMPLE_FILE, '<?php');
 
-        $response = $this->tester->requestAndWait(PrepareRenameRequest::METHOD, 
+        $response = $this->tester->requestAndWait(
+            PrepareRenameRequest::METHOD,
             new PrepareRenameParams(
                 ProtocolFactory::textDocumentIdentifier(self::EXAMPLE_FILE),
                 ProtocolFactory::position(0, 0),
@@ -105,7 +93,8 @@ class RenameHandlerTest extends IntegrationTestCase
         ]);
         $this->tester->textDocument()->open(self::EXAMPLE_FILE, '<?php');
 
-        $response = $this->tester->requestAndWait(RenameRequest::METHOD, 
+        $response = $this->tester->requestAndWait(
+            RenameRequest::METHOD,
             new RenameParams(
                 ProtocolFactory::textDocumentIdentifier(self::EXAMPLE_FILE),
                 ProtocolFactory::position(0, 0),
@@ -121,6 +110,17 @@ class RenameHandlerTest extends IntegrationTestCase
         $edit = reset($edit->edits);
         assert($edit instanceof PhpactorTextEdit);
         self::assertEquals('foobar', $edit->newText);
+    }
 
+    protected function initialize(?ByteOffsetRange $range, array $results): void
+    {
+        $container = $this->container([
+            'range' => $range,
+            'results' => $results,
+        ]);
+        $this->tester = $container->get(LanguageServerBuilder::class)->tester(
+            ProtocolFactory::initializeParams($this->workspace()->path())
+        );
+        $this->renamer = $container->get(InMemoryRenamer::class);
     }
 }

@@ -2,15 +2,12 @@
 
 namespace Phpactor\Extension\LanguageServerRename\Tests\Unit\Model\Renamer;
 
-use Generator;
 use PHPUnit\Framework\TestCase;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer\ChainRenamer;
 use Phpactor\Extension\LanguageServerRename\Model\RenameResult;
-use Phpactor\Extension\LanguageServerRename\Model\Renamer;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer\InMemoryRenamer;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\ByteOffsetRange;
-use Phpactor\TextDocument\TextDocument;
 use Phpactor\TextDocument\TextDocumentBuilder;
 use Phpactor\TextDocument\TextDocumentUri;
 use Phpactor\TextDocument\TextEdits;

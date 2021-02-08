@@ -3,12 +3,10 @@
 namespace Phpactor\Extension\LanguageServerRename\Model\Renamer;
 
 use Generator;
-use Phpactor\Extension\LanguageServerRename\Model\RenameResult;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\ByteOffsetRange;
 use Phpactor\TextDocument\TextDocument;
-use Phpactor\TextDocument\Util\WordAtOffset;
 
 class InMemoryRenamer implements Renamer
 {
