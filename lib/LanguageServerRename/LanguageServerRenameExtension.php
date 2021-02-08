@@ -16,18 +16,17 @@ use Phpactor\TextDocument\TextDocumentLocator;
 
 class LanguageServerRenameExtension implements Extension
 {
+    public const TAG_RENAMER = 'language_server_rename.renamer';
+
     /**
      * {@inheritDoc}
      */
     public function load(ContainerBuilder $container): void
     {
         $container->register(Renamer::class, function (Container $container) {
-            return new ChainRenamer(
-                [
-                    new VariableRenamer(),
-                    new MemberRenamer(),
-                ]
-            );
+            return new ChainRenamer(array_map(function (string $serviceId) use ($container) {
+                return $container->get($serviceId);
+            }, array_keys($container->getServiceIdsForTag(self::TAG_RENAMER))));
         });
 
         $container->register(RenameHandler::class, function (Container $container) {
