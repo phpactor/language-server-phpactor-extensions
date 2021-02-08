@@ -33,7 +33,7 @@ class ChainRenamerTest extends TestCase
         $this->assertRename([$renamer1, $renamer2], $range1, $results1);
     }
 
-    public function testGetRenameRangeTwoMatches(): void
+    public function testFirstRenameForTwoCapableRenamers(): void
     {
         $range1 = new ByteOffsetRange(ByteOffset::fromInt(0), ByteOffset::fromInt(1));
         $range2 = new ByteOffsetRange(ByteOffset::fromInt(0), ByteOffset::fromInt(1));
