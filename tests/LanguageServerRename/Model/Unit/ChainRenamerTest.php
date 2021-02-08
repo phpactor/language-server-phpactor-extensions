@@ -1,6 +1,6 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerRename\Tests\Bridge\Unit;
+namespace Phpactor\Extension\LanguageServerRename\Tests\Model\Unit;
 
 use Generator;
 use PHPUnit\Framework\TestCase;
