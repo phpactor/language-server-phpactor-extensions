@@ -15,6 +15,11 @@ use function iterator_to_array;
 
 class ChainRenamerTest extends TestCase
 {
+    public function testReturnsNullWithNoRenamers(): void
+    {
+        $this->assertRename([], null, []);
+    }
+
     public function testGetFirstNonNullRename(): void
     {
         $range1 = new ByteOffsetRange(ByteOffset::fromInt(0), ByteOffset::fromInt(1));
@@ -41,7 +46,7 @@ class ChainRenamerTest extends TestCase
         $this->assertRename([$renamer2, $renamer1], $range2, $results2);
     }
 
-    private function assertRename(array $renamers, ByteOffsetRange $range1, array $results): void
+    private function assertRename(array $renamers, ?ByteOffsetRange $range1, array $results): void
     {
         $textDocument = TextDocumentBuilder::create('text')->uri('file:///test1')->build();
         $byteOffset = ByteOffset::fromInt(0);
