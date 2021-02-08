@@ -5,7 +5,7 @@ namespace Phpactor\Extension\LanguageServerRename;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
-use Phpactor\Extension\LanguageServerRename\Bridge\ChainRenamer;
+use Phpactor\Extension\LanguageServerRename\Model\Renamer\ChainRenamer;
 use Phpactor\Extension\LanguageServerRename\Bridge\MemberRenamer;
 use Phpactor\Extension\LanguageServerRename\Bridge\VariableRenamer;
 use Phpactor\Extension\LanguageServerRename\Handler\RenameHandler;
