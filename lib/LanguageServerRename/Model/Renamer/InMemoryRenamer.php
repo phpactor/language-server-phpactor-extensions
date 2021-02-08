@@ -25,16 +25,6 @@ class InMemoryRenamer implements Renamer
         $this->range = $range;
     }
 
-    public function setRange(ByteOffsetRange $range): void
-    {
-        $this->range = $range;
-    }
-
-    public function setResults(array $results): void
-    {
-        $this->results = $results;
-    }
-
     public function getRenameRange(TextDocument $textDocument, ByteOffset $offset): ?ByteOffsetRange
     {
         return $this->range;
