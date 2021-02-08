@@ -29,8 +29,7 @@ class IntegrationTestCase extends TestCase
             FilePathResolverExtension::class,
             LanguageServerBridgeExtension::class,
             LoggingExtension::class,
-        ], array_merge([
-        ], $config));
+        ], $config);
 
         return $container;
     }
