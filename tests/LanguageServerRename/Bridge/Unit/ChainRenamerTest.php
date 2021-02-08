@@ -4,9 +4,10 @@ namespace Phpactor\Extension\LanguageServerRename\Tests\Bridge\Unit;
 
 use Generator;
 use PHPUnit\Framework\TestCase;
-use Phpactor\Extension\LanguageServerRename\Bridge\ChainRenamer;
+use Phpactor\Extension\LanguageServerRename\Model\Renamer\ChainRenamer;
 use Phpactor\Extension\LanguageServerRename\Model\RenameResult;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
+use Phpactor\Extension\LanguageServerRename\Model\Renamer\InMemoryRenamer;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\ByteOffsetRange;
 use Phpactor\TextDocument\TextDocument;
@@ -17,163 +18,51 @@ use function iterator_to_array;
 
 class ChainRenamerTest extends TestCase
 {
-    public function testGetRenameRange_OneMatch(): void
+    public function testGetFirstNonNullRename(): void
     {
-        $renamer1 = new class() implements Renamer {
-            public function getRenameRange(TextDocument $textDocument, ByteOffset $offset): ?ByteOffsetRange
-            {
-                return new ByteOffsetRange(ByteOffset::fromInt(0), ByteOffset::fromInt(1));
-            }
-            
-            public function rename(TextDocument $textDocument, ByteOffset $offset, string $newName): Generator
-            {
-                return;
-                yield;
-            }
-        };
+        $range1 = new ByteOffsetRange(ByteOffset::fromInt(0), ByteOffset::fromInt(1));
+        $results1 = [
+            new RenameResult(TextEdits::none(), TextDocumentUri::fromString('/foo/bar'))
+        ];
+        $renamer1 = new InMemoryRenamer($range1, $results1);
+        $renamer2 = new InMemoryRenamer(null, []);
 
-        $renamer2 = new class() implements Renamer {
-            public function getRenameRange(TextDocument $textDocument, ByteOffset $offset): ?ByteOffsetRange
-            {
-                return null;
-            }
-            
-            public function rename(TextDocument $textDocument, ByteOffset $offset, string $newName): Generator
-            {
-                return;
-                yield;
-            }
-        };
+        $this->assertRename([$renamer2, $renamer1], $range1, $results1);
+        $this->assertRename([$renamer1, $renamer2], $range1, $results1);
+    }
 
+    public function testGetRenameRangeTwoMatches(): void
+    {
+        $range1 = new ByteOffsetRange(ByteOffset::fromInt(0), ByteOffset::fromInt(1));
+        $range2 = new ByteOffsetRange(ByteOffset::fromInt(0), ByteOffset::fromInt(1));
+        $results2 = [
+            new RenameResult(TextEdits::none(), TextDocumentUri::fromString('/foo/bar'))
+        ];
+        $renamer1 = new InMemoryRenamer($range1, []);
+        $renamer2 = new InMemoryRenamer($range2, $results2);
+
+        $this->assertRename([$renamer2, $renamer1], $range2, $results2);
+    }
+
+    private function assertRename(array $renamers, ByteOffsetRange $range1, array $results): void
+    {
         $textDocument = TextDocumentBuilder::create('text')->uri('file:///test1')->build();
-        $renamer = new ChainRenamer([$renamer2, $renamer1]);
-        $this->assertEquals(
-            new ByteOffsetRange(ByteOffset::fromInt(0), ByteOffset::fromInt(1)),
-            $renamer->getRenameRange($textDocument, ByteOffset::fromInt(0))
+        $byteOffset = ByteOffset::fromInt(0);
+
+        $this->assertSame(
+            $range1,
+            $this->createRenamer($renamers)->getRenameRange($textDocument, $byteOffset),
+            'Returns expected range',
         );
-        $renamer = new ChainRenamer([$renamer1, $renamer2]);
-        $this->assertEquals(
-            new ByteOffsetRange(ByteOffset::fromInt(0), ByteOffset::fromInt(1)),
-            $renamer->getRenameRange($textDocument, ByteOffset::fromInt(0))
+        $this->assertSame(
+            $results,
+            iterator_to_array($this->createRenamer($renamers)->rename($textDocument, $byteOffset, 'foobar')),
+            'Returns expected results',
         );
     }
 
-    public function testGetRenameRange_TwoMatches(): void
+    private function createRenamer(array $renamers): ChainRenamer
     {
-        $renamer1 = new class() implements Renamer {
-            public function getRenameRange(TextDocument $textDocument, ByteOffset $offset): ?ByteOffsetRange
-            {
-                return new ByteOffsetRange(ByteOffset::fromInt(0), ByteOffset::fromInt(1));
-            }
-            
-            public function rename(TextDocument $textDocument, ByteOffset $offset, string $newName): Generator
-            {
-                return;
-                yield;
-            }
-        };
-
-        $renamer2 = new class() implements Renamer {
-            public function getRenameRange(TextDocument $textDocument, ByteOffset $offset): ?ByteOffsetRange
-            {
-                return new ByteOffsetRange(ByteOffset::fromInt(2), ByteOffset::fromInt(3));
-            }
-            
-            public function rename(TextDocument $textDocument, ByteOffset $offset, string $newName): Generator
-            {
-                return;
-                yield;
-            }
-        };
-
-        $textDocument = TextDocumentBuilder::create('text')->uri('file:///test1')->build();
-        $renamer = new ChainRenamer([$renamer2, $renamer1]);
-        $this->assertEquals(
-            new ByteOffsetRange(ByteOffset::fromInt(2), ByteOffset::fromInt(3)),
-            $renamer->getRenameRange($textDocument, ByteOffset::fromInt(0))
-        );
-        $renamer = new ChainRenamer([$renamer1, $renamer2]);
-        $this->assertEquals(
-            new ByteOffsetRange(ByteOffset::fromInt(0), ByteOffset::fromInt(1)),
-            $renamer->getRenameRange($textDocument, ByteOffset::fromInt(0))
-        );
-    }
-
-    public function testRename_OneMatch(): void
-    {
-        $renamer1 = new class() implements Renamer {
-            public function getRenameRange(TextDocument $textDocument, ByteOffset $offset): ?ByteOffsetRange
-            {
-                return new ByteOffsetRange(ByteOffset::fromInt(0), ByteOffset::fromInt(1));
-            }
-            
-            public function rename(TextDocument $textDocument, ByteOffset $offset, string $newName): Generator
-            {
-                yield new RenameResult(TextEdits::fromTextEdits([]), TextDocumentUri::fromString('file:///test1'));
-            }
-        };
-
-        $renamer2 = new class() implements Renamer {
-            public function getRenameRange(TextDocument $textDocument, ByteOffset $offset): ?ByteOffsetRange
-            {
-                return null;
-            }
-            
-            public function rename(TextDocument $textDocument, ByteOffset $offset, string $newName): Generator
-            {
-                yield new RenameResult(TextEdits::fromTextEdits([]), TextDocumentUri::fromString('file:///test2'));
-            }
-        };
-
-        $textDocument = TextDocumentBuilder::create('text')->uri('file:///test1')->build();
-        $renamer = new ChainRenamer([$renamer2, $renamer1]);
-        $this->assertEquals(
-            [new RenameResult(TextEdits::fromTextEdits([]), TextDocumentUri::fromString('file:///test1'))],
-            iterator_to_array($renamer->rename($textDocument, ByteOffset::fromInt(0), 'newName'), true)
-        );
-        $renamer = new ChainRenamer([$renamer1, $renamer2]);
-        $this->assertEquals(
-            [new RenameResult(TextEdits::fromTextEdits([]), TextDocumentUri::fromString('file:///test1'))],
-            iterator_to_array($renamer->rename($textDocument, ByteOffset::fromInt(0), 'newName'), true)
-        );
-    }
-
-    public function testRename_TwoMatches(): void
-    {
-        $renamer1 = new class() implements Renamer {
-            public function getRenameRange(TextDocument $textDocument, ByteOffset $offset): ?ByteOffsetRange
-            {
-                return new ByteOffsetRange(ByteOffset::fromInt(0), ByteOffset::fromInt(1));
-            }
-            
-            public function rename(TextDocument $textDocument, ByteOffset $offset, string $newName): Generator
-            {
-                yield new RenameResult(TextEdits::fromTextEdits([]), TextDocumentUri::fromString('file:///test1'));
-            }
-        };
-
-        $renamer2 = new class() implements Renamer {
-            public function getRenameRange(TextDocument $textDocument, ByteOffset $offset): ?ByteOffsetRange
-            {
-                return new ByteOffsetRange(ByteOffset::fromInt(0), ByteOffset::fromInt(1));
-            }
-            
-            public function rename(TextDocument $textDocument, ByteOffset $offset, string $newName): Generator
-            {
-                yield new RenameResult(TextEdits::fromTextEdits([]), TextDocumentUri::fromString('file:///test2'));
-            }
-        };
-
-        $textDocument = TextDocumentBuilder::create('text')->uri('file:///test1')->build();
-        $renamer = new ChainRenamer([$renamer2, $renamer1]);
-        $this->assertEquals(
-            [new RenameResult(TextEdits::fromTextEdits([]), TextDocumentUri::fromString('file:///test2'))],
-            iterator_to_array($renamer->rename($textDocument, ByteOffset::fromInt(0), 'newName'), true)
-        );
-        $renamer = new ChainRenamer([$renamer1, $renamer2]);
-        $this->assertEquals(
-            [new RenameResult(TextEdits::fromTextEdits([]), TextDocumentUri::fromString('file:///test1'))],
-            iterator_to_array($renamer->rename($textDocument, ByteOffset::fromInt(0), 'newName'), true)
-        );
+        return new ChainRenamer($renamers);
     }
 }
