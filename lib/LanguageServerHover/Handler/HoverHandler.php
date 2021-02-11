@@ -175,7 +175,7 @@ class HoverHandler implements Handler, CanRegisterCapabilities
 
     private function renderFunction(SymbolContext $symbolContext): string
     {
-        $name = $symbolContext->symbol()->name();
+        $name = $symbolContext->name();
         $function = $this->reflector->reflectFunction($name);
 
         return $this->renderer->render(new HoverInformation($name, $function->docblock()->formatted(), $function));

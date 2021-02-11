@@ -82,7 +82,14 @@ class HoverHandlerTest extends IntegrationTestCase
 
         yield 'class' => [
             '<?php cl<>ass A { } }',
-            'A'
+        ];
+
+        yield 'function' => [
+            '<?php function foo() {} f<>oo();',
+        ];
+
+        yield 'namespaced function' => [
+            '<?php namespace Barf {function foo() {}} Barf\f<>oo();',
         ];
     }
 }
