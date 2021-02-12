@@ -63,6 +63,7 @@
             "Phpactor\\Extension\\LanguageServerCompletion\\Tests\\": "tests/LanguageServerCompletion/",
             "Phpactor\\Extension\\LanguageServerReferenceFinder\\Tests\\": "tests/LanguageServerReferenceFinder/",
             "Phpactor\\Extension\\LanguageServerIndexer\\Tests\\": "tests/LanguageServerIndexer/",
+            "Phpactor\\Extension\\LanguageServerRename\\Tests\\": "tests/LanguageServerRename/",
             "Phpactor\\Extension\\LanguageServerWorseReflection\\Tests\\": "tests/LanguageServerWorseReflection/",
             "Phpactor\\Extension\\LanguageServerBridge\\Tests\\": "tests/LanguageServerBridge/",
             "Phpactor\\Extension\\LanguageServerCodeTransform\\Tests\\": "tests/LanguageServerCodeTransform/"

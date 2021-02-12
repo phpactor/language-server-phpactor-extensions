@@ -1,6 +1,6 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerRename\Bridge;
+namespace Phpactor\Extension\LanguageServerRename\Model\Renamer;
 
 use Generator;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
