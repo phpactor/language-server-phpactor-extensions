@@ -8,12 +8,12 @@ use Phpactor\TextDocument\TextEdits;
 class RenameResult
 {
     /**
-    * @var TextEdits
-    */
+     * @var TextEdits
+     */
     private $textEdits;
     /**
-    * @var TextDocumentUri
-    */
+     * @var TextDocumentUri
+     */
     private $documentUri;
 
     public function __construct(TextEdits $textEdits, TextDocumentUri $documentUri)

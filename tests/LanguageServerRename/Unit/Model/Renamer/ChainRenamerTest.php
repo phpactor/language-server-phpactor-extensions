@@ -50,8 +50,7 @@ class ChainRenamerTest extends TestCase
         array $renamers,
         ?ByteOffsetRange $expectedRange,
         array $expectedResults
-    ): void
-    {
+    ): void {
         $textDocument = TextDocumentBuilder::create('text')->uri('file:///test1')->build();
         $byteOffset = ByteOffset::fromInt(0);
 

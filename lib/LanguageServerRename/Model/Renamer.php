@@ -10,6 +10,8 @@ use Phpactor\TextDocument\TextDocument;
 interface Renamer
 {
     public function getRenameRange(TextDocument $textDocument, ByteOffset $offset): ?ByteOffsetRange;
-    /** @return Generator<RenameResult> */
+    /**
+     * @return Generator<RenameResult>
+     */
     public function rename(TextDocument $textDocument, ByteOffset $offset, string $newName): Generator;
 }

@@ -25,11 +25,17 @@ use Phpactor\TextDocument\TextDocumentUri;
 
 class RenameHandler implements Handler, CanRegisterCapabilities
 {
-    /** @var Renamer */
+    /**
+     * @var Renamer
+     */
     private $renamer;
-    /** @var Workspace */
+    /**
+     * @var Workspace
+     */
     private $workspace;
-    /** @var TextDocumentLocator */
+    /**
+     * @var TextDocumentLocator
+     */
     private $documentLocator;
 
     public function __construct(Workspace $workspace, TextDocumentLocator $documentLocator, Renamer $renamer)
@@ -48,7 +54,9 @@ class RenameHandler implements Handler, CanRegisterCapabilities
             RenameRequest::METHOD => 'rename',
         ];
     }
-    /** @return Promise<WorkspaceEdit> */
+    /**
+     * @return Promise<WorkspaceEdit>
+     */
     public function rename(RenameParams $params): Promise
     {
         return \Amp\call(function () use ($params) {
@@ -64,7 +72,9 @@ class RenameHandler implements Handler, CanRegisterCapabilities
             );
         });
     }
-    /** @return Promise<Range> */
+    /**
+     * @return Promise<Range>
+     */
     public function prepareRename(PrepareRenameParams $params): Promise
     {
         // https://microsoft.github.io/language-server-protocol/specification#textDocument_prepareRename
