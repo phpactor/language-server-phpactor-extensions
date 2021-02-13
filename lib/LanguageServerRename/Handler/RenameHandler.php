@@ -4,6 +4,7 @@ namespace Phpactor\Extension\LanguageServerRename\Handler;
 
 use Amp\Promise;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
+use Phpactor\Extension\LanguageServerBridge\Converter\RangeConverter;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
 use Phpactor\Extension\LanguageServerRename\Model\RenameResult;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
@@ -89,16 +90,7 @@ class RenameHandler implements Handler, CanRegisterCapabilities
             if ($range == null) {
                 return null;
             }
-            return new Range(
-                PositionConverter::byteOffsetToPosition(
-                    $range->start(),
-                    (string)$document
-                ),
-                PositionConverter::byteOffsetToPosition(
-                    $range->end(),
-                    (string)$document
-                )
-            );
+            return RangeConverter::toLspRange($range, (string)$document);
         });
     }
 
