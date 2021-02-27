@@ -2,21 +2,23 @@
 
 namespace Phpactor\Extension\LanguageServerRename\Tests;
 
+use Closure;
+
 class OffsetExtractor
 {
     /** @var array */
     private $points = [];
-    /** @var \Closure[] */
+    /** @var Closure[] */
     private $pointCreateors = [];
 
     /** @var array */
     private $rangeOpenMarkers = [];
     /** @var array */
     private $rangeCloseMarkers = [];
-    /** @var \Closure[] */
+    /** @var Closure[] */
     private $rangeCreateors = [];
 
-    public function registerPoint(string $name, string $marker, \Closure $creator = null): void
+    public function registerPoint(string $name, string $marker, Closure $creator = null): void
     {
         $this->points[$marker] = $name;
         $this->pointCreateors[$marker] = $creator ?? function (int $offset) {
@@ -24,7 +26,7 @@ class OffsetExtractor
         };
     }
 
-    public function registerRange(string $name, string $openMarker, string $closeMarker, \Closure $creator = null): void
+    public function registerRange(string $name, string $openMarker, string $closeMarker, Closure $creator = null): void
     {
         $this->rangeOpenMarkers[$openMarker] = $name;
         $this->rangeCloseMarkers[$closeMarker] = $name;
@@ -40,13 +42,13 @@ class OffsetExtractor
             array_keys($this->rangeOpenMarkers),
             array_keys($this->rangeCloseMarkers),
         );
-        $results = preg_split("/(". implode("|", $markers) .")/u", $source, null, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
+        $results = preg_split('/('. implode('|', $markers) .')/u', $source, null, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
         
         if (!is_array($results)) {
             return [];
         }
 
-        $newSource = "";
+        $newSource = '';
         $retVal = [];
         $offset = 0;
         $currentRangeStartOffset = 0;

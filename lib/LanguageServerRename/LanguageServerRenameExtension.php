@@ -2,6 +2,7 @@
 
 namespace Phpactor\Extension\LanguageServerRename;
 
+use Microsoft\PhpParser\Parser;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
@@ -13,7 +14,6 @@ use Phpactor\Extension\LanguageServerRename\Model\Renamer;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
 use Phpactor\MapResolver\Resolver;
-use Phpactor\ReferenceFinder\DefinitionLocator;
 use Phpactor\ReferenceFinder\ReferenceFinder;
 use Phpactor\TextDocument\TextDocumentLocator;
 
@@ -26,7 +26,7 @@ class LanguageServerRenameExtension implements Extension
      */
     public function load(ContainerBuilder $container): void
     {
-        $container->register(RenameLocationsProvider::class, function (Container $container) {
+        $container->register(RenameLocationsProvider::class, function (Container $container): void {
             new RenameLocationsProvider(
                 $container->get(ReferenceFinder::class),
                 $container->get(ReferenceFinderExtension::SERVICE_DEFINITION_LOCATOR),
@@ -34,7 +34,9 @@ class LanguageServerRenameExtension implements Extension
         });
         $container->register(VariableRenamer::class, function (Container $container) {
             return new VariableRenamer(
-                $container->get(RenameLocationsProvider::class)
+                $container->get(RenameLocationsProvider::class),
+                $container->get(TextDocumentLocator::class),
+                new Parser(),
             );
         }, [ LanguageServerRenameExtension::TAG_RENAMER => [] ]);
         $container->register(Renamer::class, function (Container $container) {

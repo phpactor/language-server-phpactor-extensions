@@ -27,13 +27,13 @@ class RenameLocationsProviderTest extends TestCase
     public function testLocations(array $sources): void
     {
         $offsetExtractor = new OffsetExtractor();
-        $offsetExtractor->registerPoint('selection', "<>", function (int $offset) {
+        $offsetExtractor->registerPoint('selection', '<>', function (int $offset) {
             return ByteOffset::fromInt($offset);
         });
-        $offsetExtractor->registerPoint('definition', "<d>", function (int $offset) {
+        $offsetExtractor->registerPoint('definition', '<d>', function (int $offset) {
             return ByteOffset::fromInt($offset);
         });
-        $offsetExtractor->registerPoint('references', "<r>", function (int $offset) {
+        $offsetExtractor->registerPoint('references', '<r>', function (int $offset) {
             return ByteOffset::fromInt($offset);
         });
         
@@ -125,7 +125,7 @@ class RenameLocationsProviderTest extends TestCase
 
         $actualResults = iterator_to_array(
             $provider->provideLocations(
-                TextDocumentBuilder::create("")
+                TextDocumentBuilder::create('')
                     ->uri($selectionDocumentUri)
                     ->build(),
                 $selection
@@ -141,32 +141,32 @@ class RenameLocationsProviderTest extends TestCase
     
     public function provideLocations(): Generator
     {
-        yield "Locations with only definition in a single file" => [
+        yield 'Locations with only definition in a single file' => [
             [
                 'file:///test/Class1.php' => '<?php class Class1 { function <d>metho<>d1(){ } }',
             ]
         ];
 
-        yield "Locations with definition in a single file" => [
+        yield 'Locations with definition in a single file' => [
             [
                 'file:///test/Class1.php' => '<?php class Class1 { function <d>metho<>d1(){ } function method2() { $this-><r>method1(); $this-><r>method1(); } }',
             ]
         ];
 
-        yield "Locations with no definition in a single file" => [
+        yield 'Locations with no definition in a single file' => [
             [
                 'file:///test/Class1.php' => '<?php class Class1 { function method1(){ $this-><r>meth<>od1(); } function method2() { $this-><r>meth<>od1(); } }',
             ]
         ];
 
-        yield "Locations with definition in two files" => [
+        yield 'Locations with definition in two files' => [
             [
                 'file:///test/Class1.php' => '<?php class Class1 { function <d>metho<>d1(){ $this-><r>method1(); } function method2() { $this-><r>method1(); } }',
                 'file:///test/Class2.php' => '<?php class Class2 { function method3(){ $class1 = new Class1(); $class1-><r>method1(); } }'
             ]
         ];
 
-        yield "Locations with definition in one file and references in another" => [
+        yield 'Locations with definition in one file and references in another' => [
             [
                 'file:///test/Class2.php' => '<?php class Class2 { function method3(){ $class1 = new Class1(); $class1-><r>method1(); $class1-><r>method1(); } }',
                 'file:///test/Class1.php' => '<?php class Class1 { function <d>metho<>d1(){ } }',
