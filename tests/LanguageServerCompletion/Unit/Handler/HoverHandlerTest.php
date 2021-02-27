@@ -86,8 +86,7 @@ class HoverHandlerTest extends IntegrationTestCase
         ];
 
         yield 'unknown function' => [
-            '<?php foobar<>()',
-            'A'
+            '<?php foobar<>()'
         ];
     }
 }
