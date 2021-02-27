@@ -5,6 +5,7 @@ namespace Phpactor\Extension\LanguageServerRename;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
+use Phpactor\Extension\LanguageServerRename\Adapter\VariableRenamer;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer\ChainRenamer;
 use Phpactor\Extension\LanguageServerRename\Handler\RenameHandler;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
@@ -21,6 +22,11 @@ class LanguageServerRenameExtension implements Extension
      */
     public function load(ContainerBuilder $container): void
     {
+        $container->register(VariableRenamer::class, function (Container $container) {
+            return new VariableRenamer(
+                
+            );
+        }, [ LanguageServerRenameExtension::TAG_RENAMER => [] ]);
         $container->register(Renamer::class, function (Container $container) {
             return new ChainRenamer(array_map(function (string $serviceId) use ($container) {
                 return $container->get($serviceId);
