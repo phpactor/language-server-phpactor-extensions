@@ -1,6 +1,6 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerRename\Adapter;
+namespace Phpactor\Extension\LanguageServerRename\Adapter\Worse;
 
 use Generator;
 use Phpactor\ReferenceFinder\DefinitionLocator;
@@ -8,6 +8,7 @@ use Phpactor\ReferenceFinder\Exception\CouldNotLocateDefinition;
 use Phpactor\ReferenceFinder\ReferenceFinder;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocument;
+use Phpactor\Extension\LanguageServerRename\Adapter\Worse\RenameLocationGroup;
 
 class RenameLocationsProvider
 {

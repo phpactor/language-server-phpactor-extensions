@@ -1,11 +1,11 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerRename\Tests\Unit\Adapter;
+namespace Phpactor\Extension\LanguageServerRename\Tests\Unit\Adapter\Worse;
 
 use Generator;
 use PHPUnit\Framework\TestCase;
-use Phpactor\Extension\LanguageServerRename\Adapter\RenameLocationGroup;
-use Phpactor\Extension\LanguageServerRename\Adapter\RenameLocationsProvider;
+use Phpactor\Extension\LanguageServerRename\Adapter\Worse\RenameLocationGroup;
+use Phpactor\Extension\LanguageServerRename\Adapter\Worse\RenameLocationsProvider;
 use Phpactor\Extension\LanguageServerRename\Tests\OffsetExtractor;
 use Phpactor\ReferenceFinder\DefinitionLocation;
 use Phpactor\ReferenceFinder\DefinitionLocator;
