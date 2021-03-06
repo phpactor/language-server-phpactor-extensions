@@ -7,6 +7,7 @@ use Phpactor\Extension\LanguageServerRename\LanguageServerRenameExtension;
 use Phpactor\Extension\LanguageServerRename\Tests\Extension\TestExtension;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\Logger\LoggingExtension;
+use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
 use Phpactor\FilePathResolverExtension\FilePathResolverExtension;
 use Phpactor\Container\PhpactorContainer;
 use Phpactor\Container\Container;
@@ -29,6 +30,7 @@ class IntegrationTestCase extends TestCase
             FilePathResolverExtension::class,
             LanguageServerBridgeExtension::class,
             LoggingExtension::class,
+            ReferenceFinderExtension::class,
         ], $config);
 
         return $container;

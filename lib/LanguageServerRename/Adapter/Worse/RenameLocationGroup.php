@@ -1,6 +1,6 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerRename\Adapter;
+namespace Phpactor\Extension\LanguageServerRename\Adapter\Worse;
 
 use Phpactor\TextDocument\Location;
 use Phpactor\TextDocument\TextDocumentUri;

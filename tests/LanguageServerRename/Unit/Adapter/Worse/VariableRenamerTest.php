@@ -1,12 +1,12 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerRename\Tests\Unit\Adapter;
+namespace Phpactor\Extension\LanguageServerRename\Tests\Unit\Adapter\Worse;
 
 use Microsoft\PhpParser\Parser;
 use PHPUnit\Framework\TestCase;
 use Generator;
-use Phpactor\Extension\LanguageServerRename\Adapter\RenameLocationsProvider;
-use Phpactor\Extension\LanguageServerRename\Adapter\VariableRenamer;
+use Phpactor\Extension\LanguageServerRename\Adapter\Worse\RenameLocationsProvider;
+use Phpactor\Extension\LanguageServerRename\Adapter\Worse\VariableRenamer;
 use Phpactor\Extension\LanguageServerRename\Model\RenameResult;
 use Phpactor\Extension\LanguageServerRename\Tests\OffsetExtractor;
 use Phpactor\Extension\LanguageServerRename\Tests\Unit\PredefinedDefinitionLocator;

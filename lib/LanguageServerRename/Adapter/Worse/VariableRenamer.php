@@ -1,6 +1,6 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerRename\Adapter;
+namespace Phpactor\Extension\LanguageServerRename\Adapter\Worse;
 
 use Generator;
 use Microsoft\PhpParser\Node;
@@ -13,6 +13,8 @@ use Microsoft\PhpParser\Node\Statement\ForeachStatement;
 use Microsoft\PhpParser\Node\StringLiteral;
 use Microsoft\PhpParser\Parser;
 use Microsoft\PhpParser\Token;
+use Phpactor\Extension\LanguageServerRename\Adapter\Worse\RenameLocationGroup;
+use Phpactor\Extension\LanguageServerRename\Adapter\Worse\RenameLocationsProvider;
 use Phpactor\Extension\LanguageServerRename\Model\RenameResult;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
 use Phpactor\TextDocument\ByteOffset;
@@ -67,7 +69,7 @@ class VariableRenamer implements Renamer
         $oldName = $this->getTokenNameText($token, (string)$textDocument);
 
         foreach ($this->renameLocations->provideLocations($textDocument, $offset) as $locationGroup) {
-            /** @var RenameLocationGroup $locationGroup */
+            assert($locationGroup instanceof RenameLocationGroup);
             yield new RenameResult(
                 $this->locationsToTextEdits($locationGroup->uri(), $locationGroup->locations(), $oldName, $newName),
                 $locationGroup->uri()
