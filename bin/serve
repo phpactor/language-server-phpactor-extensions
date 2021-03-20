@@ -55,10 +55,8 @@ $container = PhpactorContainer::fromExtensions([
     LanguageServerBridgeExtension::class,
     LanguageServerSelectionRangeExtension::class,
     LanguageServerCodeTransformExtension::class,
-
     LanguageServerRenameExtension::class,
     LanguageServerWorseRenameExtension::class,
-
     WorseReferenceFinderExtension::class,
     CodeTransformExtension::class,
     PhpExtension::class,

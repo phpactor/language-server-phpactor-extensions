@@ -101,12 +101,11 @@ class RenameHandler implements Handler, CanRegisterCapabilities
     
     private function resultToWorkspaceEdit(iterable $results): WorkspaceEdit
     {
-        $edits = [];
-        $documentChanges = [];
+        $documentEdits = [];
         foreach ($results as $result) {
             /** @var RenameResult $result */
             $version = $this->getDocumentVersion((string)$result->documentUri());
-            $edits[] = new TextDocumentEdit(
+            $documentEdits[] = new TextDocumentEdit(
                 new VersionedTextDocumentIdentifier(
                     (string)$result->documentUri(),
                     $version
@@ -117,7 +116,7 @@ class RenameHandler implements Handler, CanRegisterCapabilities
                 )
             );
         }
-        return new WorkspaceEdit(null, $edits);
+        return new WorkspaceEdit(null, $documentEdits);
     }
 
     private function getDocumentVersion(string $uri): int
