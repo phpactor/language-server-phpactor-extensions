@@ -8,7 +8,6 @@ use Phpactor\ReferenceFinder\Exception\CouldNotLocateDefinition;
 use Phpactor\ReferenceFinder\ReferenceFinder;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocument;
-use Phpactor\Extension\LanguageServerRename\Adapter\Worse\RenameLocationGroup;
 
 class RenameLocationsProvider
 {

@@ -11,15 +11,10 @@ use Phpactor\Extension\LanguageServerRename\Model\RenameResult;
 use Phpactor\Extension\LanguageServerRename\Tests\OffsetExtractor;
 use Phpactor\Extension\LanguageServerRename\Tests\Unit\PredefinedDefinitionLocator;
 use Phpactor\Extension\LanguageServerRename\Tests\Unit\PredefinedReferenceFinder;
-use Phpactor\ReferenceFinder\DefinitionLocation;
-use Phpactor\ReferenceFinder\DefinitionLocator;
-use Phpactor\ReferenceFinder\ReferenceFinder;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\ByteOffsetRange;
-use Phpactor\TextDocument\TextDocument;
 use Phpactor\TextDocument\TextDocumentBuilder;
 use Phpactor\TextDocument\TextDocumentLocator\InMemoryDocumentLocator;
-use Phpactor\TextDocument\TextDocumentUri;
 use Phpactor\TextDocument\TextEdit;
 use Phpactor\TextDocument\TextEdits;
 
@@ -28,27 +23,14 @@ class VariableRenamerTest extends TestCase
     /** @dataProvider provideGetRenameRange */
     public function testGetRenameRange(string $source): void
     {
-        $offsetExtractor = new OffsetExtractor();
-        $offsetExtractor->registerPoint('selection', '<>', function (int $offset) {
-            return ByteOffset::fromInt($offset);
-        });
-        $offsetExtractor->registerRange(
-            'expectedRange',
-            '{{',
-            '}}',
-            function (int $start, int $end) {
-                return new ByteOffsetRange(
-                    ByteOffset::fromInt($start),
-                    ByteOffset::fromInt($end),
-                );
-            }
-        );
-
         [
             'selection' => [ $selection ],
             'expectedRange' => $expectedRanges,
             'newSource' => $newSource
-        ] = $offsetExtractor->parse($source);
+        ] = OffsetExtractor::create()
+            ->registerPoint('selection', '<>')
+            ->registerRange('expectedRange', '{{', '}}')
+            ->parse($source);
         
         $expectedRange = count($expectedRanges) > 0 ? $expectedRanges[0] : null;
 
@@ -58,20 +40,8 @@ class VariableRenamerTest extends TestCase
         
         $variableRenamer = new VariableRenamer(
             new RenameLocationsProvider(
-                new class() implements ReferenceFinder {
-                    public function findReferences(TextDocument $document, ByteOffset $byteOffset): Generator
-                    {
-                        return;
-                        // @phpstan-ignore-next-line
-                        yield;
-                    }
-                },
-                new class() implements DefinitionLocator {
-                    public function locateDefinition(TextDocument $document, ByteOffset $byteOffset): DefinitionLocation
-                    {
-                        return new DefinitionLocation(TextDocumentUri::fromString(''), ByteOffset::fromInt(0));
-                    }
-                }
+                new PredefinedReferenceFinder([]),
+                new PredefinedDefinitionLocator(ByteOffset::fromInt(0), '')
             ),
             InMemoryDocumentLocator::fromTextDocuments([]),
             new Parser()
@@ -114,36 +84,18 @@ class VariableRenamerTest extends TestCase
     public function testRename(string $source): void
     {
         $newName = 'newName';
-        $offsetExtractor = new OffsetExtractor();
-        $offsetExtractor->registerPoint('selection', '<>', function (int $offset) {
-            return ByteOffset::fromInt($offset);
-        });
-        $offsetExtractor->registerPoint('definition', '<d>', function (int $offset) {
-            return ByteOffset::fromInt($offset);
-        });
-        $offsetExtractor->registerPoint('references', '<r>', function (int $offset) {
-            return ByteOffset::fromInt($offset);
-        });
-        $offsetExtractor->registerRange(
-            'resultEdits',
-            '{{',
-            '}}',
-            function (int $start, int $end) use ($newName) {
-                return TextEdit::create(
-                    ByteOffset::fromInt($start),
-                    $end - $start,
-                    $newName
-                );
-            }
-        );
-
         [
             'selection' => [ $selection ],
             'definition' => [ $definition ],
             'references' => $references,
-            'resultEdits' => $resultEdits,
+            'resultEditRanges' => $resultEditRanges,
             'newSource' => $newSource
-        ] = $offsetExtractor->parse($source);
+        ] = OffsetExtractor::create()
+            ->registerPoint('selection', '<>')
+            ->registerPoint('definition', '<d>')
+            ->registerPoint('references', '<r>')
+            ->registerRange('resultEditRanges', '{{', '}}')
+            ->parse($source);
 
         $textDocumentUri = 'file:///test/Class1.php';
         $textDocument = TextDocumentBuilder::create($newSource)
@@ -152,14 +104,24 @@ class VariableRenamerTest extends TestCase
         
         $renamer = new VariableRenamer(
             new RenameLocationsProvider(
-                new PredefinedReferenceFinder($references, $textDocument),
-                new PredefinedDefinitionLocator($definition, $textDocument)
+                new PredefinedReferenceFinder([$textDocumentUri => $references]),
+                new PredefinedDefinitionLocator($definition, $textDocumentUri)
             ),
             InMemoryDocumentLocator::fromTextDocuments([
                 $textDocumentUri => $textDocument
             ]),
             new Parser(),
         );
+
+        $resultEdits = [];
+        foreach ($resultEditRanges as $range) {
+            assert($range instanceof ByteOffsetRange);
+            $resultEdits[] = TextEdit::create(
+                $range->start(),
+                $range->end()->toInt() - $range->start()->toInt(),
+                $newName
+            );
+        }
 
         $renamer->getRenameRange($textDocument, $selection);
         $actualResults = iterator_to_array($renamer->rename($textDocument, $selection, $newName), false);

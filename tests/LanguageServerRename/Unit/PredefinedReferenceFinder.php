@@ -8,26 +8,33 @@ use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\Location;
 use Phpactor\TextDocument\TextDocument;
 use Generator;
+use Phpactor\TextDocument\TextDocumentUri;
 
 class PredefinedReferenceFinder implements ReferenceFinder
 {
-    /** @var array */
+    /**
+     * @var array<string,ByteOffset[]>
+     */
     private $references;
-    /** @var TextDocument */
-    private $textDocument;
+    /**
+     * @var array<string,string>
+     */
+    private $sources;
 
-    public function __construct(array $references, TextDocument $textDocument)
+    public function __construct(array $references)
     {
         $this->references = $references;
-        $this->textDocument = $textDocument;
     }
 
     public function findReferences(TextDocument $document, ByteOffset $byteOffset): Generator
     {
-        foreach ($this->references as $offset) {
-            yield PotentialLocation::surely(
-                new Location($this->textDocument->uri(), $offset)
-            );
+        foreach ($this->references as $uri=>$offsets) {
+            $uriObj = TextDocumentUri::fromString($uri);
+            foreach ($offsets as $offset) {
+                yield PotentialLocation::surely(
+                    new Location($uriObj, $offset)
+                );
+            }
         }
     }
 }

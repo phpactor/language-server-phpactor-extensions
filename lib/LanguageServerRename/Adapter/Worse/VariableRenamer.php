@@ -13,8 +13,6 @@ use Microsoft\PhpParser\Node\Statement\ForeachStatement;
 use Microsoft\PhpParser\Node\StringLiteral;
 use Microsoft\PhpParser\Parser;
 use Microsoft\PhpParser\Token;
-use Phpactor\Extension\LanguageServerRename\Adapter\Worse\RenameLocationGroup;
-use Phpactor\Extension\LanguageServerRename\Adapter\Worse\RenameLocationsProvider;
 use Phpactor\Extension\LanguageServerRename\Model\RenameResult;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
 use Phpactor\TextDocument\ByteOffset;

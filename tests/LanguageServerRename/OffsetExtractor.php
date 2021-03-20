@@ -2,37 +2,44 @@
 
 namespace Phpactor\Extension\LanguageServerRename\Tests;
 
-use Closure;
+use Phpactor\TextDocument\ByteOffset;
+use Phpactor\TextDocument\ByteOffsetRange;
 
 class OffsetExtractor
 {
-    /** @var array */
+    /**
+     * @var array
+     */
     private $points = [];
-    /** @var Closure[] */
-    private $pointCreateors = [];
-
-    /** @var array */
+    /**
+     * @var array
+     */
     private $rangeOpenMarkers = [];
-    /** @var array */
+    /**
+     * @var array
+     */
     private $rangeCloseMarkers = [];
-    /** @var Closure[] */
-    private $rangeCreateors = [];
 
-    public function registerPoint(string $name, string $marker, Closure $creator = null): void
+    private function __construct()
     {
-        $this->points[$marker] = $name;
-        $this->pointCreateors[$marker] = $creator ?? function (int $offset) {
-            return $offset;
-        };
     }
 
-    public function registerRange(string $name, string $openMarker, string $closeMarker, Closure $creator = null): void
+    public static function create(): OffsetExtractor
+    {
+        return new OffsetExtractor();
+    }
+
+    public function registerPoint(string $name, string $marker): OffsetExtractor
+    {
+        $this->points[$marker] = $name;
+        return $this;
+    }
+
+    public function registerRange(string $name, string $openMarker, string $closeMarker): OffsetExtractor
     {
         $this->rangeOpenMarkers[$openMarker] = $name;
         $this->rangeCloseMarkers[$closeMarker] = $name;
-        $this->rangeCreateors[$closeMarker] = $creator ?? function (int $startOffset, int $endOffset) {
-            return ['start'=>$startOffset, 'end'=>$endOffset];
-        };
+        return $this;
     }
 
     public function parse(string $source): array
@@ -65,7 +72,7 @@ class OffsetExtractor
                 if (!isset($retVal[$this->points[$result]])) {
                     $retVal[$this->points[$result]] = [];
                 }
-                $retVal[$this->points[$result]][] = $this->pointCreateors[$result]($offset, $newSource);
+                $retVal[$this->points[$result]][] = ByteOffset::fromInt($offset); // $this->pointCreateors[$result]($offset, $newSource);
                 continue;
             }
             
@@ -78,7 +85,7 @@ class OffsetExtractor
                 if (!isset($retVal[$this->rangeCloseMarkers[$result]])) {
                     $retVal[$this->rangeCloseMarkers[$result]] = [];
                 }
-                $retVal[$this->rangeCloseMarkers[$result]][] = $this->rangeCreateors[$result]($currentRangeStartOffset, $offset, $newSource);
+                $retVal[$this->rangeCloseMarkers[$result]][] = ByteOffsetRange::fromInts($currentRangeStartOffset, $offset); // $this->rangeCreateors[$result]($currentRangeStartOffset, $offset, $newSource);
                 continue;
             }
             

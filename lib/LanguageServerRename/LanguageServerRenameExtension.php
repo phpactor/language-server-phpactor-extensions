@@ -2,19 +2,14 @@
 
 namespace Phpactor\Extension\LanguageServerRename;
 
-use Microsoft\PhpParser\Parser;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
-use Phpactor\Extension\LanguageServerRename\Adapter\Worse\RenameLocationsProvider;
-use Phpactor\Extension\LanguageServerRename\Adapter\Worse\VariableRenamer;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer\ChainRenamer;
 use Phpactor\Extension\LanguageServerRename\Handler\RenameHandler;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
-use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
 use Phpactor\MapResolver\Resolver;
-use Phpactor\ReferenceFinder\ReferenceFinder;
 use Phpactor\TextDocument\TextDocumentLocator;
 
 class LanguageServerRenameExtension implements Extension

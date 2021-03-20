@@ -22,7 +22,7 @@ class ChainRenamerTest extends TestCase
 
     public function testGetFirstNonNullRename(): void
     {
-        $range1 = new ByteOffsetRange(ByteOffset::fromInt(0), ByteOffset::fromInt(1));
+        $range1 = ByteOffsetRange::fromInts(0, 1);
         $results1 = [
             new RenameResult(TextEdits::none(), TextDocumentUri::fromString('/foo/bar'))
         ];
@@ -35,8 +35,8 @@ class ChainRenamerTest extends TestCase
 
     public function testFirstRenameForTwoCapableRenamers(): void
     {
-        $range1 = new ByteOffsetRange(ByteOffset::fromInt(0), ByteOffset::fromInt(1));
-        $range2 = new ByteOffsetRange(ByteOffset::fromInt(0), ByteOffset::fromInt(1));
+        $range1 = ByteOffsetRange::fromInts(0, 1);
+        $range2 = ByteOffsetRange::fromInts(0, 1);
         $results2 = [
             new RenameResult(TextEdits::none(), TextDocumentUri::fromString('/foo/bar'))
         ];

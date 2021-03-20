@@ -7,14 +7,11 @@ use PHPUnit\Framework\TestCase;
 use Phpactor\Extension\LanguageServerRename\Adapter\Worse\RenameLocationGroup;
 use Phpactor\Extension\LanguageServerRename\Adapter\Worse\RenameLocationsProvider;
 use Phpactor\Extension\LanguageServerRename\Tests\OffsetExtractor;
+use Phpactor\Extension\LanguageServerRename\Tests\Unit\PredefinedDefinitionLocator;
+use Phpactor\Extension\LanguageServerRename\Tests\Unit\PredefinedReferenceFinder;
 use Phpactor\ReferenceFinder\DefinitionLocation;
-use Phpactor\ReferenceFinder\DefinitionLocator;
-use Phpactor\ReferenceFinder\Exception\CouldNotLocateDefinition;
-use Phpactor\ReferenceFinder\PotentialLocation;
-use Phpactor\ReferenceFinder\ReferenceFinder;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\Location;
-use Phpactor\TextDocument\TextDocument;
 use Phpactor\TextDocument\TextDocumentBuilder;
 use Phpactor\TextDocument\TextDocumentUri;
 
@@ -26,16 +23,10 @@ class RenameLocationsProviderTest extends TestCase
      */
     public function testLocations(array $sources): void
     {
-        $offsetExtractor = new OffsetExtractor();
-        $offsetExtractor->registerPoint('selection', '<>', function (int $offset) {
-            return ByteOffset::fromInt($offset);
-        });
-        $offsetExtractor->registerPoint('definition', '<d>', function (int $offset) {
-            return ByteOffset::fromInt($offset);
-        });
-        $offsetExtractor->registerPoint('references', '<r>', function (int $offset) {
-            return ByteOffset::fromInt($offset);
-        });
+        $offsetExtractor = OffsetExtractor::create()
+            ->registerPoint('selection', '<>')
+            ->registerPoint('definition', '<d>')
+            ->registerPoint('references', '<r>');
         
         $selection = null;
         $selectionDocumentUri = null;
@@ -55,6 +46,10 @@ class RenameLocationsProviderTest extends TestCase
                 $selection = $selections[0];
                 $selectionDocumentUri = $uri;
             }
+            $textDocument =
+                TextDocumentBuilder::create($source)
+                ->uri($uri)
+                ->build();
             $textDocumentUri = TextDocumentUri::fromString($uri);
             $locations = [];
             if (!empty($definitions)) {
@@ -72,55 +67,9 @@ class RenameLocationsProviderTest extends TestCase
             );
         }
         
-        
         $provider = new RenameLocationsProvider(
-            new class($references) implements ReferenceFinder {
-                /** @var array */
-                private $references;
-
-                public function __construct(array $references)
-                {
-                    $this->references = $references;
-                }
-
-                public function findReferences(TextDocument $document, ByteOffset $byteOffset): Generator
-                {
-                    foreach ($this->references as $uri => $referenceLocations) {
-                        foreach ($referenceLocations as $location) {
-                            yield PotentialLocation::surely(
-                                new Location(
-                                    TextDocumentUri::fromString($uri),
-                                    $location
-                                )
-                            );
-                        }
-                    }
-                }
-            },
-            new class($definition, $definitionDocumentUri) implements DefinitionLocator {
-                /** @var ?ByteOffset */
-                private $definition;
-                /** @var string */
-                private $uri;
-
-                public function __construct(?ByteOffset $definition, ?string $uri)
-                {
-                    $this->definition = $definition;
-                    $this->uri = $uri;
-                }
-
-                public function locateDefinition(TextDocument $document, ByteOffset $byteOffset): DefinitionLocation
-                {
-                    if ($this->definition !== null) {
-                        return new DefinitionLocation(
-                            TextDocumentUri::fromString($this->uri),
-                            $this->definition
-                        );
-                    } else {
-                        throw new CouldNotLocateDefinition();
-                    }
-                }
-            }
+            new PredefinedReferenceFinder($references),
+            new PredefinedDefinitionLocator($definition, $definitionDocumentUri)
         );
 
         $actualResults = iterator_to_array(
