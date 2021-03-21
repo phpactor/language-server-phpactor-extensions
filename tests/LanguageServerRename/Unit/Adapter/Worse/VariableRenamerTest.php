@@ -23,14 +23,14 @@ class VariableRenamerTest extends TestCase
     /** @dataProvider provideGetRenameRange */
     public function testGetRenameRange(string $source): void
     {
-        [
-            'selection' => [ $selection ],
-            'expectedRange' => $expectedRanges,
-            'newSource' => $newSource
-        ] = OffsetExtractor::create()
+        $extractor = OffsetExtractor::create()
             ->registerPoint('selection', '<>')
             ->registerRange('expectedRange', '{{', '}}')
             ->parse($source);
+        
+        [ $selection ] = $extractor->points('selection');
+        $expectedRanges = $extractor->ranges('expectedRange');
+        $newSource = $extractor->source();
         
         $expectedRange = count($expectedRanges) > 0 ? $expectedRanges[0] : null;
 
@@ -83,19 +83,20 @@ class VariableRenamerTest extends TestCase
     /** @dataProvider provideRename */
     public function testRename(string $source): void
     {
-        $newName = 'newName';
-        [
-            'selection' => [ $selection ],
-            'definition' => [ $definition ],
-            'references' => $references,
-            'resultEditRanges' => $resultEditRanges,
-            'newSource' => $newSource
-        ] = OffsetExtractor::create()
+        $extractor = OffsetExtractor::create()
             ->registerPoint('selection', '<>')
             ->registerPoint('definition', '<d>')
             ->registerPoint('references', '<r>')
             ->registerRange('resultEditRanges', '{{', '}}')
             ->parse($source);
+
+        [ $selection ] = $extractor->points('selection');
+        [ $definition ] = $extractor->points('definition');
+        $references = $extractor->points('references');
+        $resultEditRanges = $extractor->ranges('resultEditRanges');
+        $newSource = $extractor->source();
+        
+        $newName = 'newName';
 
         $textDocumentUri = 'file:///test/Class1.php';
         $textDocument = TextDocumentBuilder::create($newSource)

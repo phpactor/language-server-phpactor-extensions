@@ -11,12 +11,12 @@ class OffsetExtractorTest extends TestCase
 {
     public function testPoint(): void
     {
-        list(
-            'selection' => $selection,
-            'newSource' => $newSource
-        ) = OffsetExtractor::create()
+        $extractor = OffsetExtractor::create()
             ->registerPoint('selection', '<>')
             ->parse('Test string with<> selector');
+        $selection = $extractor->points('selection');
+        $newSource = $extractor->source();
+        
         $this->assertIsArray($selection);
         $this->assertEquals(1, count($selection));
         $this->assertEquals(ByteOffset::fromInt(16), $selection[0]);
@@ -25,12 +25,11 @@ class OffsetExtractorTest extends TestCase
 
     public function testPoints(): void
     {
-        list(
-            'selection' => $selection,
-            'newSource' => $newSource
-        ) = OffsetExtractor::create()
+        $extractor = OffsetExtractor::create()
             ->registerPoint('selection', '<>')
             ->parse('Test string with<> two select<>ors');
+        $selection = $extractor->points('selection');
+        $newSource = $extractor->source();
         $this->assertEquals([
             ByteOffset::fromInt(16),
             ByteOffset::fromInt(27)
@@ -40,24 +39,22 @@ class OffsetExtractorTest extends TestCase
     
     public function testRange(): void
     {
-        list(
-            'textEdit' => $textEdit,
-            'newSource' => $newSource
-        ) = OffsetExtractor::create()
+        $extractor = OffsetExtractor::create()
             ->registerRange('textEdit', '{{', '}}')
             ->parse('Test string {{with}} selector');
+        $textEdit = $extractor->ranges('textEdit');
+        $newSource = $extractor->source();
         $this->assertEquals([ByteOffsetRange::fromInts(12, 16)], $textEdit);
         $this->assertEquals('Test string with selector', $newSource);
     }
 
     public function testRanges(): void
     {
-        list(
-            'textEdit' => $textEdit,
-            'newSource' => $newSource
-        ) = OffsetExtractor::create()
+        $extractor = OffsetExtractor::create()
             ->registerRange('textEdit', '{{', '}}')
             ->parse('Test string {{with}} two {{selectors}}');
+        $textEdit = $extractor->ranges('textEdit');
+        $newSource = $extractor->source();
         $this->assertEquals(
             [
                 ByteOffsetRange::fromInts(12, 16),
