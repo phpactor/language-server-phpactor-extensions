@@ -111,8 +111,9 @@ class OffsetExtractor
      */
     public function points(string $name): array
     {
-        if(!isset($this->pointResults[$name]))
+        if (!isset($this->pointResults[$name])) {
             throw new RuntimeException('No registered point by that name.');
+        }
 
         return $this->pointResults[$name];
     }
@@ -121,8 +122,9 @@ class OffsetExtractor
      */
     public function ranges(string $name): array
     {
-        if(!isset($this->rangeResults[$name]))
+        if (!isset($this->rangeResults[$name])) {
             throw new RuntimeException('No registered range by that name.');
+        }
 
         return $this->rangeResults[$name];
     }
