@@ -14,6 +14,7 @@ use Phpactor\Extension\Console\ConsoleExtension;
 use Phpactor\Extension\LanguageServerBridge\LanguageServerBridgeExtension;
 use Phpactor\Extension\LanguageServerCodeTransform\LanguageServerCodeTransformExtension;
 use Phpactor\Extension\LanguageServerCompletion\LanguageServerCompletionExtension;
+use Phpactor\Extension\LanguageServerDiagnostics\LanguageServerDiagnosticsExtension;
 use Phpactor\Extension\LanguageServerHover\LanguageServerHoverExtension;
 use Phpactor\Extension\LanguageServerIndexer\LanguageServerIndexerExtension;
 use Phpactor\Extension\LanguageServerReferenceFinder\LanguageServerReferenceFinderExtension;
@@ -54,6 +55,7 @@ $container = PhpactorContainer::fromExtensions([
     LanguageServerCodeTransformExtension::class,
     CodeTransformExtension::class,
     PhpExtension::class,
+    LanguageServerDiagnosticsExtension::class,
 ], [
     FilePathResolverExtension::PARAM_PROJECT_ROOT => realpath(__DIR__ . '/..'),
     FilePathResolverExtension::PARAM_APPLICATION_ROOT => realpath(__DIR__ .'/..'),
