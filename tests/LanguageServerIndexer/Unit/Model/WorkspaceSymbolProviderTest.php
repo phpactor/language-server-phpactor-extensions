@@ -1,12 +1,12 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerReferenceFinder\Tests\Unit\Model;
+namespace Phpactor\Extension\LanguageServerIndexer\Tests\Unit\Model;
 
 use Closure;
 use Generator;
 use PHPUnit\Framework\TestCase;
-use Phpactor\Extension\LanguageServerReferenceFinder\Model\WorkspaceSymbolProvider;
-use Phpactor\Extension\LanguageServerReferenceFinder\Tests\IntegrationTestCase;
+use Phpactor\Extension\LanguageServerIndexer\Model\WorkspaceSymbolProvider;
+use Phpactor\Extension\LanguageServerIndexer\Tests\IntegrationTestCase;
 use Phpactor\Indexer\Adapter\Php\InMemory\InMemorySearchIndex;
 use Phpactor\Indexer\Model\Indexer;
 use Phpactor\Indexer\Model\MemberReference;

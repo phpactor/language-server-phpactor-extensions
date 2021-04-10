@@ -7,13 +7,17 @@ use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
 use Phpactor\Extension\LanguageServerIndexer\Handler\IndexerHandler;
+use Phpactor\Extension\LanguageServerIndexer\Handler\WorkspaceSymbolHandler;
 use Phpactor\Extension\LanguageServerIndexer\Listener\ReindexListener;
+use Phpactor\Extension\LanguageServerIndexer\Model\WorkspaceSymbolProvider;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\Logger\LoggingExtension;
 use Phpactor\Indexer\Model\Indexer;
+use Phpactor\Indexer\Model\SearchClient;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Core\Service\ServiceManager;
 use Phpactor\MapResolver\Resolver;
+use Phpactor\TextDocument\TextDocumentLocator;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 class LanguageServerIndexerExtension implements Extension
@@ -24,6 +28,12 @@ class LanguageServerIndexerExtension implements Extension
     public function load(ContainerBuilder $container): void
     {
         $this->registerSessionHandler($container);
+
+        $container->register(WorkspaceSymbolHandler::class, function (Container $container) {
+            return new WorkspaceSymbolHandler(
+                new WorkspaceSymbolProvider($container->get(SearchClient::class), $container->get(TextDocumentLocator::class))
+            );
+        }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [] ]);
     }
 
     public function configure(Resolver $schema): void

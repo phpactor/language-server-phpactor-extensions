@@ -1,6 +1,6 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerReferenceFinder\Tests\Unit\Handler;
+namespace Phpactor\Extension\LanguageServerIndexer\Tests\Unit\Handler;
 
 use Phpactor\Extension\LanguageServerBridge\TextDocument\WorkspaceTextDocumentLocator;
 use Phpactor\LanguageServerProtocol\Location as LspLocation;

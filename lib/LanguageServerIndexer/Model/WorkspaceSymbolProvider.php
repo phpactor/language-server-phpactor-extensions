@@ -1,6 +1,6 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerReferenceFinder\Model;
+namespace Phpactor\Extension\LanguageServerIndexer\Model;
 
 use Amp\Promise;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;

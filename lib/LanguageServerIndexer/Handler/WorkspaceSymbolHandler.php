@@ -1,10 +1,10 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerReferenceFinder\Handler;
+namespace Phpactor\Extension\LanguageServerIndexer\Handler;
 
 use Amp\Promise;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
-use Phpactor\Extension\LanguageServerReferenceFinder\Model\WorkspaceSymbolProvider;
+use Phpactor\Extension\LanguageServerIndexer\Model\WorkspaceSymbolProvider;
 use Phpactor\Indexer\Model\Query\Criteria;
 use Phpactor\Indexer\Model\Record;
 use Phpactor\Indexer\Model\SearchClient;
