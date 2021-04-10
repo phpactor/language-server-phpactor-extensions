@@ -2,6 +2,7 @@
 
 namespace Phpactor\Extension\LanguageServerIndexer\Tests;
 
+use Phpactor\Extension\LanguageServerBridge\LanguageServerBridgeExtension;
 use Phpactor\Extension\LanguageServerIndexer\LanguageServerIndexerExtension;
 use Phpactor\Extension\LanguageServerIndexer\Tests\Extension\TestExtension;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
@@ -40,6 +41,7 @@ class IntegrationTestCase extends TestCase
             ReferenceFinderExtension::class,
             LanguageServerIndexerExtension::class,
             LanguageServerExtension::class,
+            LanguageServerBridgeExtension::class,
             TestExtension::class,
         ], array_merge([
             FilePathResolverExtension::PARAM_APPLICATION_ROOT => __DIR__ . '/../',

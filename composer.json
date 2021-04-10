@@ -21,7 +21,7 @@
         "phpactor/console-extension": "^0.1.6",
         "phpactor/container": "^2.0.0",
         "phpactor/file-path-resolver-extension": "^0.3.4",
-        "phpactor/indexer-extension": "^0.3.0",
+        "phpactor/indexer-extension": "^0.3.1",
         "phpactor/language-server-extension": "^0.5.0",
         "phpactor/logging-extension": "^0.3.4",
         "phpactor/reference-finder-extension": "^0.1.7",
