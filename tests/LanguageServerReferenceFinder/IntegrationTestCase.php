@@ -1,6 +1,6 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerIndexer\Tests;
+namespace Phpactor\Extension\LanguageServerReferenceFinder\Tests;
 
 use Phpactor\Extension\LanguageServerBridge\LanguageServerBridgeExtension;
 use Phpactor\Extension\LanguageServerIndexer\LanguageServerIndexerExtension;
@@ -56,3 +56,4 @@ class IntegrationTestCase extends TestCase
         return $container;
     }
 }
+
