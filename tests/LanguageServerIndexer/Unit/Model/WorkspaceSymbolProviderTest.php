@@ -4,21 +4,13 @@ namespace Phpactor\Extension\LanguageServerIndexer\Tests\Unit\Model;
 
 use Closure;
 use Generator;
-use PHPUnit\Framework\TestCase;
 use Phpactor\Extension\LanguageServerIndexer\Model\WorkspaceSymbolProvider;
 use Phpactor\Extension\LanguageServerIndexer\Tests\IntegrationTestCase;
-use Phpactor\Indexer\Adapter\Php\InMemory\InMemorySearchIndex;
 use Phpactor\Indexer\Model\Indexer;
-use Phpactor\Indexer\Model\MemberReference;
-use Phpactor\Indexer\Model\Record;
-use Phpactor\Indexer\Model\Record\ClassRecord;
-use Phpactor\Indexer\Model\Record\MemberRecord;
 use Phpactor\Indexer\Model\SearchClient;
 use Phpactor\LanguageServerProtocol\SymbolInformation;
-use Phpactor\TextDocument\ByteOffset;
+use Phpactor\LanguageServerProtocol\SymbolKind;
 use Phpactor\TextDocument\TextDocumentLocator;
-use Phpactor\TextDocument\TextDocumentLocator\ChainDocumentLocator;
-use Phpactor\TextDocument\TextDocumentLocator\InMemoryDocumentLocator;
 use function Amp\Promise\wait;
 
 class WorkspaceSymbolProviderTest extends IntegrationTestCase
@@ -58,7 +50,7 @@ class WorkspaceSymbolProviderTest extends IntegrationTestCase
             [
                 'Foo.php' => '<?php class Foo',
             ],
-            function (array $infos) {
+            function (array $infos): void {
                 self::assertCount(0, $infos);
             },
             'Nothing'
@@ -68,11 +60,12 @@ class WorkspaceSymbolProviderTest extends IntegrationTestCase
             [
                 'Foo1.php' => '<?php class Foo',
             ],
-            function (array $infos) {
+            function (array $infos): void {
                 self::assertCount(1, $infos);
                 $info = reset($infos);
                 assert($info instanceof SymbolInformation);
                 self::assertEquals('Foo', $info->name);
+                self::assertEquals(SymbolKind::CLASS_, $info->kind);
             },
             'F'
         ];
@@ -81,7 +74,7 @@ class WorkspaceSymbolProviderTest extends IntegrationTestCase
             [
                 'Foo.php' => '<?php class Foo { function barbar() {} }',
             ],
-            function (array $infos) {
+            function (array $infos): void {
                 self::assertCount(0, $infos);
             },
             'bar'
@@ -91,18 +84,26 @@ class WorkspaceSymbolProviderTest extends IntegrationTestCase
             [
                 'Foo.php' => '<?php function barbar(){}',
             ],
-            function (array $infos) {
+            function (array $infos): void {
                 self::assertCount(1, $infos);
+                $info = reset($infos);
+                assert($info instanceof SymbolInformation);
+                self::assertEquals('barbar', $info->name);
+                self::assertEquals(SymbolKind::FUNCTION, $info->kind);
             },
             'bar'
         ];
 
         yield 'Constants' => [
             [
-                'Foo4.php' => '<?php define("Foobar", "barfoo");',
+                'Foo4.php' => '<?php const FOOBAR = "barfoo"',
             ],
-            function (array $infos) {
+            function (array $infos): void {
                 self::assertCount(1, $infos);
+                $info = reset($infos);
+                assert($info instanceof SymbolInformation);
+                self::assertEquals('FOOBAR', $info->name);
+                self::assertEquals(SymbolKind::CONSTANT, $info->kind);
             },
             'Foo'
         ];

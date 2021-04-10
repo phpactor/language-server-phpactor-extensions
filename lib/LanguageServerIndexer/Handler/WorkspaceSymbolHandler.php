@@ -3,22 +3,12 @@
 namespace Phpactor\Extension\LanguageServerIndexer\Handler;
 
 use Amp\Promise;
-use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\LanguageServerIndexer\Model\WorkspaceSymbolProvider;
-use Phpactor\Indexer\Model\Query\Criteria;
-use Phpactor\Indexer\Model\Record;
-use Phpactor\Indexer\Model\SearchClient;
-use Phpactor\LanguageServerProtocol\DefinitionParams;
 use Phpactor\LanguageServerProtocol\ServerCapabilities;
-use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\LanguageServerProtocol\SymbolInformation;
 use Phpactor\LanguageServerProtocol\WorkspaceSymbolParams;
 use Phpactor\LanguageServer\Core\Handler\CanRegisterCapabilities;
 use Phpactor\LanguageServer\Core\Handler\Handler;
-use Phpactor\LanguageServer\Core\Workspace\Workspace;
-use Phpactor\ReferenceFinder\DefinitionLocator;
-use Phpactor\ReferenceFinder\Exception\CouldNotLocateDefinition;
-use Phpactor\TextDocument\TextDocumentBuilder;
 
 class WorkspaceSymbolHandler implements Handler, CanRegisterCapabilities
 {
@@ -55,4 +45,3 @@ class WorkspaceSymbolHandler implements Handler, CanRegisterCapabilities
         $capabilities->workspaceSymbolProvider = true;
     }
 }
-

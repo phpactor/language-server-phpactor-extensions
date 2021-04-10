@@ -12,16 +12,12 @@ use Phpactor\Extension\LanguageServerReferenceFinder\Handler\GotoImplementationH
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\HighlightHandler;
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\ReferencesHandler;
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\TypeDefinitionHandler;
-use Phpactor\Extension\LanguageServerIndexer\Handler\WorkspaceSymbolHandler;
 use Phpactor\Extension\LanguageServerReferenceFinder\Model\Highlighter;
-use Phpactor\Extension\LanguageServerIndexer\Model\WorkspaceSymbolProvider;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
-use Phpactor\Indexer\Model\SearchClient;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\MapResolver\Resolver;
 use Phpactor\ReferenceFinder\ReferenceFinder;
-use Phpactor\TextDocument\TextDocumentLocator;
 
 class LanguageServerReferenceFinderExtension implements Extension
 {
