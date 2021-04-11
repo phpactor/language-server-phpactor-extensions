@@ -66,6 +66,15 @@ class MemberRenamerTest extends TestCase
         yield 'static method call' => [
             '<?php Foobar::{{me<>thod1}}(); }'
         ];
+        yield 'property declaration' => [
+            '<?php class Class1 { public ${{prop<>erty}}; }'
+        ];
+        yield 'property access' => [
+            '<?php $foo->${{me<>thod1}};'
+        ];
+        yield 'static property access' => [
+            '<?php Foobar::${{me<>thod1}}; }'
+        ];
     }
 
     /** 

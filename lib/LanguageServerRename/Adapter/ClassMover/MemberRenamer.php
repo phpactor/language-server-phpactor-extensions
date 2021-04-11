@@ -3,9 +3,13 @@
 namespace Phpactor\Extension\LanguageServerRename\Adapter\ClassMover;
 
 use Generator;
+use Microsoft\PhpParser\Node;
+use Microsoft\PhpParser\Node\Expression\CallExpression;
 use Microsoft\PhpParser\Node\Expression\MemberAccessExpression;
 use Microsoft\PhpParser\Node\Expression\ScopedPropertyAccessExpression;
+use Microsoft\PhpParser\Node\Expression\Variable;
 use Microsoft\PhpParser\Node\MethodDeclaration;
+use Microsoft\PhpParser\Node\PropertyDeclaration;
 use Microsoft\PhpParser\Parser;
 use Microsoft\PhpParser\Token;
 use Phpactor\ClassMover\Domain\MemberFinder;
@@ -60,17 +64,26 @@ class MemberRenamer implements Renamer
         if ($node instanceof MethodDeclaration) {
             return ByteOffsetRange::fromInts($node->name->start, $node->name->getEndPosition());
         }
-        if (!$node instanceof MemberAccessExpression && !$node instanceof ScopedPropertyAccessExpression) {
-            return null;
+
+        if ($node instanceof Variable && $node->getFirstAncestor(PropertyDeclaration::class)) {
+            return $this->offsetRangeFromToken($node->name, true);
         }
 
-        $memberName = $node->memberName;
-
-        if (!$memberName instanceof Token) {
-            return null;
+        if (
+            $node instanceof Variable && 
+            (
+                $node->getFirstAncestor(ScopedPropertyAccessExpression::class) ||
+                $node->getFirstAncestor(MemberAccessExpression::class)
+            )
+        ) {
+            return $this->offsetRangeFromToken($node->name, true);
         }
 
-        return ByteOffsetRange::fromInts($memberName->start, $memberName->getEndPosition());
+        if ($node instanceof MemberAccessExpression || $node instanceof ScopedPropertyAccessExpression) {
+            return $this->offsetRangeFromToken($node->memberName, false);
+        }
+
+        return null;
     }
 
     /**
@@ -84,6 +97,7 @@ class MemberRenamer implements Renamer
             if (!$reference->isSurely()) {
                 continue;
             }
+
             $textDocument = $this->locator->get($reference->location()->uri());
             $range = $this->getRenameRange($textDocument, $reference->location()->offset());
 
@@ -98,5 +112,21 @@ class MemberRenamer implements Renamer
         }
 
         yield from $edits->toLocatedTextEdits();
+    }
+
+    /**
+     * @param Token|Node $tokenOrNode
+     */
+    private function offsetRangeFromToken($tokenOrNode, bool $hasDollar): ?ByteOffsetRange
+    {
+        if (!$tokenOrNode instanceof Token) {
+            return null;
+        }
+
+        if ($hasDollar) {
+            return ByteOffsetRange::fromInts($tokenOrNode->start + 1, $tokenOrNode->getEndPosition());
+        }
+
+        return ByteOffsetRange::fromInts($tokenOrNode->start, $tokenOrNode->getEndPosition());
     }
 }
