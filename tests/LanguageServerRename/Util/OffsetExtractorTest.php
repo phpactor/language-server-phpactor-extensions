@@ -66,10 +66,10 @@ class OffsetExtractorTest extends TestCase
             ->registerRange('textEdit', '{{', '}}')
             ->parse('Test string {{with}} selector');
 
-        $textEdit = $extractor->ranges('textEdit');
+        $textEdit = $extractor->range('textEdit');
         $newSource = $extractor->source();
 
-        $this->assertEquals([ByteOffsetRange::fromInts(12, 16)], $textEdit);
+        $this->assertEquals(ByteOffsetRange::fromInts(12, 16), $textEdit);
         $this->assertEquals('Test string with selector', $newSource);
     }
 
@@ -88,5 +88,28 @@ class OffsetExtractorTest extends TestCase
             $textEdit
         );
         $this->assertEquals('Test string with two selectors', $newSource);
+    }
+
+    public function testExceptionWhenNoRangeIsFound(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('No "selection" ranges found');
+
+        $extractor = OffsetExtractor::create()
+            ->registerRange('selection', '<', '>')
+            ->parse('Test string without selector');
+
+        $extractor->range('selection');
+    }
+
+    public function testExceptionWhenNoRangeIsRegistered(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('No range registered');
+
+        $extractor = OffsetExtractor::create()
+            ->parse('Test string without selector');
+
+        $extractor->range('selection');
     }
 }

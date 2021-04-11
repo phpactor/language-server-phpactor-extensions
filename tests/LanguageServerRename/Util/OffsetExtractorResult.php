@@ -3,6 +3,7 @@
 namespace Phpactor\Extension\LanguageServerRename\Tests\Util;
 
 use Phpactor\TextDocument\ByteOffset;
+use Phpactor\TextDocument\ByteOffsetRange;
 use RuntimeException;
 
 class OffsetExtractorResult
@@ -80,5 +81,21 @@ class OffsetExtractorResult
         }
 
         return $this->ranges[$name];
+    }
+
+    public function range(string $name): ByteOffsetRange
+    {
+        $ranges = $this->ranges($name);
+
+        if (!count($ranges)) {
+            throw new RuntimeException(sprintf(
+                'No "%s" ranges found in source code',
+                $name
+            ));
+        }
+
+        $range = reset($ranges);
+
+        return $range;
     }
 }
