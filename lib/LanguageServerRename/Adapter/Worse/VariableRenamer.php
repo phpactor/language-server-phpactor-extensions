@@ -25,184 +25,21 @@ use Phpactor\TextDocument\TextDocumentUri;
 use Phpactor\TextDocument\TextEdit;
 use Phpactor\TextDocument\TextEdits;
 
-class VariableRenamer implements Renamer
+class VariableRenamer extends AbstractReferenceRenamer
 {
-    /**
-     * @var Parser
-     */
-    private $parser;
-
-    /**
-     * @var ReferenceFinder
-     */
-    private $finder;
-
-    /**
-     * @var TextDocumentLocator
-     */
-    private $locator;
-
-    public function __construct(ReferenceFinder $finder, TextDocumentLocator $locator, Parser $parser)
+    public function getRenameRangeForNode(Node $node): ?ByteOffsetRange
     {
-        $this->parser = $parser;
-        $this->finder = $finder;
-        $this->locator = $locator;
-    }
-
-    public function getRenameRange(TextDocument $textDocument, ByteOffset $offset): ?ByteOffsetRange
-    {
-        if (($node = $this->getValidNode($textDocument, $offset)) !== null) {
-            [ $token ] = $this->getNodeNameTokens($node);
-            return $this->getTokenNameRange($token, (string)$textDocument);
-        }
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function rename(TextDocument $textDocument, ByteOffset $offset, string $newName): Generator
-    {
-        foreach ($this->finder->findReferences($textDocument, $offset) as $reference) {
-            if (!$reference->isSurely()) {
-                continue;
-            }
-
-            $textDocument = $this->locator->get($reference->location()->uri());
-            $range = $this->getRenameRange($textDocument, $reference->location()->offset());
-
-            if (null === $range) {
-                continue;
-            }
-
-            yield new LocatedTextEdit(
-                $reference->location()->uri(),
-                TextEdit::create(
-                    $range->start(),
-                    $range->end()->toInt() - $range->start()->toInt(),
-                    $newName
-                )
-            );
-        }
-    }
-
-    /** @param Location[] $locations */
-    private function locationsToTextEdits(TextDocumentUri $textDocumentUri, array $locations, string $oldName, string $newName): TextEdits
-    {
-        $textEdits = [];
-        $rootNode = $this->parser->parseSourceFile($this->locator->get($textDocumentUri));
-        foreach ($locations as $location) {
-            $node = $rootNode->getDescendantNodeAtPosition($location->offset()->toInt());
-            $tokens = $this->getNodeNameTokens($node);
-
-            foreach ($tokens as $token) {
-                $range = $this->getTokenNameRange($token, $rootNode->getFileContents());
-                $rangeText = $this->getTokenNameText($token, $rootNode->getFileContents());
-
-                if ($rangeText == $oldName) {
-                    $textEdits[] = TextEdit::create($range->start(), $range->end()->toInt() - $range->start()->toInt(), $newName);
-                    break;
-                }
-            }
-        }
-        return TextEdits::fromTextEdits($textEdits);
-    }
-
-    private function getTokenNameRange(Token $token, string $fileContents): ByteOffsetRange
-    {
-        $range = ByteOffsetRange::fromInts(
-            $token->getStartPosition(),
-            $token->getEndPosition()
-        );
-        if (mb_substr((string)$token->getText($fileContents), 0, 1) == '$') {
-            $range = ByteOffsetRange::fromInts(
-                $range->start()->toInt() + 1,
-                $range->end()->toInt()
-            );
-        }
-        return $range;
-    }
-
-    private function getTokenNameText(Token $token, string $fileContents): string
-    {
-        $text = (string)$token->getText($fileContents);
-        if (mb_substr((string)$token->getText($fileContents), 0, 1) == '$') {
-            $text = mb_substr($text, 1);
-        }
-        return $text;
-    }
-
-    private function getValidNode(TextDocument $textDocument, ByteOffset $offset): ?Node
-    {
-        $rootNode = $this->parser->parseSourceFile((string)$textDocument);
-        $node = $rootNode->getDescendantNodeAtPosition($offset->toInt());
-        
         if (
-            (
-                $node instanceof Variable &&
-                null === $node->getFirstAncestor(PropertyDeclaration::class)
-            )
-            || $node instanceof Parameter
+            $node instanceof Variable &&
+            !$node->getFirstAncestor(PropertyDeclaration::class)
         ) {
-            return $node;
-        }
-
-        return null;
-    }
-    /**
-     * @return Token[]
-     */
-    private function getNodeNameTokens(Node $node): array
-    {
-        if ($node instanceof QualifiedName && $node->getParent() instanceof Parameter) {
-            // an argument with a type hint
-            return $this->getNodeNameTokens($node->getParent());
-        }
-
-        if ($node instanceof Variable) {
-            while ($node->name instanceof Variable) {
-                $node = $node->name;
-            }
-            if ($node->name instanceof Token) {
-                return [ $node->name ];
-            }
-            return [];
+            return $this->offsetRangeFromToken($node->name, true);
         }
 
         if ($node instanceof Parameter) {
-            return [ $node->variableName ];
+            return $this->offsetRangeFromToken($node->variableName, true);
         }
 
-        if ($node instanceof ForeachStatement) {
-            assert($node instanceof ForeachStatement);
-            $names = [];
-            if (
-                $node->foreachKey !== null &&
-                $node->foreachKey->expression instanceof Variable &&
-                $node->foreachKey->expression->name instanceof Token
-            ) {
-                $names[] = $node->foreachKey->expression->name;
-            }
-            
-            if (
-                $node->foreachValue !== null &&
-                $node->foreachValue->expression instanceof Variable &&
-                $node->foreachValue->expression->name instanceof Token
-            ) {
-                $names[] = $node->foreachValue->expression->name;
-            }
-            return $names;
-        }
-        
-        if (
-            $node instanceof StringLiteral &&
-            $node->getParent() instanceof ArrayElement &&
-            $node->getParent()->elementValue instanceof Variable &&
-            $node->getParent()->elementValue->name instanceof Token
-        ) {
-            return [$node->getParent()->elementValue->name ];
-        }
-
-        return [];
+        return null;
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerRename\Adapter\Worse;
+namespace Phpactor\Extension\LanguageServerRename\Adapter\Worse\RangeFinder;
 
 use Generator;
 use Microsoft\PhpParser\Node;
@@ -21,10 +21,15 @@ use Phpactor\TextDocument\TextDocument;
 use Phpactor\TextDocument\TextDocumentLocator;
 use Phpactor\TextDocument\TextEdit as PhpactorTextEdit;
 
-class MemberRenamer extends AbstractReferenceRenamer
+class ClassMemberRangeFinder
 {
-    public function getRenameRangeForNode(Node $node): ?ByteOffsetRange
+    public function __construct(Parser $parser)
     {
+    }
+    public function getRenameRange(TextDocument $textDocument, ByteOffset $offset): ?ByteOffsetRange
+    {
+        $node = $this->parser->parseSourceFile($textDocument->__toString())->getDescendantNodeAtPosition($offset->toInt());
+
         if ($node instanceof MethodDeclaration) {
             return ByteOffsetRange::fromInts($node->name->start, $node->name->getEndPosition());
         }
