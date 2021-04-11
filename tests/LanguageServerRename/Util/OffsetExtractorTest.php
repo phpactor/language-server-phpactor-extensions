@@ -3,7 +3,6 @@
 namespace Phpactor\Extension\LanguageServerRename\Tests\Util;
 
 use PHPUnit\Framework\TestCase;
-use Phpactor\Extension\LanguageServerRename\Tests\Util\OffsetExtractor;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\ByteOffsetRange;
 use RuntimeException;

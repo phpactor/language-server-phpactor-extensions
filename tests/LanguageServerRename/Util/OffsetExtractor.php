@@ -4,9 +4,6 @@ namespace Phpactor\Extension\LanguageServerRename\Tests\Util;
 
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\ByteOffsetRange;
-use RuntimeException;
-use Phpactor\Extension\LanguageServerRename\Tests\Util\OffsetExtractor;
-use Phpactor\Extension\LanguageServerRename\Tests\Util\OffsetExtractorResult;
 
 final class OffsetExtractor
 {
@@ -96,6 +93,7 @@ final class OffsetExtractor
             $newSource .= $result;
         }
         
-        return new OffsetExtractorResult($newSource, $pointResults, $rangeResults);;
+        return new OffsetExtractorResult($newSource, $pointResults, $rangeResults);
+        ;
     }
 }
