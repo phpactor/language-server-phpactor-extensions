@@ -15,6 +15,7 @@ use Microsoft\PhpParser\Parser;
 use Microsoft\PhpParser\Token;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdit;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
+use Phpactor\ReferenceFinder\ReferenceFinder;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\ByteOffsetRange;
 use Phpactor\TextDocument\Location;
@@ -27,23 +28,25 @@ use Phpactor\TextDocument\TextEdits;
 class VariableRenamer implements Renamer
 {
     /**
-     * @var RenameLocationsProvider
-     */
-    private $renameLocations;
-    /**
-     * @var TextDocumentLocator
-     */
-    private $locator;
-    /**
      * @var Parser
      */
     private $parser;
 
-    public function __construct(RenameLocationsProvider $renameLocations, TextDocumentLocator $locator, Parser $parser)
+    /**
+     * @var ReferenceFinder
+     */
+    private $finder;
+
+    /**
+     * @var TextDocumentLocator
+     */
+    private $locator;
+
+    public function __construct(ReferenceFinder $finder, TextDocumentLocator $locator, Parser $parser)
     {
-        $this->renameLocations = $renameLocations;
-        $this->locator = $locator;
         $this->parser = $parser;
+        $this->finder = $finder;
+        $this->locator = $locator;
     }
 
     public function getRenameRange(TextDocument $textDocument, ByteOffset $offset): ?ByteOffsetRange
@@ -54,28 +57,32 @@ class VariableRenamer implements Renamer
         }
         return null;
     }
+
     /**
      * {@inheritDoc}
      */
     public function rename(TextDocument $textDocument, ByteOffset $offset, string $newName): Generator
     {
-        if (($node = $this->getValidNode($textDocument, $offset)) === null) {
-            return null;
-        }
-
-        [ $token ] = $this->getNodeNameTokens($node);
-        $oldName = $this->getTokenNameText($token, (string)$textDocument);
-
-        foreach ($this->renameLocations->provideLocations($textDocument, $offset) as $locationGroup) {
-            assert($locationGroup instanceof RenameLocationGroup);
-            foreach ($this->locationsToTextEdits(
-                $locationGroup->uri(),
-                $locationGroup->locations(),
-                $oldName,
-                $newName
-            ) as $textEdit) {
-                yield new LocatedTextEdit($locationGroup->uri(), $textEdit);
+        foreach ($this->finder->findReferences($textDocument, $offset) as $reference) {
+            if (!$reference->isSurely()) {
+                continue;
             }
+
+            $textDocument = $this->locator->get($reference->location()->uri());
+            $range = $this->getRenameRange($textDocument, $reference->location()->offset());
+
+            if (null === $range) {
+                continue;
+            }
+
+            yield new LocatedTextEdit(
+                $reference->location()->uri(),
+                TextEdit::create(
+                    $range->start(),
+                    $range->end()->toInt() - $range->start()->toInt(),
+                    $newName
+                )
+            );
         }
     }
 
@@ -139,6 +146,7 @@ class VariableRenamer implements Renamer
         ) {
             return $node;
         }
+        dump(get_class($node));
         return null;
     }
     /**

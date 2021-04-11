@@ -13,28 +13,19 @@ use Phpactor\TextDocument\TextDocumentUri;
 class PredefinedReferenceFinder implements ReferenceFinder
 {
     /**
-     * @var array<string,ByteOffset[]>
+     * @var array
      */
-    private $references;
-    /**
-     * @var array<string,string>
-     */
-    private $sources;
+    private $locations;
 
-    public function __construct(array $references)
+    public function __construct(PotentialLocation ...$locations)
     {
-        $this->references = $references;
+        $this->locations = $locations;
     }
 
     public function findReferences(TextDocument $document, ByteOffset $byteOffset): Generator
     {
-        foreach ($this->references as $uri=>$offsets) {
-            $uriObj = TextDocumentUri::fromString($uri);
-            foreach ($offsets as $offset) {
-                yield PotentialLocation::surely(
-                    new Location($uriObj, $offset)
-                );
-            }
+        foreach ($this->locations as $location) {
+            yield $location;
         }
     }
 }
