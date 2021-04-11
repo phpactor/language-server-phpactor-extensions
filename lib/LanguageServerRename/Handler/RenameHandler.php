@@ -3,10 +3,10 @@
 namespace Phpactor\Extension\LanguageServerRename\Handler;
 
 use Amp\Promise;
-use Generator;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\LanguageServerBridge\Converter\RangeConverter;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
+use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdit;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEditsMap;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
 use Phpactor\LanguageServerProtocol\PrepareRenameParams;
@@ -24,9 +24,7 @@ use Phpactor\LanguageServer\Core\Handler\Handler;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\TextDocument\TextDocumentLocator;
 use Phpactor\TextDocument\TextDocumentUri;
-use Traversable;
 use function Amp\delay;
-use function iterator_to_array;
 
 class RenameHandler implements Handler, CanRegisterCapabilities
 {
@@ -111,7 +109,7 @@ class RenameHandler implements Handler, CanRegisterCapabilities
     }
 
     /**
-     * @param LocatedTextEdit[] $results
+     * @param LocatedTextEdit[] $locatedEdits
      */
     private function resultToWorkspaceEdit(array $locatedEdits): WorkspaceEdit
     {
