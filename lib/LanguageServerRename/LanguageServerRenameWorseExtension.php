@@ -13,6 +13,7 @@ use Phpactor\MapResolver\Resolver;
 use Phpactor\ReferenceFinder\DefinitionAndReferenceFinder;
 use Phpactor\ReferenceFinder\ReferenceFinder;
 use Phpactor\TextDocument\TextDocumentLocator;
+use Phpactor\WorseReferenceFinder\TolerantVariableReferenceFinder;
 
 class LanguageServerRenameWorseExtension implements Extension
 {
@@ -25,7 +26,10 @@ class LanguageServerRenameWorseExtension implements Extension
     {
         $container->register(VariableRenamer::class, function (Container $container) {
             return new VariableRenamer(
-                $container->get('worse_reference_finder.reference_finder.variable'),
+                new TolerantVariableReferenceFinder(
+                    $container->get('worse_reflection.tolerant_parser'),
+                    true
+                ),
                 $container->get(TextDocumentLocator::class),
                 $container->get('worse_reflection.tolerant_parser')
             );
