@@ -1,11 +1,10 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerRename\Adapter\ClassMover;
+namespace Phpactor\Extension\LanguageServerRename\Adapter\Worse;
 
 use Generator;
 use Microsoft\PhpParser\Node;
 use Microsoft\PhpParser\Node\ConstElement;
-use Microsoft\PhpParser\Node\Expression\CallExpression;
 use Microsoft\PhpParser\Node\Expression\MemberAccessExpression;
 use Microsoft\PhpParser\Node\Expression\ScopedPropertyAccessExpression;
 use Microsoft\PhpParser\Node\Expression\Variable;
@@ -13,17 +12,8 @@ use Microsoft\PhpParser\Node\MethodDeclaration;
 use Microsoft\PhpParser\Node\PropertyDeclaration;
 use Microsoft\PhpParser\Parser;
 use Microsoft\PhpParser\Token;
-use Phpactor\ClassMover\Domain\MemberFinder;
-use Phpactor\ClassMover\Domain\MemberReplacer;
-use Phpactor\ClassMover\Domain\Model\ClassMemberQuery;
-use Phpactor\ClassMover\Domain\Reference\MemberReference;
-use Phpactor\ClassMover\Domain\SourceCode;
-use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdit;
-use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEditsMap;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
-use Phpactor\LanguageServerProtocol\Range;
-use Phpactor\LanguageServerProtocol\TextEdit;
 use Phpactor\ReferenceFinder\ReferenceFinder;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\ByteOffsetRange;
@@ -52,8 +42,7 @@ class MemberRenamer implements Renamer
         ReferenceFinder $referenceFinder,
         TextDocumentLocator $locator,
         Parser $parser
-    )
-    {
+    ) {
         $this->referenceFinder = $referenceFinder;
         $this->locator = $locator;
         $this->parser = $parser;
@@ -72,7 +61,7 @@ class MemberRenamer implements Renamer
         }
 
         if (
-            $node instanceof Variable && 
+            $node instanceof Variable &&
             (
                 $node->getFirstAncestor(ScopedPropertyAccessExpression::class) ||
                 $node->getFirstAncestor(MemberAccessExpression::class)

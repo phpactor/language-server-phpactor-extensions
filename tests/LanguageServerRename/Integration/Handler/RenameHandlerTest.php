@@ -3,7 +3,6 @@
 namespace Phpactor\Extension\LanguageServerRename\Tests\Integration\Handler;
 
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdit;
-use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdits;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer\InMemoryRenamer;
 use Phpactor\Extension\LanguageServerRename\Tests\IntegrationTestCase;
 use Phpactor\LanguageServerProtocol\PrepareRenameParams;
@@ -20,7 +19,6 @@ use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\ByteOffsetRange;
 use Phpactor\TextDocument\TextDocumentUri;
 use Phpactor\TextDocument\TextEdit;
-use Phpactor\TextDocument\TextEdits;
 
 class RenameHandlerTest extends IntegrationTestCase
 {

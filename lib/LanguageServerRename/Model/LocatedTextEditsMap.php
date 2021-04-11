@@ -3,7 +3,6 @@
 namespace Phpactor\Extension\LanguageServerRename\Model;
 
 use Phpactor\TextDocument\TextDocumentUri;
-use Phpactor\TextDocument\TextEdit;
 use Phpactor\TextDocument\TextEdits;
 
 final class LocatedTextEditsMap
@@ -23,7 +22,7 @@ final class LocatedTextEditsMap
         return new self([]);
     }
 
-    public static function fromLocatedEdits(array $locatedEdits)
+    public static function fromLocatedEdits(array $locatedEdits): self
     {
         $map = new self([]);
         foreach ($locatedEdits as $locationEdit) {

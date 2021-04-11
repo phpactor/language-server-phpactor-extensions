@@ -1,20 +1,15 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerRename\Tests\Unit\Adapter\ClassMover;
+namespace Phpactor\Extension\LanguageServerRename\Tests\Unit\Adapter\Worse;
 
 use Microsoft\PhpParser\Parser;
 use PHPUnit\Framework\TestCase;
 use Generator;
-use Phpactor\ClassMover\Domain\MemberFinder;
-use Phpactor\Extension\LanguageServerRename\Adapter\ClassMover\MemberRenamer;
-use Phpactor\Extension\LanguageServerRename\Adapter\Worse\RenameLocationsProvider;
-use Phpactor\Extension\LanguageServerRename\Adapter\Worse\VariableRenamer;
+use Phpactor\Extension\LanguageServerRename\Adapter\Worse\MemberRenamer;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdits;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEditsMap;
-use Phpactor\Extension\LanguageServerRename\Tests\Unit\PredefinedDefinitionLocator;
 use Phpactor\Extension\LanguageServerRename\Tests\Unit\PredefinedReferenceFinder;
 use Phpactor\Extension\LanguageServerRename\Tests\Util\OffsetExtractor;
-use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\ByteOffsetRange;
 use Phpactor\TextDocument\TextDocumentBuilder;
 use Phpactor\TextDocument\TextDocumentLocator\InMemoryDocumentLocator;
@@ -25,8 +20,8 @@ class MemberRenamerTest extends TestCase
 {
     const EXAMPLE_DOCUMENT_URI = 'file:///test/Class1.php';
 
-    /** 
-     * @dataProvider provideGetRenameRange 
+    /**
+     * @dataProvider provideGetRenameRange
      */
     public function testGetRenameRange(string $source): void
     {
@@ -84,8 +79,8 @@ class MemberRenamerTest extends TestCase
         ];
     }
 
-    /** 
-     * @dataProvider provideRename 
+    /**
+     * @dataProvider provideRename
      */
     public function testRename(string $source): void
     {

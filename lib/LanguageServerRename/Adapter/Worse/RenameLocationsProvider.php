@@ -9,6 +9,9 @@ use Phpactor\ReferenceFinder\ReferenceFinder;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocument;
 
+/**
+ * @deprecated The renamers should stream LocatedTextEdit instances.
+ */
 class RenameLocationsProvider
 {
     /**

@@ -5,6 +5,9 @@ namespace Phpactor\Extension\LanguageServerRename\Adapter\Worse;
 use Phpactor\TextDocument\Location;
 use Phpactor\TextDocument\TextDocumentUri;
 
+/**
+ * @deprecated The renamers should stream LocatedTextEdit instances.
+ */
 class RenameLocationGroup
 {
     /**
