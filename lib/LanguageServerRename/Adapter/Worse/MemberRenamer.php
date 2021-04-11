@@ -26,7 +26,7 @@ class MemberRenamer extends AbstractReferenceRenamer
             if (!$variable instanceof Variable) {
                 return null;
             }
-            return $this->offsetRangeFromToken($variable->name, false);
+            return $this->offsetRangeFromToken($variable->name, true);
         }
 
         if ($node instanceof Variable && $node->getFirstAncestor(PropertyDeclaration::class)) {
