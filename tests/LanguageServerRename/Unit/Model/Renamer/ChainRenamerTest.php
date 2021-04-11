@@ -4,7 +4,7 @@ namespace Phpactor\Extension\LanguageServerRename\Tests\Unit\Model\Renamer;
 
 use PHPUnit\Framework\TestCase;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer\ChainRenamer;
-use Phpactor\Extension\LanguageServerRename\Model\RenameResult;
+use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdits;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer\InMemoryRenamer;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\ByteOffsetRange;
@@ -24,7 +24,7 @@ class ChainRenamerTest extends TestCase
     {
         $range1 = ByteOffsetRange::fromInts(0, 1);
         $results1 = [
-            new RenameResult(TextEdits::none(), TextDocumentUri::fromString('/foo/bar'))
+            new LocatedTextEdits(TextEdits::none(), TextDocumentUri::fromString('/foo/bar'))
         ];
         $renamer1 = new InMemoryRenamer($range1, $results1);
         $renamer2 = new InMemoryRenamer(null, []);
@@ -38,7 +38,7 @@ class ChainRenamerTest extends TestCase
         $range1 = ByteOffsetRange::fromInts(0, 1);
         $range2 = ByteOffsetRange::fromInts(0, 1);
         $results2 = [
-            new RenameResult(TextEdits::none(), TextDocumentUri::fromString('/foo/bar'))
+            new LocatedTextEdits(TextEdits::none(), TextDocumentUri::fromString('/foo/bar'))
         ];
         $renamer1 = new InMemoryRenamer($range1, []);
         $renamer2 = new InMemoryRenamer($range2, $results2);

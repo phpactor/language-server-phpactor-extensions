@@ -2,7 +2,7 @@
 
 namespace Phpactor\Extension\LanguageServerRename\Tests\Integration\Handler;
 
-use Phpactor\Extension\LanguageServerRename\Model\RenameResult;
+use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdits;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer\InMemoryRenamer;
 use Phpactor\Extension\LanguageServerRename\Tests\IntegrationTestCase;
 use Phpactor\LanguageServerProtocol\PrepareRenameParams;
@@ -66,7 +66,7 @@ class RenameHandlerTest extends IntegrationTestCase
         $expectedCharOffset = 3;
 
         $this->bootContainerWithRangeAndResults(ByteOffsetRange::fromInts(0, $expectedCharOffset), [
-            new RenameResult(TextEdits::none(), TextDocumentUri::fromString('file:///foobar.php'))
+            new LocatedTextEdits(TextEdits::none(), TextDocumentUri::fromString('file:///foobar.php'))
         ]);
         $this->tester->textDocument()->open(self::EXAMPLE_FILE, '<?php');
 
@@ -86,7 +86,7 @@ class RenameHandlerTest extends IntegrationTestCase
     {
         $expectedUri = TextDocumentUri::fromString(self::EXAMPLE_FILE);
         $this->bootContainerWithRangeAndResults(ByteOffsetRange::fromInts(0, 0), [
-            new RenameResult(
+            new LocatedTextEdits(
                 TextEdits::one(
                     TextEdit::create(ByteOffset::fromInt(1), 0, self::EXAMPLE_NEW_NAME)
                 ),

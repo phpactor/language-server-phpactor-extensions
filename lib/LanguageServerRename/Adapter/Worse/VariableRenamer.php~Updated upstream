@@ -13,7 +13,7 @@ use Microsoft\PhpParser\Node\Statement\ForeachStatement;
 use Microsoft\PhpParser\Node\StringLiteral;
 use Microsoft\PhpParser\Parser;
 use Microsoft\PhpParser\Token;
-use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdits;
+use Phpactor\Extension\LanguageServerRename\Model\RenameResult;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\ByteOffsetRange;
@@ -46,7 +46,11 @@ class VariableRenamer implements Renamer
         $this->parser = $parser;
     }
 
+<<<<<<< Updated upstream:lib/LanguageServerRename/Adapter/Worse/VariableRenamer.php
     public function getRenameRange(TextDocument $textDocument, ByteOffset $offset): ?ByteOffsetRange
+=======
+    public function resolveRenameRange(TextDocument $textDocument, ByteOffset $offset): ?ByteOffsetRange
+>>>>>>> Stashed changes:lib/LanguageServerRename/Model/Renamer/VariableRenamer.php
     {
         if (($node = $this->getValidNode($textDocument, $offset)) !== null) {
             [ $token ] = $this->getNodeNameTokens($node);
@@ -68,7 +72,7 @@ class VariableRenamer implements Renamer
 
         foreach ($this->renameLocations->provideLocations($textDocument, $offset) as $locationGroup) {
             assert($locationGroup instanceof RenameLocationGroup);
-            yield new LocatedTextEdits(
+            yield new RenameResult(
                 $this->locationsToTextEdits($locationGroup->uri(), $locationGroup->locations(), $oldName, $newName),
                 $locationGroup->uri()
             );

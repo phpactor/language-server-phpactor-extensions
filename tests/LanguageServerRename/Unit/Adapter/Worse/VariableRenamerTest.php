@@ -7,7 +7,7 @@ use PHPUnit\Framework\TestCase;
 use Generator;
 use Phpactor\Extension\LanguageServerRename\Adapter\Worse\RenameLocationsProvider;
 use Phpactor\Extension\LanguageServerRename\Adapter\Worse\VariableRenamer;
-use Phpactor\Extension\LanguageServerRename\Model\RenameResult;
+use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdits;
 use Phpactor\Extension\LanguageServerRename\Tests\Util\OffsetExtractor;
 use Phpactor\Extension\LanguageServerRename\Tests\Unit\PredefinedDefinitionLocator;
 use Phpactor\Extension\LanguageServerRename\Tests\Unit\PredefinedReferenceFinder;
@@ -128,7 +128,7 @@ class VariableRenamerTest extends TestCase
         $actualResults = iterator_to_array($renamer->rename($textDocument, $selection, $newName), false);
         $this->assertEquals(
             [
-                new RenameResult(
+                new LocatedTextEdits(
                     TextEdits::fromTextEdits($resultEdits),
                     $textDocument->uri()
                 )

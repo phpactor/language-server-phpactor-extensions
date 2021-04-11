@@ -5,7 +5,7 @@ namespace Phpactor\Extension\LanguageServerRename\Model;
 use Phpactor\TextDocument\TextDocumentUri;
 use Phpactor\TextDocument\TextEdits;
 
-class RenameResult
+class LocatedTextEdits
 {
     /**
      * @var TextEdits
