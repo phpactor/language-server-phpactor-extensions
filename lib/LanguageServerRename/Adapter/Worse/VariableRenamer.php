@@ -146,7 +146,7 @@ class VariableRenamer implements Renamer
         ) {
             return $node;
         }
-        dump(get_class($node));
+
         return null;
     }
     /**

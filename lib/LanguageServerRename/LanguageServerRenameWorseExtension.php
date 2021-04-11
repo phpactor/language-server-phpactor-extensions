@@ -23,16 +23,9 @@ class LanguageServerRenameWorseExtension implements Extension
      */
     public function load(ContainerBuilder $container): void
     {
-        $container->register(RenameLocationsProvider::class, function (Container $container) {
-            return new RenameLocationsProvider(
-                $container->get('worse_reference_finder.reference_finder.variable'),
-                $container->get(ReferenceFinderExtension::SERVICE_DEFINITION_LOCATOR)
-            );
-        });
-
         $container->register(VariableRenamer::class, function (Container $container) {
             return new VariableRenamer(
-                $container->get(RenameLocationsProvider::class),
+                $container->get('worse_reference_finder.reference_finder.variable'),
                 $container->get(TextDocumentLocator::class),
                 $container->get('worse_reflection.tolerant_parser')
             );

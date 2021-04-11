@@ -10,7 +10,10 @@ use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdits;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEditsMap;
 use Phpactor\Extension\LanguageServerRename\Tests\Unit\PredefinedReferenceFinder;
 use Phpactor\Extension\LanguageServerRename\Tests\Util\OffsetExtractor;
+use Phpactor\ReferenceFinder\PotentialLocation;
+use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\ByteOffsetRange;
+use Phpactor\TextDocument\Location;
 use Phpactor\TextDocument\TextDocumentBuilder;
 use Phpactor\TextDocument\TextDocumentLocator\InMemoryDocumentLocator;
 use Phpactor\TextDocument\TextEdit;
@@ -41,7 +44,7 @@ class MemberRenamerTest extends TestCase
             ->build();
         
         $variableRenamer = new MemberRenamer(
-            new PredefinedReferenceFinder([]),
+            new PredefinedReferenceFinder(...[]),
             InMemoryDocumentLocator::fromTextDocuments([]),
             new Parser()
         );
@@ -97,16 +100,15 @@ class MemberRenamerTest extends TestCase
         
         $newName = 'newName';
 
-        $textDocumentUri = self::EXAMPLE_DOCUMENT_URI;
         $textDocument = TextDocumentBuilder::create($newSource)
-            ->uri($textDocumentUri)
+            ->uri(self::EXAMPLE_DOCUMENT_URI)
             ->build();
         
         $renamer = new MemberRenamer(
-            new PredefinedReferenceFinder([$textDocumentUri => $references]),
-            InMemoryDocumentLocator::fromTextDocuments([
-                $textDocumentUri => $textDocument
-            ]),
+            new PredefinedReferenceFinder(...array_map(function (ByteOffset $reference) use ($textDocument) {
+                return PotentialLocation::surely(new Location($textDocument->uri(), $reference));
+            }, $references)),
+            InMemoryDocumentLocator::fromTextDocuments([$textDocument]),
             new Parser(),
         );
 
