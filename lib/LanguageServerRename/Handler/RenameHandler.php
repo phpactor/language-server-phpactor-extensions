@@ -3,6 +3,7 @@
 namespace Phpactor\Extension\LanguageServerRename\Handler;
 
 use Amp\Promise;
+use Generator;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\LanguageServerBridge\Converter\RangeConverter;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
@@ -24,6 +25,7 @@ use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\TextDocument\TextDocumentLocator;
 use Phpactor\TextDocument\TextDocumentUri;
 use Traversable;
+use function Amp\delay;
 use function iterator_to_array;
 
 class RenameHandler implements Handler, CanRegisterCapabilities
@@ -63,16 +65,23 @@ class RenameHandler implements Handler, CanRegisterCapabilities
     public function rename(RenameParams $params): Promise
     {
         return \Amp\call(function () use ($params) {
-            return $this->resultToWorkspaceEdit(
-                $this->renamer->rename(
-                    $document = $this->documentLocator->get(TextDocumentUri::fromString($params->textDocument->uri)),
-                    PositionConverter::positionToByteOffset(
-                        $params->position,
-                        (string)$document
-                    ),
-                    $params->newName
-                )
-            );
+            $locatedEdits = [];
+            $count = 0;
+            foreach ($this->renamer->rename(
+                $document = $this->documentLocator->get(TextDocumentUri::fromString($params->textDocument->uri)),
+                PositionConverter::positionToByteOffset(
+                    $params->position,
+                    (string)$document
+                ),
+                $params->newName
+            ) as $result) {
+                if ($count++ === 10) {
+                    yield delay(1);
+                }
+                $locatedEdits[] = $result;
+            }
+
+            return $this->resultToWorkspaceEdit($locatedEdits);
         });
     }
     /**
@@ -100,11 +109,14 @@ class RenameHandler implements Handler, CanRegisterCapabilities
     {
         $capabilities->renameProvider = new RenameOptions(true);
     }
-    
-    private function resultToWorkspaceEdit(Traversable $results): WorkspaceEdit
+
+    /**
+     * @param LocatedTextEdit[] $results
+     */
+    private function resultToWorkspaceEdit(array $locatedEdits): WorkspaceEdit
     {
         $documentEdits = [];
-        $map = LocatedTextEditsMap::fromLocatedEdits(iterator_to_array($results));
+        $map = LocatedTextEditsMap::fromLocatedEdits($locatedEdits);
 
         foreach ($map->toLocatedTextEdits() as $result) {
             $version = $this->getDocumentVersion((string)$result->documentUri());
