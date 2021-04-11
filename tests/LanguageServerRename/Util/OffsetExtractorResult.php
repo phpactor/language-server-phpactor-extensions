@@ -7,7 +7,7 @@ use Phpactor\TextDocument\ByteOffsetRange;
 use RuntimeException;
 use function array_reduce;
 
-class OffsetExtractorResult
+final class OffsetExtractorResult
 {
     /**
      * @var array<string,ByteOffset[]>

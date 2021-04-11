@@ -20,18 +20,9 @@ final class OffsetExtractor
      */
     private $rangeCloseMarkers = [];
 
-    final private function __construct()
-    {
-    }
-
     public static function create(): OffsetExtractor
     {
         return new OffsetExtractor();
-    }
-
-    public static function extractOffset(string $source, string $marker = '<>'): OffsetExtractorResult
-    {
-        return self::create()->registerOffset('point', $marker)->parse($source);
     }
 
     public function registerOffset(string $name, string $marker): OffsetExtractor
