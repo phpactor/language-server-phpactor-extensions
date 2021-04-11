@@ -35,11 +35,12 @@ class RenameLocationsProviderTest extends TestCase
         $references = [];
         $expected = [];
         foreach ($sources as $uri => $source) {
-            $offsetExtractor->parse($source);
-            $selections = $offsetExtractor->points('selection');
-            $definitions = $offsetExtractor->points('definition');
-            $documentReferences = $offsetExtractor->points('references');
-            $newSource = $offsetExtractor->source();
+            $offsets = $offsetExtractor->parse($source);
+
+            $selections = $offsets->points('selection');
+            $definitions = $offsets->points('definition');
+            $documentReferences = $offsets->points('references');
+            $newSource = $offsets->source();
             
             if (!empty($selections)) {
                 $selection = $selections[0];
