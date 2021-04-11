@@ -19,6 +19,16 @@ class MemberRenamer extends AbstractReferenceRenamer
             return ByteOffsetRange::fromInts($node->name->start, $node->name->getEndPosition());
         }
 
+        // hack because the WR property deefinition locator returns the
+        // property declaration and not the variable
+        if ($node instanceof PropertyDeclaration) {
+            $variable = $node->getFirstDescendantNode(Variable::class);
+            if (!$variable instanceof Variable) {
+                return null;
+            }
+            return $this->offsetRangeFromToken($variable->name, false);
+        }
+
         if ($node instanceof Variable && $node->getFirstAncestor(PropertyDeclaration::class)) {
             return $this->offsetRangeFromToken($node->name, true);
         }

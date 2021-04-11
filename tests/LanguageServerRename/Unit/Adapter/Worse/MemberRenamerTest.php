@@ -149,5 +149,8 @@ class MemberRenamerTest extends TestCase
         yield 'static method call' => [
             '<?php Foobar::{{<r>me<>thod1}}(); }'
         ];
+        yield 'property and definition' => [
+            '<?php class Foobar { <r>private {{$foobar}}; function bar() { return $this->{{<r>fo<>obar}}; } }'
+        ];
     }
 }
