@@ -16,11 +16,24 @@ class OffsetExtractorTest extends TestCase
             ->registerPoint('selection', '<>')
             ->parse('Test string with<> selector');
 
-        $selection = $extractor->point('selection');
+        $selection = $extractor->offset('selection');
         $newSource = $extractor->source();
         
         $this->assertEquals(ByteOffset::fromInt(16), $selection);
         $this->assertEquals('Test string with selector', $newSource);
+    }
+
+    public function testPreservesMultibytePoint(): void
+    {
+        $extractor = OffsetExtractor::create()
+            ->registerPoint('selection', '<>')
+            ->parse('Test string 🐱   <> selector');
+
+        $selection = $extractor->offset('selection');
+        $newSource = $extractor->source();
+        
+        $this->assertEquals(ByteOffset::fromInt(19), $selection);
+        $this->assertEquals('Test string 🐱    selector', $newSource);
     }
 
     public function testExceptionWhenNoPointIsFound(): void
@@ -32,7 +45,7 @@ class OffsetExtractorTest extends TestCase
             ->registerPoint('selection', '<>')
             ->parse('Test string without selector');
 
-        $extractor->point('selection');
+        $extractor->offset('selection');
     }
 
     public function testExceptionWhenNoPointIsRegistered(): void
@@ -43,7 +56,7 @@ class OffsetExtractorTest extends TestCase
         $extractor = OffsetExtractor::create()
             ->parse('Test string without selector');
 
-        $extractor->point('selection');
+        $extractor->offset('selection');
     }
 
     public function testPoints(): void
@@ -51,7 +64,7 @@ class OffsetExtractorTest extends TestCase
         $extractor = OffsetExtractor::create()
             ->registerPoint('selection', '<>')
             ->parse('Test string with<> two select<>ors');
-        $selection = $extractor->points('selection');
+        $selection = $extractor->offsets('selection');
         $newSource = $extractor->source();
         $this->assertEquals([
             ByteOffset::fromInt(16),

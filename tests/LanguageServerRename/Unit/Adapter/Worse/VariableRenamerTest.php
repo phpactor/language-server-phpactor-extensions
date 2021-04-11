@@ -28,7 +28,7 @@ class VariableRenamerTest extends TestCase
             ->registerRange('expectedRange', '{{', '}}')
             ->parse($source);
 
-        [ $selection ] = $extractor->points('selection');
+        [ $selection ] = $extractor->offsets('selection');
         $expectedRanges = $extractor->ranges('expectedRange');
         $newSource = $extractor->source();
         
@@ -90,9 +90,9 @@ class VariableRenamerTest extends TestCase
             ->registerRange('resultEditRanges', '{{', '}}')
             ->parse($source);
 
-        [ $selection ] = $extractor->points('selection');
-        [ $definition ] = $extractor->points('definition');
-        $references = $extractor->points('references');
+        [ $selection ] = $extractor->offsets('selection');
+        [ $definition ] = $extractor->offsets('definition');
+        $references = $extractor->offsets('references');
         $resultEditRanges = $extractor->ranges('resultEditRanges');
         $newSource = $extractor->source();
         

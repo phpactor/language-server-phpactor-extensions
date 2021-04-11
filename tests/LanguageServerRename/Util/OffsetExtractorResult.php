@@ -38,7 +38,7 @@ class OffsetExtractorResult
     /**
      * @return ByteOffset[]
      */
-    public function points(string $name): array
+    public function offsets(string $name): array
     {
         if (!isset($this->points[$name])) {
             throw new RuntimeException(sprintf(
@@ -51,9 +51,9 @@ class OffsetExtractorResult
         return $this->points[$name];
     }
 
-    public function point(string $name): ByteOffset
+    public function offset(string $name): ByteOffset
     {
-        $points = $this->points($name);
+        $points = $this->offsets($name);
 
         if (!count($points)) {
             throw new RuntimeException(sprintf(
