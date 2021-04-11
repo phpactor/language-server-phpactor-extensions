@@ -4,6 +4,7 @@ namespace Phpactor\Extension\LanguageServerRename\Adapter\ClassMover;
 
 use Generator;
 use Microsoft\PhpParser\Node;
+use Microsoft\PhpParser\Node\ConstElement;
 use Microsoft\PhpParser\Node\Expression\CallExpression;
 use Microsoft\PhpParser\Node\Expression\MemberAccessExpression;
 use Microsoft\PhpParser\Node\Expression\ScopedPropertyAccessExpression;
@@ -81,6 +82,10 @@ class MemberRenamer implements Renamer
 
         if ($node instanceof MemberAccessExpression || $node instanceof ScopedPropertyAccessExpression) {
             return $this->offsetRangeFromToken($node->memberName, false);
+        }
+
+        if ($node instanceof ConstElement) {
+            return ByteOffsetRange::fromInts($node->name->start, $node->name->getEndPosition());
         }
 
         return null;

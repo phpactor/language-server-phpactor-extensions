@@ -34,7 +34,7 @@ class MemberRenamerTest extends TestCase
             ->registerRange('expectedRange', '{{', '}}')
             ->parse($source);
         
-        [ $selection ] = $extractor->offsets('selection');
+        $selection = $extractor->offset('selection');
         $expectedRanges = $extractor->ranges('expectedRange');
         $newSource = $extractor->source();
         
@@ -74,6 +74,12 @@ class MemberRenamerTest extends TestCase
         ];
         yield 'static property access' => [
             '<?php Foobar::${{me<>thod1}}; }'
+        ];
+        yield 'constant declaration' => [
+            '<?php class Class1 { const {{F<>OO}}="bar"; }'
+        ];
+        yield 'constant access' => [
+            '<?php Foo::{{F<>OO}};'
         ];
     }
 
