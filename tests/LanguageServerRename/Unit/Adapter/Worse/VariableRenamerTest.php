@@ -8,7 +8,7 @@ use Generator;
 use Phpactor\Extension\LanguageServerRename\Adapter\Worse\RenameLocationsProvider;
 use Phpactor\Extension\LanguageServerRename\Adapter\Worse\VariableRenamer;
 use Phpactor\Extension\LanguageServerRename\Model\RenameResult;
-use Phpactor\Extension\LanguageServerRename\Tests\OffsetExtractor;
+use Phpactor\Extension\LanguageServerRename\Tests\Util\OffsetExtractor;
 use Phpactor\Extension\LanguageServerRename\Tests\Unit\PredefinedDefinitionLocator;
 use Phpactor\Extension\LanguageServerRename\Tests\Unit\PredefinedReferenceFinder;
 use Phpactor\TextDocument\ByteOffset;
@@ -27,7 +27,7 @@ class VariableRenamerTest extends TestCase
             ->registerPoint('selection', '<>')
             ->registerRange('expectedRange', '{{', '}}')
             ->parse($source);
-        
+
         [ $selection ] = $extractor->points('selection');
         $expectedRanges = $extractor->ranges('expectedRange');
         $newSource = $extractor->source();

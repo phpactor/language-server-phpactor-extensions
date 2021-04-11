@@ -6,7 +6,7 @@ use Generator;
 use PHPUnit\Framework\TestCase;
 use Phpactor\Extension\LanguageServerRename\Adapter\Worse\RenameLocationGroup;
 use Phpactor\Extension\LanguageServerRename\Adapter\Worse\RenameLocationsProvider;
-use Phpactor\Extension\LanguageServerRename\Tests\OffsetExtractor;
+use Phpactor\Extension\LanguageServerRename\Tests\Util\OffsetExtractor;
 use Phpactor\Extension\LanguageServerRename\Tests\Unit\PredefinedDefinitionLocator;
 use Phpactor\Extension\LanguageServerRename\Tests\Unit\PredefinedReferenceFinder;
 use Phpactor\ReferenceFinder\DefinitionLocation;
