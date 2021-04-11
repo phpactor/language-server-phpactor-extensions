@@ -48,6 +48,9 @@ final class LocatedTextEditsMap
         return new self($map);
     }
 
+    /**
+     * @return LocatedTextEdits[]
+     */
     public function toLocatedTextEdits(): array
     {
         $locatedTextEdits = [];

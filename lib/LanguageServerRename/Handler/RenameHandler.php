@@ -7,6 +7,7 @@ use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\LanguageServerBridge\Converter\RangeConverter;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdits;
+use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEditsMap;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
 use Phpactor\LanguageServerProtocol\PrepareRenameParams;
 use Phpactor\LanguageServerProtocol\PrepareRenameRequest;
@@ -23,6 +24,8 @@ use Phpactor\LanguageServer\Core\Handler\Handler;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\TextDocument\TextDocumentLocator;
 use Phpactor\TextDocument\TextDocumentUri;
+use Traversable;
+use function iterator_to_array;
 
 class RenameHandler implements Handler, CanRegisterCapabilities
 {
@@ -99,11 +102,12 @@ class RenameHandler implements Handler, CanRegisterCapabilities
         $capabilities->renameProvider = new RenameOptions(true);
     }
     
-    private function resultToWorkspaceEdit(iterable $results): WorkspaceEdit
+    private function resultToWorkspaceEdit(Traversable $results): WorkspaceEdit
     {
         $documentEdits = [];
-        foreach ($results as $result) {
-            /** @var RenameResult $result */
+        $map = LocatedTextEditsMap::fromLocatedEdits(iterator_to_array($results));
+
+        foreach ($map->toLocatedTextEdits() as $result) {
             $version = $this->getDocumentVersion((string)$result->documentUri());
             $documentEdits[] = new TextDocumentEdit(
                 new VersionedTextDocumentIdentifier(

@@ -3,6 +3,7 @@
 namespace Phpactor\Extension\LanguageServerRename\Model\Renamer;
 
 use Generator;
+use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdit;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\ByteOffsetRange;
@@ -14,11 +15,15 @@ class InMemoryRenamer implements Renamer
      * @var ByteOffsetRange
      */
     private $range;
+
     /**
-     * @var array
+     * @var LocatedTextEdit[]
      */
     private $results;
 
+    /**
+     * @param LocatedTextEdit[] $results
+     */
     public function __construct(?ByteOffsetRange $range, array $results = [])
     {
         $this->results = $results;
