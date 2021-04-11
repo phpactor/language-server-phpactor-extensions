@@ -106,6 +106,10 @@ class MemberRenamer implements Renamer
             $textDocument = $this->locator->get($reference->location()->uri());
             $range = $this->getRenameRange($textDocument, $reference->location()->offset());
 
+            if (null === $range) {
+                continue;
+            }
+
             $edits = $edits->withTextEdit(
                 $reference->location()->uri(),
                 PhpactorTextEdit::create(
