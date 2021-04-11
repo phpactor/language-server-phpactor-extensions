@@ -6,7 +6,6 @@ use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
 use Phpactor\Extension\LanguageServerRename\Adapter\Worse\MemberRenamer;
-use Phpactor\Extension\LanguageServerRename\Adapter\Worse\RenameLocationsProvider;
 use Phpactor\Extension\LanguageServerRename\Adapter\Worse\VariableRenamer;
 use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
 use Phpactor\MapResolver\Resolver;

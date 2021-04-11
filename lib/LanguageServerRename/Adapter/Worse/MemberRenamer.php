@@ -2,7 +2,6 @@
 
 namespace Phpactor\Extension\LanguageServerRename\Adapter\Worse;
 
-use Generator;
 use Microsoft\PhpParser\Node;
 use Microsoft\PhpParser\Node\ConstElement;
 use Microsoft\PhpParser\Node\Expression\MemberAccessExpression;
@@ -10,16 +9,7 @@ use Microsoft\PhpParser\Node\Expression\ScopedPropertyAccessExpression;
 use Microsoft\PhpParser\Node\Expression\Variable;
 use Microsoft\PhpParser\Node\MethodDeclaration;
 use Microsoft\PhpParser\Node\PropertyDeclaration;
-use Microsoft\PhpParser\Parser;
-use Microsoft\PhpParser\Token;
-use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdit;
-use Phpactor\Extension\LanguageServerRename\Model\Renamer;
-use Phpactor\ReferenceFinder\ReferenceFinder;
-use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\ByteOffsetRange;
-use Phpactor\TextDocument\TextDocument;
-use Phpactor\TextDocument\TextDocumentLocator;
-use Phpactor\TextDocument\TextEdit as PhpactorTextEdit;
 
 class MemberRenamer extends AbstractReferenceRenamer
 {

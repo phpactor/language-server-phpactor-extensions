@@ -5,10 +5,8 @@ namespace Phpactor\Extension\LanguageServerRename\Tests\Unit;
 use Phpactor\ReferenceFinder\PotentialLocation;
 use Phpactor\ReferenceFinder\ReferenceFinder;
 use Phpactor\TextDocument\ByteOffset;
-use Phpactor\TextDocument\Location;
 use Phpactor\TextDocument\TextDocument;
 use Generator;
-use Phpactor\TextDocument\TextDocumentUri;
 
 class PredefinedReferenceFinder implements ReferenceFinder
 {

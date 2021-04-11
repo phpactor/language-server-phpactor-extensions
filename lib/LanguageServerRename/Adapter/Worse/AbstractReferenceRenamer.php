@@ -4,12 +4,6 @@ namespace Phpactor\Extension\LanguageServerRename\Adapter\Worse;
 
 use Generator;
 use Microsoft\PhpParser\Node;
-use Microsoft\PhpParser\Node\ConstElement;
-use Microsoft\PhpParser\Node\Expression\MemberAccessExpression;
-use Microsoft\PhpParser\Node\Expression\ScopedPropertyAccessExpression;
-use Microsoft\PhpParser\Node\Expression\Variable;
-use Microsoft\PhpParser\Node\MethodDeclaration;
-use Microsoft\PhpParser\Node\PropertyDeclaration;
 use Microsoft\PhpParser\Parser;
 use Microsoft\PhpParser\Token;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdit;
@@ -48,8 +42,6 @@ abstract class AbstractReferenceRenamer implements Renamer
         $this->parser = $parser;
     }
 
-    abstract protected function getRenameRangeForNode(Node $node): ?ByteOffsetRange;
-
     public function getRenameRange(TextDocument $textDocument, ByteOffset $offset): ?ByteOffsetRange
     {
         $node = $this->parser->parseSourceFile($textDocument->__toString())->getDescendantNodeAtPosition($offset->toInt());
@@ -83,6 +75,8 @@ abstract class AbstractReferenceRenamer implements Renamer
             );
         }
     }
+
+    abstract protected function getRenameRangeForNode(Node $node): ?ByteOffsetRange;
 
     /**
      * @param Token|Node $tokenOrNode
