@@ -18,7 +18,7 @@ use Phpactor\ReferenceFinder\DefinitionLocator;
 use Phpactor\TextDocument\TextDocumentLocator;
 use Phpactor\WorseReferenceFinder\TolerantVariableReferenceFinder;
 
-class LanguageServerRenameExtension implements Extension
+class LanguageServerRenameWorseExtension implements Extension
 {
     public const TAG_RENAMER = 'language_server_rename.renamer';
     /**
@@ -27,20 +27,21 @@ class LanguageServerRenameExtension implements Extension
      */
     public function load(ContainerBuilder $container): void
     {
-        $container->register(Renamer::class, function (Container $container) {
-            return new ChainRenamer(array_map(function (string $serviceId) use ($container) {
-                return $container->get($serviceId);
-            }, array_keys($container->getServiceIdsForTag(self::TAG_RENAMER))));
+        $container->register(RenameLocationsProvider::class, function (Container $container) {
+            return new RenameLocationsProvider(
+                $container->get('worse_reference_finder.reference_finder.variable'),
+                $container->get(ReferenceFinderExtension::SERVICE_DEFINITION_LOCATOR)
+            );
         });
 
-        $container->register(RenameHandler::class, function (Container $container) {
-            return new RenameHandler(
-                $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
+        $container->register(VariableRenamer::class, function (Container $container) {
+            return new VariableRenamer(
+                $container->get(RenameLocationsProvider::class),
                 $container->get(TextDocumentLocator::class),
-                $container->get(Renamer::class),
+                $container->get('worse_reflection.tolerant_parser')
             );
         }, [
-            LanguageServerExtension::TAG_METHOD_HANDLER => []
+            LanguageServerRenameExtension::TAG_RENAMER => []
         ]);
     }
 
