@@ -3,28 +3,28 @@
 namespace Phpactor\Extension\LanguageServerRename\Model;
 
 use Phpactor\TextDocument\TextDocumentUri;
-use Phpactor\TextDocument\TextEdits;
+use Phpactor\TextDocument\TextEdit;
 
-class RenameResult
+final class LocatedTextEdit
 {
-    /**
-     * @var TextEdits
-     */
-    private $textEdits;
     /**
      * @var TextDocumentUri
      */
     private $documentUri;
+    /**
+     * @var TextEdit
+     */
+    private $textEdit;
 
-    public function __construct(TextEdits $textEdits, TextDocumentUri $documentUri)
+    public function __construct(TextDocumentUri $documentUri, TextEdit $textEdit)
     {
-        $this->textEdits = $textEdits;
         $this->documentUri = $documentUri;
+        $this->textEdit = $textEdit;
     }
 
-    public function textEdits(): TextEdits
+    public function textEdit(): TextEdit
     {
-        return $this->textEdits;
+        return $this->textEdit;
     }
 
     public function documentUri(): TextDocumentUri

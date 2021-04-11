@@ -7,34 +7,25 @@ use Phpactor\ReferenceFinder\DefinitionLocator;
 use Phpactor\ReferenceFinder\Exception\CouldNotLocateDefinition;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocument;
-use Phpactor\TextDocument\TextDocumentUri;
 
 class PredefinedDefinitionLocator implements DefinitionLocator
 {
     /**
-     * @var ?ByteOffset
+     * @var DefinitionLocation|null
      */
-    private $definition;
-    /**
-     * @var ?string
-     */
-    private $uri;
+    private $location;
 
-    public function __construct(?ByteOffset $definition, ?string $uri)
+    public function __construct(?DefinitionLocation $locationr)
     {
-        $this->definition = $definition;
-        $this->uri = $uri;
+        $this->location = $locationr;
     }
 
     public function locateDefinition(TextDocument $document, ByteOffset $byteOffset): DefinitionLocation
     {
-        if ($this->definition !== null) {
-            return new DefinitionLocation(
-                TextDocumentUri::fromString($this->uri),
-                $this->definition
-            );
-        } else {
-            throw new CouldNotLocateDefinition();
+        if ($this->location !== null) {
+            return $this->location;
         }
+
+        throw new CouldNotLocateDefinition();
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Phpactor\Extension\LanguageServerRename\Tests\Integration\Handler;
 
-use Phpactor\Extension\LanguageServerRename\Model\RenameResult;
+use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdit;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer\InMemoryRenamer;
 use Phpactor\Extension\LanguageServerRename\Tests\IntegrationTestCase;
 use Phpactor\LanguageServerProtocol\PrepareRenameParams;
@@ -19,7 +19,6 @@ use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\ByteOffsetRange;
 use Phpactor\TextDocument\TextDocumentUri;
 use Phpactor\TextDocument\TextEdit;
-use Phpactor\TextDocument\TextEdits;
 
 class RenameHandlerTest extends IntegrationTestCase
 {
@@ -65,9 +64,7 @@ class RenameHandlerTest extends IntegrationTestCase
     {
         $expectedCharOffset = 3;
 
-        $this->bootContainerWithRangeAndResults(ByteOffsetRange::fromInts(0, $expectedCharOffset), [
-            new RenameResult(TextEdits::none(), TextDocumentUri::fromString('file:///foobar.php'))
-        ]);
+        $this->bootContainerWithRangeAndResults(ByteOffsetRange::fromInts(0, $expectedCharOffset), []);
         $this->tester->textDocument()->open(self::EXAMPLE_FILE, '<?php');
 
         $response = $this->tester->requestAndWait(
@@ -86,11 +83,9 @@ class RenameHandlerTest extends IntegrationTestCase
     {
         $expectedUri = TextDocumentUri::fromString(self::EXAMPLE_FILE);
         $this->bootContainerWithRangeAndResults(ByteOffsetRange::fromInts(0, 0), [
-            new RenameResult(
-                TextEdits::one(
-                    TextEdit::create(ByteOffset::fromInt(1), 0, self::EXAMPLE_NEW_NAME)
-                ),
+            new LocatedTextEdit(
                 $expectedUri,
+                TextEdit::create(ByteOffset::fromInt(1), 0, self::EXAMPLE_NEW_NAME)
             )
         ]);
         $this->tester->textDocument()->open(self::EXAMPLE_FILE, '<?php');

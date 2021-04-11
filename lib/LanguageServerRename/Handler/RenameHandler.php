@@ -6,7 +6,8 @@ use Amp\Promise;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\LanguageServerBridge\Converter\RangeConverter;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
-use Phpactor\Extension\LanguageServerRename\Model\RenameResult;
+use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdit;
+use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEditsMap;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
 use Phpactor\LanguageServerProtocol\PrepareRenameParams;
 use Phpactor\LanguageServerProtocol\PrepareRenameRequest;
@@ -23,6 +24,7 @@ use Phpactor\LanguageServer\Core\Handler\Handler;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\TextDocument\TextDocumentLocator;
 use Phpactor\TextDocument\TextDocumentUri;
+use function Amp\delay;
 
 class RenameHandler implements Handler, CanRegisterCapabilities
 {
@@ -61,16 +63,23 @@ class RenameHandler implements Handler, CanRegisterCapabilities
     public function rename(RenameParams $params): Promise
     {
         return \Amp\call(function () use ($params) {
-            return $this->resultToWorkspaceEdit(
-                $this->renamer->rename(
-                    $document = $this->documentLocator->get(TextDocumentUri::fromString($params->textDocument->uri)),
-                    PositionConverter::positionToByteOffset(
-                        $params->position,
-                        (string)$document
-                    ),
-                    $params->newName
-                )
-            );
+            $locatedEdits = [];
+            $count = 0;
+            foreach ($this->renamer->rename(
+                $document = $this->documentLocator->get(TextDocumentUri::fromString($params->textDocument->uri)),
+                PositionConverter::positionToByteOffset(
+                    $params->position,
+                    (string)$document
+                ),
+                $params->newName
+            ) as $result) {
+                if ($count++ === 10) {
+                    yield delay(1);
+                }
+                $locatedEdits[] = $result;
+            }
+
+            return $this->resultToWorkspaceEdit($locatedEdits);
         });
     }
     /**
@@ -98,12 +107,16 @@ class RenameHandler implements Handler, CanRegisterCapabilities
     {
         $capabilities->renameProvider = new RenameOptions(true);
     }
-    
-    private function resultToWorkspaceEdit(iterable $results): WorkspaceEdit
+
+    /**
+     * @param LocatedTextEdit[] $locatedEdits
+     */
+    private function resultToWorkspaceEdit(array $locatedEdits): WorkspaceEdit
     {
         $documentEdits = [];
-        foreach ($results as $result) {
-            /** @var RenameResult $result */
+        $map = LocatedTextEditsMap::fromLocatedEdits($locatedEdits);
+
+        foreach ($map->toLocatedTextEdits() as $result) {
             $version = $this->getDocumentVersion((string)$result->documentUri());
             $documentEdits[] = new TextDocumentEdit(
                 new VersionedTextDocumentIdentifier(

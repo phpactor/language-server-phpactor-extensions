@@ -5,14 +5,18 @@ namespace Phpactor\Extension\LanguageServerRename\Tests\Unit\Adapter\Worse;
 use Microsoft\PhpParser\Parser;
 use PHPUnit\Framework\TestCase;
 use Generator;
-use Phpactor\Extension\LanguageServerRename\Adapter\Worse\RenameLocationsProvider;
 use Phpactor\Extension\LanguageServerRename\Adapter\Worse\VariableRenamer;
-use Phpactor\Extension\LanguageServerRename\Model\RenameResult;
+use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdits;
+use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEditsMap;
 use Phpactor\Extension\LanguageServerRename\Tests\Util\OffsetExtractor;
 use Phpactor\Extension\LanguageServerRename\Tests\Unit\PredefinedDefinitionLocator;
 use Phpactor\Extension\LanguageServerRename\Tests\Unit\PredefinedReferenceFinder;
+use Phpactor\ReferenceFinder\DefinitionAndReferenceFinder;
+use Phpactor\ReferenceFinder\DefinitionLocation;
+use Phpactor\ReferenceFinder\PotentialLocation;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\ByteOffsetRange;
+use Phpactor\TextDocument\Location;
 use Phpactor\TextDocument\TextDocumentBuilder;
 use Phpactor\TextDocument\TextDocumentLocator\InMemoryDocumentLocator;
 use Phpactor\TextDocument\TextEdit;
@@ -20,6 +24,8 @@ use Phpactor\TextDocument\TextEdits;
 
 class VariableRenamerTest extends TestCase
 {
+    const URI = 'file:///test/Class1.php';
+
     /** @dataProvider provideGetRenameRange */
     public function testGetRenameRange(string $source): void
     {
@@ -38,14 +44,7 @@ class VariableRenamerTest extends TestCase
             ->uri('file:///test/testDoc')
             ->build();
         
-        $variableRenamer = new VariableRenamer(
-            new RenameLocationsProvider(
-                new PredefinedReferenceFinder([]),
-                new PredefinedDefinitionLocator(ByteOffset::fromInt(0), '')
-            ),
-            InMemoryDocumentLocator::fromTextDocuments([]),
-            new Parser()
-        );
+        $variableRenamer = $this->createRenamer([], null, []);
         $actualRange = $variableRenamer->getRenameRange($document, $selection);
         $this->assertEquals($expectedRange, $actualRange);
     }
@@ -87,53 +86,48 @@ class VariableRenamerTest extends TestCase
             ->registerOffset('selection', '<>')
             ->registerOffset('definition', '<d>')
             ->registerOffset('references', '<r>')
-            ->registerRange('resultEditRanges', '{{', '}}')
+            ->registerRange('expectedRanges', '{{', '}}')
             ->parse($source);
 
-        [ $selection ] = $extractor->offsets('selection');
-        [ $definition ] = $extractor->offsets('definition');
+        $selection = $extractor->offset('selection');
+        $definition = $extractor->offset('definition');
         $references = $extractor->offsets('references');
-        $resultEditRanges = $extractor->ranges('resultEditRanges');
-        $newSource = $extractor->source();
-        
+        $expectedRanges = $extractor->ranges('expectedRanges');
         $newName = 'newName';
 
-        $textDocumentUri = 'file:///test/Class1.php';
-        $textDocument = TextDocumentBuilder::create($newSource)
-            ->uri($textDocumentUri)
+        $textDocument = TextDocumentBuilder::create($extractor->source())
+            ->uri(self::URI)
             ->build();
-        
-        $renamer = new VariableRenamer(
-            new RenameLocationsProvider(
-                new PredefinedReferenceFinder([$textDocumentUri => $references]),
-                new PredefinedDefinitionLocator($definition, $textDocumentUri)
-            ),
-            InMemoryDocumentLocator::fromTextDocuments([
-                $textDocumentUri => $textDocument
-            ]),
-            new Parser(),
-        );
 
-        $resultEdits = [];
-        foreach ($resultEditRanges as $range) {
+        $expectedEdits = [];
+        foreach ($expectedRanges as $range) {
             assert($range instanceof ByteOffsetRange);
-            $resultEdits[] = TextEdit::create(
+            $expectedEdits[] = TextEdit::create(
                 $range->start(),
                 $range->end()->toInt() - $range->start()->toInt(),
                 $newName
             );
         }
 
+        $renamer = $this->createRenamer(array_map(function (ByteOffset $reference) use ($textDocument) {
+            return PotentialLocation::surely(new Location($textDocument->uri(), $reference));
+        }, $references), new DefinitionLocation($textDocument->uri(), $definition), [ $textDocument ]);
+
         $renamer->getRenameRange($textDocument, $selection);
-        $actualResults = iterator_to_array($renamer->rename($textDocument, $selection, $newName), false);
+
+        $actualResults = iterator_to_array(
+            $renamer->rename($textDocument, $selection, $newName),
+            false
+        );
+
         $this->assertEquals(
             [
-                new RenameResult(
-                    TextEdits::fromTextEdits($resultEdits),
+                new LocatedTextEdits(
+                    TextEdits::fromTextEdits($expectedEdits),
                     $textDocument->uri()
                 )
             ],
-            $actualResults
+            LocatedTextEditsMap::fromLocatedEdits($actualResults)->toLocatedTextEdits()
         );
     }
 
@@ -152,7 +146,7 @@ class VariableRenamerTest extends TestCase
         ];
 
         yield 'Rename variable (in list deconstructor with key)' => [
-            '<?php class Class1 { function method1(){ [ <d>"key"=>${{va<>r1}} ] = 5; $var2 = <r>${{var1}} + 5; } }'
+            '<?php class Class1 { function method1(){ [ "key"=><d>${{va<>r1}} ] = 5; $var2 = <r>${{var1}} + 5; } }'
         ];
 
         yield 'Rename variable (in list function no key)' => [
@@ -160,7 +154,7 @@ class VariableRenamerTest extends TestCase
         ];
 
         yield 'Rename variable (in list function with key)' => [
-            '<?php class Class1 { function method1(){ list(<d>"key"=>${{va<>r1}}) = 5; $var2 = <r>${{var1}} + 5; } }'
+            '<?php class Class1 { function method1(){ list("key"=><d>${{va<>r1}}) = 5; $var2 = <r>${{var1}} + 5; } }'
         ];
 
         yield 'Rename variable (as foreach array)' => [
@@ -168,15 +162,15 @@ class VariableRenamerTest extends TestCase
         ];
 
         yield 'Rename variable (as foreach value)' => [
-            '<?php class Class1 { function method1(){ $var = []; <d>foreach($var as ${{val}}) { <r>${{v<>al}} += 5; } } }'
+            '<?php class Class1 { function method1(){ $var = []; foreach($var as <d>${{val}}) { <r>${{v<>al}} += 5; } } }'
         ];
 
         yield 'Rename variable (as foreach key)' => [
-            '<?php class Class1 { function method1(){ $var = []; <d>foreach($var as ${{key}}=>$val) { <r>${{k<>ey}} += 5; } } }'
+            '<?php class Class1 { function method1(){ $var = []; foreach($var as <d>${{key}}=>$val) { <r>${{k<>ey}} += 5; } } }'
         ];
 
         yield 'Rename argument' => [
-            '<?php class Class1 { function method1(<d>Class2 ${{ar<>g1}}){ <r>${{arg1}} = 5; $var2 = <r>${{arg1}} + 5; } }'
+            '<?php class Class1 { function method1(Class2 <d>${{ar<>g1}}){ <r>${{arg1}} = 5; $var2 = <r>${{arg1}} + 5; } }'
         ];
 
         yield 'Rename argument (no hint)' => [
@@ -184,7 +178,20 @@ class VariableRenamerTest extends TestCase
         ];
 
         yield 'Rename foreach variable' => [
-            '<?php $var1 = 0; <d>foreach($array as ${{value}}) { echo <r>${{val<>ue}}; }'
+            '<?php $var1 = 0; foreach($array as <d>${{value}}) { echo <r>${{val<>ue}}; }'
         ];
+    }
+
+    private function createRenamer(array $references, ?DefinitionLocation $defintionLocation, array $textDocuments): VariableRenamer
+    {
+        $variableRenamer = new VariableRenamer(
+            new DefinitionAndReferenceFinder(
+                new PredefinedDefinitionLocator($defintionLocation),
+                new PredefinedReferenceFinder(...$references),
+            ),
+            InMemoryDocumentLocator::fromTextDocuments($textDocuments),
+            new Parser()
+        );
+        return $variableRenamer;
     }
 }
