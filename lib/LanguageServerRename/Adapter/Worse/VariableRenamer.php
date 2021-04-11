@@ -13,6 +13,7 @@ use Microsoft\PhpParser\Node\Statement\ForeachStatement;
 use Microsoft\PhpParser\Node\StringLiteral;
 use Microsoft\PhpParser\Parser;
 use Microsoft\PhpParser\Token;
+use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdit;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdits;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
 use Phpactor\TextDocument\ByteOffset;
@@ -68,12 +69,17 @@ class VariableRenamer implements Renamer
 
         foreach ($this->renameLocations->provideLocations($textDocument, $offset) as $locationGroup) {
             assert($locationGroup instanceof RenameLocationGroup);
-            yield new LocatedTextEdits(
-                $this->locationsToTextEdits($locationGroup->uri(), $locationGroup->locations(), $oldName, $newName),
-                $locationGroup->uri()
-            );
+            foreach ($this->locationsToTextEdits(
+                $locationGroup->uri(),
+                $locationGroup->locations(),
+                $oldName,
+                $newName
+            ) as $textEdit) {
+                yield new LocatedTextEdit($locationGroup->uri(), $textEdit);
+            }
         }
     }
+
     /** @param Location[] $locations */
     private function locationsToTextEdits(TextDocumentUri $textDocumentUri, array $locations, string $oldName, string $newName): TextEdits
     {

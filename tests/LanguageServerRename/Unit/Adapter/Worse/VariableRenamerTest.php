@@ -8,6 +8,7 @@ use Generator;
 use Phpactor\Extension\LanguageServerRename\Adapter\Worse\RenameLocationsProvider;
 use Phpactor\Extension\LanguageServerRename\Adapter\Worse\VariableRenamer;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdits;
+use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEditsMap;
 use Phpactor\Extension\LanguageServerRename\Tests\Util\OffsetExtractor;
 use Phpactor\Extension\LanguageServerRename\Tests\Unit\PredefinedDefinitionLocator;
 use Phpactor\Extension\LanguageServerRename\Tests\Unit\PredefinedReferenceFinder;
@@ -133,7 +134,7 @@ class VariableRenamerTest extends TestCase
                     $textDocument->uri()
                 )
             ],
-            $actualResults
+            LocatedTextEditsMap::fromLocatedEdits($actualResults)->toLocatedTextEdits()
         );
     }
 
