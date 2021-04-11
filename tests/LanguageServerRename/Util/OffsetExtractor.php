@@ -1,12 +1,11 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerRename\Tests;
+namespace Phpactor\Extension\LanguageServerRename\Tests\Util;
 
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\ByteOffsetRange;
-use RuntimeException;
 
-class OffsetExtractor
+final class OffsetExtractor
 {
     /**
      * @var array
@@ -20,30 +19,13 @@ class OffsetExtractor
      * @var array
      */
     private $rangeCloseMarkers = [];
-    /**
-     * @var array<string,ByteOffset[]>
-     */
-    private $pointResults = [];
-    /**
-     * @var array<string,ByteOffsetRange[]>
-     */
-    private $rangeResults = [];
-    /**
-     * @var string
-     */
-    private $source;
-
-
-    private function __construct()
-    {
-    }
 
     public static function create(): OffsetExtractor
     {
         return new OffsetExtractor();
     }
 
-    public function registerPoint(string $name, string $marker): OffsetExtractor
+    public function registerOffset(string $name, string $marker): OffsetExtractor
     {
         $this->points[$marker] = $name;
         return $this;
@@ -56,7 +38,7 @@ class OffsetExtractor
         return $this;
     }
 
-    public function parse(string $source): OffsetExtractor
+    public function parse(string $source): OffsetExtractorResult
     {
         $markers = array_merge(
             array_keys($this->points),
@@ -70,21 +52,21 @@ class OffsetExtractor
         }
 
         $newSource = '';
-        $this->pointResults = [];
-        $this->rangeResults = [];
+        $pointResults = [];
+        $rangeResults = [];
         $offset = 0;
         $currentRangeStartOffset = 0;
 
         foreach ($this->points as $marker=>$name) {
-            $this->pointResults[$name] = [];
+            $pointResults[$name] = [];
         }
         foreach ($this->rangeCloseMarkers as $marker=>$name) {
-            $this->rangeResults[$name] = [];
+            $rangeResults[$name] = [];
         }
 
         foreach ($results as $result) {
             if (isset($this->points[$result])) {
-                $this->pointResults[$this->points[$result]][] = ByteOffset::fromInt($offset);
+                $pointResults[$this->points[$result]][] = ByteOffset::fromInt($offset);
                 continue;
             }
             
@@ -94,7 +76,7 @@ class OffsetExtractor
             }
 
             if (isset($this->rangeCloseMarkers[$result])) {
-                $this->rangeResults[$this->rangeCloseMarkers[$result]][] = ByteOffsetRange::fromInts($currentRangeStartOffset, $offset);
+                $rangeResults[$this->rangeCloseMarkers[$result]][] = ByteOffsetRange::fromInts($currentRangeStartOffset, $offset);
                 continue;
             }
             
@@ -102,35 +84,7 @@ class OffsetExtractor
             $newSource .= $result;
         }
         
-        $this->source = $newSource;
-
-        return $this;
-    }
-    /**
-     * @return ByteOffset[]
-     */
-    public function points(string $name): array
-    {
-        if (!isset($this->pointResults[$name])) {
-            throw new RuntimeException(sprintf('No point registered with name "%s", known names "%s"', $name, implode('", "', array_keys($this->pointResults))));
-        }
-
-        return $this->pointResults[$name];
-    }
-    /**
-     * @return ByteOffsetRange[]
-     */
-    public function ranges(string $name): array
-    {
-        if (!isset($this->rangeResults[$name])) {
-            throw new RuntimeException(sprintf('No range registered with name "%s", known names "%s"', $name, implode('", "', array_keys($this->rangeResults))));
-        }
-
-        return $this->rangeResults[$name];
-    }
-
-    public function source(): string
-    {
-        return $this->source;
+        return new OffsetExtractorResult($newSource, $pointResults, $rangeResults);
+        ;
     }
 }

@@ -8,7 +8,7 @@ use Generator;
 use Phpactor\Extension\LanguageServerRename\Adapter\Worse\RenameLocationsProvider;
 use Phpactor\Extension\LanguageServerRename\Adapter\Worse\VariableRenamer;
 use Phpactor\Extension\LanguageServerRename\Model\RenameResult;
-use Phpactor\Extension\LanguageServerRename\Tests\OffsetExtractor;
+use Phpactor\Extension\LanguageServerRename\Tests\Util\OffsetExtractor;
 use Phpactor\Extension\LanguageServerRename\Tests\Unit\PredefinedDefinitionLocator;
 use Phpactor\Extension\LanguageServerRename\Tests\Unit\PredefinedReferenceFinder;
 use Phpactor\TextDocument\ByteOffset;
@@ -24,11 +24,11 @@ class VariableRenamerTest extends TestCase
     public function testGetRenameRange(string $source): void
     {
         $extractor = OffsetExtractor::create()
-            ->registerPoint('selection', '<>')
+            ->registerOffset('selection', '<>')
             ->registerRange('expectedRange', '{{', '}}')
             ->parse($source);
-        
-        [ $selection ] = $extractor->points('selection');
+
+        [ $selection ] = $extractor->offsets('selection');
         $expectedRanges = $extractor->ranges('expectedRange');
         $newSource = $extractor->source();
         
@@ -84,15 +84,15 @@ class VariableRenamerTest extends TestCase
     public function testRename(string $source): void
     {
         $extractor = OffsetExtractor::create()
-            ->registerPoint('selection', '<>')
-            ->registerPoint('definition', '<d>')
-            ->registerPoint('references', '<r>')
+            ->registerOffset('selection', '<>')
+            ->registerOffset('definition', '<d>')
+            ->registerOffset('references', '<r>')
             ->registerRange('resultEditRanges', '{{', '}}')
             ->parse($source);
 
-        [ $selection ] = $extractor->points('selection');
-        [ $definition ] = $extractor->points('definition');
-        $references = $extractor->points('references');
+        [ $selection ] = $extractor->offsets('selection');
+        [ $definition ] = $extractor->offsets('definition');
+        $references = $extractor->offsets('references');
         $resultEditRanges = $extractor->ranges('resultEditRanges');
         $newSource = $extractor->source();
         
