@@ -18,6 +18,8 @@ use Phpactor\Extension\LanguageServerDiagnostics\LanguageServerDiagnosticsExtens
 use Phpactor\Extension\LanguageServerHover\LanguageServerHoverExtension;
 use Phpactor\Extension\LanguageServerIndexer\LanguageServerIndexerExtension;
 use Phpactor\Extension\LanguageServerReferenceFinder\LanguageServerReferenceFinderExtension;
+use Phpactor\Extension\LanguageServerRename\LanguageServerRenameExtension;
+use Phpactor\Extension\LanguageServerRename\LanguageServerWorseRenameExtension;
 use Phpactor\Extension\LanguageServerSelectionRange\LanguageServerSelectionRangeExtension;
 use Phpactor\Extension\LanguageServerSymbolProvider\LanguageServerSymbolProviderExtension;
 use Phpactor\Extension\LanguageServerWorseReflection\LanguageServerWorseReflectionExtension;
@@ -27,6 +29,7 @@ use Phpactor\Extension\Logger\LoggingExtension;
 use Phpactor\Extension\Php\PhpExtension;
 use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
 use Phpactor\Extension\SourceCodeFilesystem\SourceCodeFilesystemExtension;
+use Phpactor\Extension\WorseReferenceFinder\WorseReferenceFinderExtension;
 use Phpactor\Extension\WorseReflection\WorseReflectionExtension;
 use Phpactor\FilePathResolverExtension\FilePathResolverExtension;
 use Phpactor\Indexer\Extension\IndexerExtension;
@@ -53,6 +56,9 @@ $container = PhpactorContainer::fromExtensions([
     LanguageServerBridgeExtension::class,
     LanguageServerSelectionRangeExtension::class,
     LanguageServerCodeTransformExtension::class,
+    LanguageServerRenameExtension::class,
+    LanguageServerWorseRenameExtension::class,
+    WorseReferenceFinderExtension::class,
     CodeTransformExtension::class,
     PhpExtension::class,
     LanguageServerDiagnosticsExtension::class,

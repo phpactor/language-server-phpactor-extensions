@@ -32,6 +32,8 @@
     "require-dev": {
         "dms/phpunit-arraysubset-asserts": "dev-master",
         "ergebnis/composer-normalize": "^2.0",
+        "phpactor/worse-reference-finder-extension": "^0.1.6",
+        "phpactor/worse-reference-finders": "^0.2.6",
         "friendsofphp/php-cs-fixer": "^2.17",
         "jangregor/phpstan-prophecy": "^0.8.0",
         "phpactor/test-utils": "^1.1.3",

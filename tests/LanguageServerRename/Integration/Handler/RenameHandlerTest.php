@@ -106,7 +106,8 @@ class RenameHandlerTest extends IntegrationTestCase
 
         $this->tester->assertSuccess($response);
         assert($response->result instanceof WorkspaceEdit);
-        $edit = $response->result->changes[0];
+        self::assertNull($response->result->changes);
+        $edit = $response->result->documentChanges[0];
         assert($edit instanceof TextDocumentEdit);
         self::assertEquals(self::EXAMPLE_FILE, $edit->textDocument->uri);
         $edit = reset($edit->edits);
