@@ -10,6 +10,7 @@ use Phpactor\Extension\LanguageServerRename\Adapter\ClassMover\MemberRenamer;
 use Phpactor\Extension\LanguageServerRename\Adapter\Worse\RenameLocationsProvider;
 use Phpactor\Extension\LanguageServerRename\Adapter\Worse\VariableRenamer;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdits;
+use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEditsMap;
 use Phpactor\Extension\LanguageServerRename\Tests\Unit\PredefinedDefinitionLocator;
 use Phpactor\Extension\LanguageServerRename\Tests\Unit\PredefinedReferenceFinder;
 use Phpactor\Extension\LanguageServerRename\Tests\Util\OffsetExtractor;
@@ -133,7 +134,7 @@ class MemberRenamerTest extends TestCase
                     $textDocument->uri()
                 )
             ],
-            $actualResults
+            LocatedTextEditsMap::fromLocatedEdits($actualResults)->toLocatedTextEdits()
         );
     }
 

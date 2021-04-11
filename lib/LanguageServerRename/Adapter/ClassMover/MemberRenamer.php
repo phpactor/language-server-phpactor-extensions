@@ -19,6 +19,7 @@ use Phpactor\ClassMover\Domain\Model\ClassMemberQuery;
 use Phpactor\ClassMover\Domain\Reference\MemberReference;
 use Phpactor\ClassMover\Domain\SourceCode;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
+use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdit;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEditsMap;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
 use Phpactor\LanguageServerProtocol\Range;
@@ -96,8 +97,6 @@ class MemberRenamer implements Renamer
      */
     public function rename(TextDocument $textDocument, ByteOffset $offset, string $newName): Generator
     {
-        $edits = LocatedTextEditsMap::create();
-
         foreach ($this->referenceFinder->findReferences($textDocument, $offset) as $reference) {
             if (!$reference->isSurely()) {
                 continue;
@@ -110,7 +109,7 @@ class MemberRenamer implements Renamer
                 continue;
             }
 
-            $edits = $edits->withTextEdit(
+            yield new LocatedTextEdit(
                 $reference->location()->uri(),
                 PhpactorTextEdit::create(
                     $range->start(),
@@ -119,8 +118,6 @@ class MemberRenamer implements Renamer
                 )
             );
         }
-
-        yield from $edits->toLocatedTextEdits();
     }
 
     /**

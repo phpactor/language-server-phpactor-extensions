@@ -23,9 +23,22 @@ final class LocatedTextEditsMap
         return new self([]);
     }
 
-    public function withTextEdit(TextDocumentUri $uri, TextEdit $edit): self
+    public static function fromLocatedEdits(array $locatedEdits)
+    {
+        $map = new self([]);
+        foreach ($locatedEdits as $locationEdit) {
+            $map = $map->withTextEdit($locationEdit);
+        }
+
+        return $map;
+    }
+
+    public function withTextEdit(LocatedTextEdit $edit): self
     {
         $map = $this->map;
+        $uri = $edit->documentUri();
+        $edit = $edit->textEdit();
+
         if (!isset($map[$uri->__toString()])) {
             $map[$uri->__toString()] = new TextEdits();
         }
