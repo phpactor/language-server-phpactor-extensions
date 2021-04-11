@@ -5,13 +5,14 @@ namespace Phpactor\Extension\LanguageServerRename\Tests\Util;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\ByteOffsetRange;
 use RuntimeException;
+use function array_reduce;
 
 class OffsetExtractorResult
 {
     /**
      * @var array<string,ByteOffset[]>
      */
-    private $points = [];
+    private $offsets = [];
 
     /**
      * @var array<string,ByteOffsetRange[]>
@@ -23,10 +24,10 @@ class OffsetExtractorResult
      */
     private $source;
 
-    public function __construct(string $source, array $pointResults, array $rangeResults)
+    public function __construct(string $source, array $offsetResults, array $rangeResults)
     {
         $this->source = $source;
-        $this->points = $pointResults;
+        $this->offsets = $offsetResults;
         $this->ranges = $rangeResults;
     }
 
@@ -38,40 +39,52 @@ class OffsetExtractorResult
     /**
      * @return ByteOffset[]
      */
-    public function offsets(string $name): array
+    public function offsets(string $name = null): array
     {
-        if (!isset($this->points[$name])) {
+        if (null === $name) {
+            return array_reduce($this->offsets, function (array $carry, array $offsets) {
+                return array_merge($carry, $offsets);
+            }, []);
+        }
+
+        if (!isset($this->offsets[$name])) {
             throw new RuntimeException(sprintf(
-                'No point registered with name "%s", known names "%s"',
+                'No offset registered with name "%s", known names "%s"',
                 $name,
-                implode('", "', array_keys($this->points))
+                implode('", "', array_keys($this->offsets))
             ));
         }
 
-        return $this->points[$name];
+        return $this->offsets[$name];
     }
 
-    public function offset(string $name): ByteOffset
+    public function offset(string $name = null): ByteOffset
     {
-        $points = $this->offsets($name);
+        $offsets = $this->offsets($name);
 
-        if (!count($points)) {
+        if (!count($offsets)) {
             throw new RuntimeException(sprintf(
-                'No "%s" points found in source code',
+                'No "%s" offsets found in source code',
                 $name
             ));
         }
 
-        $point = reset($points);
+        $offset = reset($offsets);
 
-        return $point;
+        return $offset;
     }
 
     /**
      * @return ByteOffsetRange[]
      */
-    public function ranges(string $name): array
+    public function ranges(string $name = null): array
     {
+        if (null === $name) {
+            return array_reduce($this->ranges, function (array $carry, array $ranges) {
+                return array_merge($carry, $ranges);
+            }, []);
+        }
+
         if (!isset($this->ranges[$name])) {
             throw new RuntimeException(sprintf(
                 'No range registered with name "%s", known names "%s"',
@@ -83,7 +96,7 @@ class OffsetExtractorResult
         return $this->ranges[$name];
     }
 
-    public function range(string $name): ByteOffsetRange
+    public function range(string $name = null): ByteOffsetRange
     {
         $ranges = $this->ranges($name);
 

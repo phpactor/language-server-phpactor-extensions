@@ -24,9 +24,9 @@ class RenameLocationsProviderTest extends TestCase
     public function testLocations(array $sources): void
     {
         $offsetExtractor = OffsetExtractor::create()
-            ->registerPoint('selection', '<>')
-            ->registerPoint('definition', '<d>')
-            ->registerPoint('references', '<r>');
+            ->registerOffset('selection', '<>')
+            ->registerOffset('definition', '<d>')
+            ->registerOffset('references', '<r>');
         
         $selection = null;
         $selectionDocumentUri = null;

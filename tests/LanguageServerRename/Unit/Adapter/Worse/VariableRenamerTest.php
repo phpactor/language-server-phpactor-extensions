@@ -24,7 +24,7 @@ class VariableRenamerTest extends TestCase
     public function testGetRenameRange(string $source): void
     {
         $extractor = OffsetExtractor::create()
-            ->registerPoint('selection', '<>')
+            ->registerOffset('selection', '<>')
             ->registerRange('expectedRange', '{{', '}}')
             ->parse($source);
 
@@ -84,9 +84,9 @@ class VariableRenamerTest extends TestCase
     public function testRename(string $source): void
     {
         $extractor = OffsetExtractor::create()
-            ->registerPoint('selection', '<>')
-            ->registerPoint('definition', '<d>')
-            ->registerPoint('references', '<r>')
+            ->registerOffset('selection', '<>')
+            ->registerOffset('definition', '<d>')
+            ->registerOffset('references', '<r>')
             ->registerRange('resultEditRanges', '{{', '}}')
             ->parse($source);
 

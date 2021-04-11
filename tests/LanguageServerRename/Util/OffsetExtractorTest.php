@@ -10,10 +10,10 @@ use RuntimeException;
 
 class OffsetExtractorTest extends TestCase
 {
-    public function testPoint(): void
+    public function testOffset(): void
     {
         $extractor = OffsetExtractor::create()
-            ->registerPoint('selection', '<>')
+            ->registerOffset('selection', '<>')
             ->parse('Test string with<> selector');
 
         $selection = $extractor->offset('selection');
@@ -23,10 +23,23 @@ class OffsetExtractorTest extends TestCase
         $this->assertEquals('Test string with selector', $newSource);
     }
 
-    public function testPreservesMultibytePoint(): void
+    public function testFirstOffset(): void
     {
         $extractor = OffsetExtractor::create()
-            ->registerPoint('selection', '<>')
+            ->registerOffset('selection', '<>')
+            ->parse('Test string with<> selector');
+
+        $selection = $extractor->offset();
+        $newSource = $extractor->source();
+        
+        $this->assertEquals(ByteOffset::fromInt(16), $selection);
+        $this->assertEquals('Test string with selector', $newSource);
+    }
+
+    public function testPreservesMultibyteOffset(): void
+    {
+        $extractor = OffsetExtractor::create()
+            ->registerOffset('selection', '<>')
             ->parse('Test string 🐱   <> selector');
 
         $selection = $extractor->offset('selection');
@@ -36,22 +49,22 @@ class OffsetExtractorTest extends TestCase
         $this->assertEquals('Test string 🐱    selector', $newSource);
     }
 
-    public function testExceptionWhenNoPointIsFound(): void
+    public function testExceptionWhenNoOffsetIsFound(): void
     {
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('No "selection" points found');
+        $this->expectExceptionMessage('No "selection" offsets found');
 
         $extractor = OffsetExtractor::create()
-            ->registerPoint('selection', '<>')
+            ->registerOffset('selection', '<>')
             ->parse('Test string without selector');
 
         $extractor->offset('selection');
     }
 
-    public function testExceptionWhenNoPointIsRegistered(): void
+    public function testExceptionWhenNoOffsetIsRegistered(): void
     {
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('No point registered');
+        $this->expectExceptionMessage('No offset registered');
 
         $extractor = OffsetExtractor::create()
             ->parse('Test string without selector');
@@ -59,12 +72,26 @@ class OffsetExtractorTest extends TestCase
         $extractor->offset('selection');
     }
 
-    public function testPoints(): void
+    public function testOffsets(): void
     {
         $extractor = OffsetExtractor::create()
-            ->registerPoint('selection', '<>')
+            ->registerOffset('selection', '<>')
             ->parse('Test string with<> two select<>ors');
         $selection = $extractor->offsets('selection');
+        $newSource = $extractor->source();
+        $this->assertEquals([
+            ByteOffset::fromInt(16),
+            ByteOffset::fromInt(27)
+        ], $selection);
+        $this->assertEquals('Test string with two selectors', $newSource);
+    }
+
+    public function testAllOffsets(): void
+    {
+        $extractor = OffsetExtractor::create()
+            ->registerOffset('selection', '<>')
+            ->parse('Test string with<> two select<>ors');
+        $selection = $extractor->offsets();
         $newSource = $extractor->source();
         $this->assertEquals([
             ByteOffset::fromInt(16),
@@ -86,12 +113,42 @@ class OffsetExtractorTest extends TestCase
         $this->assertEquals('Test string with selector', $newSource);
     }
 
+    public function testFirstRange(): void
+    {
+        $extractor = OffsetExtractor::create()
+            ->registerRange('textEdit', '{{', '}}')
+            ->parse('Test string {{with}} selector');
+
+        $textEdit = $extractor->range();
+        $newSource = $extractor->source();
+
+        $this->assertEquals(ByteOffsetRange::fromInts(12, 16), $textEdit);
+        $this->assertEquals('Test string with selector', $newSource);
+    }
+
     public function testRanges(): void
     {
         $extractor = OffsetExtractor::create()
             ->registerRange('textEdit', '{{', '}}')
             ->parse('Test string {{with}} two {{selectors}}');
         $textEdit = $extractor->ranges('textEdit');
+        $newSource = $extractor->source();
+        $this->assertEquals(
+            [
+                ByteOffsetRange::fromInts(12, 16),
+                ByteOffsetRange::fromInts(21, 30),
+            ],
+            $textEdit
+        );
+        $this->assertEquals('Test string with two selectors', $newSource);
+    }
+
+    public function testReturnsAllRanges(): void
+    {
+        $extractor = OffsetExtractor::create()
+            ->registerRange('textEdit', '{{', '}}')
+            ->parse('Test string {{with}} two {{selectors}}');
+        $textEdit = $extractor->ranges();
         $newSource = $extractor->source();
         $this->assertEquals(
             [

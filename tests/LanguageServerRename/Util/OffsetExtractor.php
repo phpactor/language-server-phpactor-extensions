@@ -32,12 +32,12 @@ final class OffsetExtractor
         return new OffsetExtractor();
     }
 
-    public static function extractOffset(string $source, string $marker = '<>'): ByteOffset
+    public static function extractOffset(string $source, string $marker = '<>'): OffsetExtractorResult
     {
-        return self::create()->registerPoint('point', $marker)->parse($source)->offset('point');
+        return self::create()->registerOffset('point', $marker)->parse($source);
     }
 
-    public function registerPoint(string $name, string $marker): OffsetExtractor
+    public function registerOffset(string $name, string $marker): OffsetExtractor
     {
         $this->points[$marker] = $name;
         return $this;
