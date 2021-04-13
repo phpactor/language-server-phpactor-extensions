@@ -3,6 +3,7 @@
 namespace Phpactor\Extension\LanguageServerRename\Adapter\Worse;
 
 use Microsoft\PhpParser\Node;
+use Microsoft\PhpParser\Node\ClassConstDeclaration;
 use Microsoft\PhpParser\Node\ConstElement;
 use Microsoft\PhpParser\Node\Expression\MemberAccessExpression;
 use Microsoft\PhpParser\Node\Expression\ScopedPropertyAccessExpression;
@@ -27,6 +28,16 @@ class MemberRenamer extends AbstractReferenceRenamer
                 return null;
             }
             return $this->offsetRangeFromToken($variable->name, true);
+        }
+
+        // hack because the WR property deefinition locator returns the
+        // property declaration and not the variable
+        if ($node instanceof ClassConstDeclaration) {
+            $constElement = $node->getFirstDescendantNode(ConstElement::class);
+            if (!$constElement instanceof ConstElement) {
+                return null;
+            }
+            return $this->offsetRangeFromToken($constElement->name, false);
         }
 
         if ($node instanceof Variable && $node->getFirstAncestor(PropertyDeclaration::class)) {
