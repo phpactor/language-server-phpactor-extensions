@@ -1,15 +1,11 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerRename\Adapter\ClassMover;
+namespace Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder;
 
 use Generator;
 use Microsoft\PhpParser\Node;
-use Microsoft\PhpParser\Node\Statement\ClassDeclaration;
 use Microsoft\PhpParser\Parser;
 use Microsoft\PhpParser\Token;
-use Phpactor\ClassMover\ClassMover;
-use Phpactor\ClassMover\Domain\Name\QualifiedName;
-use Phpactor\Extension\LanguageServerRename\Adapter\Tolerant\TokenUtil;
 use Phpactor\Extension\LanguageServerRename\Model\Exception\CouldNotRename;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdit;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
@@ -20,7 +16,7 @@ use Phpactor\TextDocument\TextDocument;
 use Phpactor\TextDocument\TextDocumentLocator;
 use Phpactor\TextDocument\TextEdit as PhpactorTextEdit;
 
-final class ClassRenamer implements Renamer
+abstract class AbstractReferenceRenamer implements Renamer
 {
     /**
      * @var ReferenceFinder
@@ -37,32 +33,20 @@ final class ClassRenamer implements Renamer
      */
     private $parser;
 
-    /**
-     * @var ClassMover
-     */
-    private $classMover;
-
     public function __construct(
         ReferenceFinder $referenceFinder,
         TextDocumentLocator $locator,
-        Parser $parser,
-        ClassMover $classMover
+        Parser $parser
     ) {
         $this->referenceFinder = $referenceFinder;
         $this->locator = $locator;
         $this->parser = $parser;
-        $this->classMover = $classMover;
     }
 
     public function getRenameRange(TextDocument $textDocument, ByteOffset $offset): ?ByteOffsetRange
     {
         $node = $this->parser->parseSourceFile($textDocument->__toString())->getDescendantNodeAtPosition($offset->toInt());
-
-        if ($node instanceof ClassDeclaration) {
-            return TokenUtil::offsetRangeFromToken($node->name);
-        }
-
-        return null;
+        return $this->getRenameRangeForNode($node);
     }
 
     /**
@@ -80,19 +64,54 @@ final class ClassRenamer implements Renamer
 
             $referenceDocument = $this->locator->get($reference->location()->uri());
 
-            $edits = $this->classMover->replaceReferences(
-                $foundReferences,
-                $this->classMover->findReferences($referenceDocument->__toString(), $originalName),
-                QualifiedName::fromString($newName)
-            );
+            $range = $this->getRenameRange($referenceDocument, $reference->location()->offset());
 
-            foreach ($edits as $edit) {
-                yield new LocatedTextEdit(
-                    $reference->location()->uri(),
-                    $edit
-                );
+            if (null === $range) {
+                throw new CouldNotRename(sprintf(
+                    'Could not find corresponding reference to member name "%s" in document "%s" at offset %s',
+                    $originalName,
+                    $referenceDocument->uri()->__toString(),
+                    $reference->location()->offset()->toInt()
+                ));
             }
+
+            $foundName = $this->rangeText($referenceDocument, $range);
+            if ($foundName !== $originalName) {
+                throw new CouldNotRename(sprintf(
+                    'Found referenced name "%s" in "%s" does not match original name "%s", perhaps the text document is out of sync?',
+                    $foundName,
+                    $referenceDocument->uri()->__toString(),
+                    $originalName
+                ));
+            }
+
+            yield new LocatedTextEdit(
+                $reference->location()->uri(),
+                PhpactorTextEdit::create(
+                    $range->start(),
+                    $range->end()->toInt() - $range->start()->toInt(),
+                    $newName
+                )
+            );
         }
+    }
+
+    abstract protected function getRenameRangeForNode(Node $node): ?ByteOffsetRange;
+
+    /**
+     * @param Token|Node $tokenOrNode
+     */
+    protected function offsetRangeFromToken($tokenOrNode, bool $hasDollar): ?ByteOffsetRange
+    {
+        if (!$tokenOrNode instanceof Token) {
+            return null;
+        }
+
+        if ($hasDollar) {
+            return ByteOffsetRange::fromInts($tokenOrNode->start + 1, $tokenOrNode->getEndPosition());
+        }
+
+        return ByteOffsetRange::fromInts($tokenOrNode->start, $tokenOrNode->getEndPosition());
     }
 
     private function rangeText(TextDocument $textDocument, ByteOffsetRange $range): string

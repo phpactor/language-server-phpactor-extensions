@@ -1,11 +1,12 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerRename\Adapter\Worse;
+namespace Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder;
 
 use Microsoft\PhpParser\Node;
 use Microsoft\PhpParser\Node\Expression\Variable;
 use Microsoft\PhpParser\Node\Parameter;
 use Microsoft\PhpParser\Node\PropertyDeclaration;
+use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\AbstractReferenceRenamer;
 use Phpactor\TextDocument\ByteOffsetRange;
 
 class VariableRenamer extends AbstractReferenceRenamer

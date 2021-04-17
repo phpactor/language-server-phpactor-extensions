@@ -2,6 +2,7 @@
 
 namespace Phpactor\Extension\LanguageServerRename\Adapter\Tolerant;
 
+use Microsoft\PhpParser\Node;
 use Microsoft\PhpParser\Token;
 use Phpactor\TextDocument\ByteOffsetRange;
 
@@ -12,6 +13,10 @@ final class TokenUtil
      */
     public static function offsetRangeFromToken($tokenOrNode, bool $hasDollar): ?ByteOffsetRange
     {
+        if ($tokenOrNode instanceof Node) {
+            return ByteOffsetRange::fromInts($tokenOrNode->getStart(), $tokenOrNode->getEndPosition());
+        }
+
         if (!$tokenOrNode instanceof Token) {
             return null;
         }

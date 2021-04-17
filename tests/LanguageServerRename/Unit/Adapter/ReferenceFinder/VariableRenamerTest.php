@@ -1,11 +1,11 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerRename\Tests\Unit\Adapter\Worse;
+namespace Phpactor\Extension\LanguageServerRename\Tests\Unit\Adapter\ReferenceFinder;
 
 use Microsoft\PhpParser\Parser;
 use PHPUnit\Framework\TestCase;
 use Generator;
-use Phpactor\Extension\LanguageServerRename\Adapter\Worse\VariableRenamer;
+use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\VariableRenamer;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdits;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEditsMap;
 use Phpactor\Extension\LanguageServerRename\Tests\Util\OffsetExtractor;
