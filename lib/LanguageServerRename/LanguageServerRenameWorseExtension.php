@@ -2,10 +2,12 @@
 
 namespace Phpactor\Extension\LanguageServerRename;
 
+use Phpactor\ClassMover\ClassMover;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
 use Phpactor\Extension\LanguageServerReferenceFinder\Adapter\Indexer\WorkspaceUpdateReferenceFinder;
+use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\ClassMover\ClassRenamer;
 use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\MemberRenamer;
 use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\VariableRenamer;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
@@ -44,6 +46,17 @@ class LanguageServerRenameWorseExtension implements Extension
                 $container->get(DefinitionAndReferenceFinder::class),
                 $container->get(TextDocumentLocator::class),
                 $container->get('worse_reflection.tolerant_parser')
+            );
+        }, [
+            LanguageServerRenameExtension::TAG_RENAMER => []
+        ]);
+
+        $container->register(ClassRenamer::class, function (Container $container) {
+            return new ClassRenamer(
+                $container->get(DefinitionAndReferenceFinder::class),
+                $container->get(TextDocumentLocator::class),
+                $container->get('worse_reflection.tolerant_parser'),
+                $container->get(ClassMover::class)
             );
         }, [
             LanguageServerRenameExtension::TAG_RENAMER => []
