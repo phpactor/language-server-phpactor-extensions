@@ -6,13 +6,17 @@ use Phpactor\ClassMover\ClassMover;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
+use Phpactor\Extension\LanguageServerBridge\TextDocument\FilesystemWorkspaceLocator;
 use Phpactor\Extension\LanguageServerReferenceFinder\Adapter\Indexer\WorkspaceUpdateReferenceFinder;
+use Phpactor\Extension\LanguageServerRename\Adapter\ClassToFile\FileRenameListener;
 use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\ClassMover\ClassRenamer;
 use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\MemberRenamer;
 use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\VariableRenamer;
+use Phpactor\Extension\LanguageServerRename\Model\FileRenamer\NullFileRenamer;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
 use Phpactor\Indexer\Model\Indexer;
+use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\MapResolver\Resolver;
 use Phpactor\ReferenceFinder\DefinitionAndReferenceFinder;
 use Phpactor\ReferenceFinder\ReferenceFinder;
@@ -22,6 +26,8 @@ use Phpactor\WorseReferenceFinder\TolerantVariableReferenceFinder;
 class LanguageServerRenameWorseExtension implements Extension
 {
     public const TAG_RENAMER = 'language_server_rename.renamer';
+    const PARAM_FILE_RENAME = 'language_server_rename.file_rename';
+
     /**
 
      * {@inheritDoc}
@@ -73,6 +79,16 @@ class LanguageServerRenameWorseExtension implements Extension
                 )
             );
         });
+
+        $container->register(FileRenameListener::class, function (Container $container) {
+            return new FileRenameListener(
+                new FilesystemWorkspaceLocator(),
+                $container->get(ClientApi::class),
+                new NullFileRenamer()
+            );
+        }, [
+            LanguageServerExtension::TAG_LISTENER_PROVIDER => []
+        ]);
     }
 
     /**
@@ -80,5 +96,11 @@ class LanguageServerRenameWorseExtension implements Extension
      */
     public function configure(Resolver $schema): void
     {
+        $schema->setDefaults([
+            self::PARAM_FILE_RENAME => false,
+        ]);
+        $schema->setDescriptions([
+            self::PARAM_FILE_RENAME => 'Exerimental support for moving classes when a file move is detected'
+        ]);
     }
 }
