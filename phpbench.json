@@ -1,6 +1,6 @@
 {
-    "bootstrap": "vendor/autoload.php",
-    "path": [
+    "runner.bootstrap": "vendor/autoload.php",
+    "runner.path": [
         "tests/LanguageServerCodeTransform/Benchmark",
         "tests/LanguageServerWorseReflection/Benchmark"
     ]
