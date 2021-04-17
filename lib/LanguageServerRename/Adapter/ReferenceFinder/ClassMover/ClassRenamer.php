@@ -9,21 +9,16 @@ use Microsoft\PhpParser\Node\QualifiedName as MicrosoftQualifiedName;
 use Microsoft\PhpParser\Node\Statement\ClassDeclaration;
 use Microsoft\PhpParser\Parser;
 use Microsoft\PhpParser\ResolvedName;
-use Microsoft\PhpParser\Token;
 use Phpactor\ClassMover\ClassMover;
 use Phpactor\ClassMover\Domain\Name\QualifiedName;
 use Phpactor\Extension\LanguageServerRename\Adapter\Tolerant\TokenUtil;
-use Phpactor\Extension\LanguageServerRename\Model\Exception\CouldNotRename;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdit;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
-use Phpactor\Name\QualifiedName as PhpactorQualifiedName;
-use Phpactor\Name\QualifiedName as AliasedQualifiedName;
 use Phpactor\ReferenceFinder\ReferenceFinder;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\ByteOffsetRange;
 use Phpactor\TextDocument\TextDocument;
 use Phpactor\TextDocument\TextDocumentLocator;
-use Phpactor\TextDocument\TextEdit as PhpactorTextEdit;
 use RuntimeException;
 
 final class ClassRenamer implements Renamer
@@ -124,7 +119,15 @@ final class ClassRenamer implements Renamer
     private function getFullName(Node $node): ResolvedName
     {
         if ($node instanceof MicrosoftQualifiedName) {
-            return $node->getResolvedName();
+            $name = $node->getResolvedName();
+            if (!$name instanceof ResolvedName) {
+                throw new RuntimeException(sprintf(
+                    'Could not get resolved name for node "%s"',
+                    get_class($node)
+                ));
+            }
+
+            return $name;
         }
 
         if ($node instanceof NamespacedNameInterface) {

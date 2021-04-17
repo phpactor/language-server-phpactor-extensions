@@ -10,7 +10,6 @@ use Microsoft\PhpParser\Node\Expression\ScopedPropertyAccessExpression;
 use Microsoft\PhpParser\Node\Expression\Variable;
 use Microsoft\PhpParser\Node\MethodDeclaration;
 use Microsoft\PhpParser\Node\PropertyDeclaration;
-use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\AbstractReferenceRenamer;
 use Phpactor\TextDocument\ByteOffsetRange;
 
 class MemberRenamer extends AbstractReferenceRenamer

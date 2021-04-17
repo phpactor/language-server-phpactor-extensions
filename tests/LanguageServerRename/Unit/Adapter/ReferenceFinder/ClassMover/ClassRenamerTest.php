@@ -4,25 +4,15 @@ namespace Phpactor\Extension\LanguageServerRename\Tests\Unit\Adapter\ReferenceFi
 
 use Generator;
 use Microsoft\PhpParser\Parser;
-use PHPUnit\Framework\TestCase;
 use Phpactor\ClassMover\ClassMover;
 use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\ClassMover\ClassRenamer;
-use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\MemberRenamer;
-use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdit;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdits;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEditsMap;
 use Phpactor\Extension\LanguageServerRename\Tests\Unit\Adapter\ReferenceFinder\ReferenceRenamerIntegrationTestCase;
-use Phpactor\Extension\LanguageServerRename\Tests\Unit\PredefinedReferenceFinder;
 use Phpactor\Extension\LanguageServerRename\Tests\Util\OffsetExtractor;
-use Phpactor\ReferenceFinder\PotentialLocation;
-use Phpactor\TextDocument\ByteOffset;
-use Phpactor\TextDocument\ByteOffsetRange;
-use Phpactor\TextDocument\Location;
 use Phpactor\TextDocument\TextDocument;
 use Phpactor\TextDocument\TextDocumentBuilder;
 use Phpactor\TextDocument\TextDocumentLocator\InMemoryDocumentLocator;
-use Phpactor\TextDocument\TextEdit;
-use Phpactor\TextDocument\TextEdits;
 
 class ClassRenamerTest extends ReferenceRenamerIntegrationTestCase
 {
@@ -54,7 +44,6 @@ class ClassRenamerTest extends ReferenceRenamerIntegrationTestCase
         $located = reset($locateds);
         assert($located instanceof LocatedTextEdits);
         self::assertEquals($expected, $located->textEdits()->apply($source));
-
     }
 
     public function provideRename(): Generator
