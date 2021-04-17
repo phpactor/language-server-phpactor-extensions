@@ -16,7 +16,6 @@ use Phpactor\Extension\LanguageServerReferenceFinder\Model\Highlighter;
 use Phpactor\Extension\LanguageServerReferenceFinder\Adapter\Indexer\WorkspaceUpdateReferenceFinder;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
-use Phpactor\Indexer\Extension\IndexerExtension;
 use Phpactor\Indexer\Model\Indexer;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\MapResolver\Resolver;

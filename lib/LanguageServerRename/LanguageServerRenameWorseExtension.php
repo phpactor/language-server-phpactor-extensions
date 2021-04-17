@@ -11,7 +11,6 @@ use Phpactor\Extension\LanguageServerRename\Adapter\Worse\VariableRenamer;
 use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
 use Phpactor\MapResolver\Resolver;
 use Phpactor\ReferenceFinder\DefinitionAndReferenceFinder;
-use Phpactor\ReferenceFinder\ReferenceFinder;
 use Phpactor\TextDocument\TextDocumentLocator;
 use Phpactor\WorseReferenceFinder\TolerantVariableReferenceFinder;
 

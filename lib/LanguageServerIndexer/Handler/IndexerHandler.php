@@ -17,9 +17,9 @@ use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\Indexer\Model\Indexer;
 use Phpactor\LanguageServer\Core\Service\ServiceManager;
 use Phpactor\LanguageServer\Core\Service\ServiceProvider;
+use Phpactor\TextDocument\TextDocumentBuilder;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
-use SplFileInfo;
 
 class IndexerHandler implements Handler, ServiceProvider
 {
@@ -165,7 +165,7 @@ class IndexerHandler implements Handler, ServiceProvider
                     break;
                 }
 
-                $this->indexer->index(new SplFileInfo($file->path()));
+                $this->indexer->index(TextDocumentBuilder::fromUri($file->path())->build());
                 $this->logger->debug(sprintf('Indexed file: %s', $file->path()));
                 yield new Delayed(0);
             }

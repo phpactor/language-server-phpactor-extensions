@@ -15,7 +15,6 @@ use Phpactor\TextDocument\ByteOffsetRange;
 use Phpactor\TextDocument\TextDocument;
 use Phpactor\TextDocument\TextDocumentLocator;
 use Phpactor\TextDocument\TextEdit as PhpactorTextEdit;
-use RuntimeException;
 
 abstract class AbstractReferenceRenamer implements Renamer
 {
@@ -80,7 +79,9 @@ abstract class AbstractReferenceRenamer implements Renamer
             if ($foundName !== $originalName) {
                 throw new CouldNotRename(sprintf(
                     'Found referenced name "%s" in "%s" does not match original name "%s", perhaps the text document is out of sync?',
-                    $foundName, $referenceDocument->uri()->__toString(), $originalName
+                    $foundName,
+                    $referenceDocument->uri()->__toString(),
+                    $originalName
                 ));
             }
 

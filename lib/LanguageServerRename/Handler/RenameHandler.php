@@ -53,8 +53,7 @@ class RenameHandler implements Handler, CanRegisterCapabilities
         TextDocumentLocator $documentLocator,
         Renamer $renamer,
         ClientApi $clientApi
-    )
-    {
+    ) {
         $this->renamer = $renamer;
         $this->workspace = $workspace;
         $this->documentLocator = $documentLocator;

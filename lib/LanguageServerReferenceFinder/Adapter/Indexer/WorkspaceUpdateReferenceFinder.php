@@ -10,7 +10,6 @@ use Phpactor\ReferenceFinder\ReferenceFinder;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocument;
 use Phpactor\TextDocument\TextDocumentBuilder;
-use SplFileInfo;
 
 class WorkspaceUpdateReferenceFinder implements ReferenceFinder
 {
@@ -44,7 +43,7 @@ class WorkspaceUpdateReferenceFinder implements ReferenceFinder
         yield from $this->innerReferenceFinder->findReferences($document, $byteOffset);
     }
 
-    private function indexWorkspace()
+    private function indexWorkspace(): void
     {
         // ensure that the index is current with the workspace
         foreach ($this->workspace as $document) {
