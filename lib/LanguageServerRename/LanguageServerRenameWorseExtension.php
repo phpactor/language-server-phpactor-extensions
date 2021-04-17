@@ -5,6 +5,7 @@ namespace Phpactor\Extension\LanguageServerRename;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
+use Phpactor\Extension\LanguageServerReferenceFinder\Adapter\Indexer\WorkspaceUpdateReferenceFinder;
 use Phpactor\Extension\LanguageServerRename\Adapter\Worse\MemberRenamer;
 use Phpactor\Extension\LanguageServerRename\Adapter\Worse\VariableRenamer;
 use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
@@ -40,7 +41,7 @@ class LanguageServerRenameWorseExtension implements Extension
             return new MemberRenamer(
                 new DefinitionAndReferenceFinder(
                     $container->get(ReferenceFinderExtension::SERVICE_DEFINITION_LOCATOR),
-                    $container->get(ReferenceFinder::class)
+                    $container->get(WorkspaceUpdateReferenceFinder::class)
                 ),
                 $container->get(TextDocumentLocator::class),
                 $container->get('worse_reflection.tolerant_parser')

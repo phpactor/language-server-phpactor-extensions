@@ -47,14 +47,18 @@ class LanguageServerReferenceFinderExtension implements Extension
             );
         }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [] ]);
 
+        $container->register(WorkspaceUpdateReferenceFinder::class, function (Container $container) {
+            return new WorkspaceUpdateReferenceFinder(
+                $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
+                $container->get(Indexer::class),
+                $container->get(ReferenceFinder::class),
+            );
+        });
+
         $container->register(ReferencesHandler::class, function (Container $container) {
             return new ReferencesHandler(
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
-                new WorkspaceUpdateReferenceFinder(
-                    $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
-                    $container->get(Indexer::class),
-                    $container->get(ReferenceFinder::class),
-                ),
+                $container->get(WorkspaceUpdateReferenceFinder::class),
                 $container->get(ReferenceFinderExtension::SERVICE_DEFINITION_LOCATOR),
                 $container->get(LocationConverter::class),
                 $container->get(ClientApi::class),
