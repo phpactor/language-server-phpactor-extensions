@@ -6,6 +6,7 @@ use Generator;
 use Microsoft\PhpParser\Node;
 use Microsoft\PhpParser\Parser;
 use Microsoft\PhpParser\Token;
+use Phpactor\Extension\LanguageServerRename\Model\Exception\CouldNotRename;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdit;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
 use Phpactor\ReferenceFinder\ReferenceFinder;
@@ -14,6 +15,7 @@ use Phpactor\TextDocument\ByteOffsetRange;
 use Phpactor\TextDocument\TextDocument;
 use Phpactor\TextDocument\TextDocumentLocator;
 use Phpactor\TextDocument\TextEdit as PhpactorTextEdit;
+use RuntimeException;
 
 abstract class AbstractReferenceRenamer implements Renamer
 {
@@ -53,16 +55,33 @@ abstract class AbstractReferenceRenamer implements Renamer
      */
     public function rename(TextDocument $textDocument, ByteOffset $offset, string $newName): Generator
     {
+        $range = $this->getRenameRange($textDocument, $offset);
+        $originalName = $this->rangeText($textDocument, $range);
+
         foreach ($this->referenceFinder->findReferences($textDocument, $offset) as $reference) {
             if (!$reference->isSurely()) {
                 continue;
             }
 
-            $textDocument = $this->locator->get($reference->location()->uri());
-            $range = $this->getRenameRange($textDocument, $reference->location()->offset());
+            $referenceDocument = $this->locator->get($reference->location()->uri());
+
+            $range = $this->getRenameRange($referenceDocument, $reference->location()->offset());
 
             if (null === $range) {
-                continue;
+                throw new CouldNotRename(sprintf(
+                    'Could not find corresponding reference to member name "%s" in document "%s" at offset %s',
+                    $originalName,
+                    $referenceDocument->uri()->__toString(),
+                    $reference->location()->offset()->toInt()
+                ));
+            }
+
+            $foundName = $this->rangeText($referenceDocument, $range);
+            if ($foundName !== $originalName) {
+                throw new CouldNotRename(sprintf(
+                    'Found referenced name "%s" in "%s" does not match original name "%s", perhaps the text document is out of sync?',
+                    $foundName, $referenceDocument->uri()->__toString(), $originalName
+                ));
             }
 
             yield new LocatedTextEdit(
@@ -92,5 +111,14 @@ abstract class AbstractReferenceRenamer implements Renamer
         }
 
         return ByteOffsetRange::fromInts($tokenOrNode->start, $tokenOrNode->getEndPosition());
+    }
+
+    private function rangeText(TextDocument $textDocument, ByteOffsetRange $range): string
+    {
+        return substr(
+            $textDocument->__toString(),
+            $range->start()->toInt(),
+            $range->end()->toInt() - $range->start()->toInt()
+        );
     }
 }

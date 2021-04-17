@@ -6,6 +6,7 @@ use Amp\Promise;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\LanguageServerBridge\Converter\RangeConverter;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
+use Phpactor\Extension\LanguageServerRename\Model\Exception\CouldNotRename;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdit;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEditsMap;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
@@ -21,6 +22,7 @@ use Phpactor\LanguageServerProtocol\VersionedTextDocumentIdentifier;
 use Phpactor\LanguageServerProtocol\WorkspaceEdit;
 use Phpactor\LanguageServer\Core\Handler\CanRegisterCapabilities;
 use Phpactor\LanguageServer\Core\Handler\Handler;
+use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\TextDocument\TextDocumentLocator;
 use Phpactor\TextDocument\TextDocumentUri;
@@ -41,11 +43,22 @@ class RenameHandler implements Handler, CanRegisterCapabilities
      */
     private $documentLocator;
 
-    public function __construct(Workspace $workspace, TextDocumentLocator $documentLocator, Renamer $renamer)
+    /**
+     * @var ClientApi
+     */
+    private $clientApi;
+
+    public function __construct(
+        Workspace $workspace,
+        TextDocumentLocator $documentLocator,
+        Renamer $renamer,
+        ClientApi $clientApi
+    )
     {
         $this->renamer = $renamer;
         $this->workspace = $workspace;
         $this->documentLocator = $documentLocator;
+        $this->clientApi = $clientApi;
     }
     /**
      * {@inheritDoc}
@@ -57,6 +70,7 @@ class RenameHandler implements Handler, CanRegisterCapabilities
             RenameRequest::METHOD => 'rename',
         ];
     }
+
     /**
      * @return Promise<WorkspaceEdit>
      */
@@ -64,19 +78,29 @@ class RenameHandler implements Handler, CanRegisterCapabilities
     {
         return \Amp\call(function () use ($params) {
             $locatedEdits = [];
+            $document = $document = $this->documentLocator->get(TextDocumentUri::fromString($params->textDocument->uri));
             $count = 0;
-            foreach ($this->renamer->rename(
-                $document = $this->documentLocator->get(TextDocumentUri::fromString($params->textDocument->uri)),
-                PositionConverter::positionToByteOffset(
-                    $params->position,
-                    (string)$document
-                ),
-                $params->newName
-            ) as $result) {
-                if ($count++ === 10) {
-                    yield delay(1);
+
+            try {
+                foreach ($this->renamer->rename(
+                    $document,
+                    PositionConverter::positionToByteOffset(
+                        $params->position,
+                        (string)$document
+                    ),
+                    $params->newName
+                ) as $result) {
+                    if ($count++ === 10) {
+                        yield delay(1);
+                    }
+                    $locatedEdits[] = $result;
                 }
-                $locatedEdits[] = $result;
+            } catch (CouldNotRename $couldNotRename) {
+                $this->clientApi->window()->showMessage()->error(sprintf(
+                    $couldNotRename->getMessage()
+                ));
+
+                return new WorkspaceEdit(null, []);
             }
 
             return $this->resultToWorkspaceEdit($locatedEdits);

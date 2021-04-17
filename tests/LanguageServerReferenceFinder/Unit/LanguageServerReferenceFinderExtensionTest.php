@@ -2,6 +2,7 @@
 
 namespace Phpactor\Extension\LanguageServerReferenceFinder\Tests\Unit;
 
+use Phpactor\Extension\LanguageServerReferenceFinder\Tests\Extension\TestIndexerExtension;
 use Phpactor\LanguageServerProtocol\ReferenceContext;
 use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
 use PHPUnit\Framework\TestCase;
@@ -70,6 +71,7 @@ class LanguageServerReferenceFinderExtensionTest extends TestCase
             ReferenceFinderExtension::class,
             FilePathResolverExtension::class,
             LanguageServerBridgeExtension::class,
+            TestIndexerExtension::class,
         ]);
         
         $builder = $container->get(LanguageServerBuilder::class);

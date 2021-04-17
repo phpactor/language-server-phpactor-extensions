@@ -13,8 +13,11 @@ use Phpactor\Extension\LanguageServerReferenceFinder\Handler\HighlightHandler;
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\ReferencesHandler;
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\TypeDefinitionHandler;
 use Phpactor\Extension\LanguageServerReferenceFinder\Model\Highlighter;
+use Phpactor\Extension\LanguageServerReferenceFinder\Adapter\Indexer\WorkspaceUpdateReferenceFinder;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
+use Phpactor\Indexer\Extension\IndexerExtension;
+use Phpactor\Indexer\Model\Indexer;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\MapResolver\Resolver;
 use Phpactor\ReferenceFinder\ReferenceFinder;
@@ -47,7 +50,11 @@ class LanguageServerReferenceFinderExtension implements Extension
         $container->register(ReferencesHandler::class, function (Container $container) {
             return new ReferencesHandler(
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
-                $container->get(ReferenceFinder::class),
+                new WorkspaceUpdateReferenceFinder(
+                    $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
+                    $container->get(Indexer::class),
+                    $container->get(ReferenceFinder::class),
+                ),
                 $container->get(ReferenceFinderExtension::SERVICE_DEFINITION_LOCATOR),
                 $container->get(LocationConverter::class),
                 $container->get(ClientApi::class),

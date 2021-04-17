@@ -9,6 +9,7 @@ use Phpactor\Extension\LanguageServerRename\Model\Renamer\ChainRenamer;
 use Phpactor\Extension\LanguageServerRename\Handler\RenameHandler;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
+use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\MapResolver\Resolver;
 use Phpactor\TextDocument\TextDocumentLocator;
 
@@ -32,6 +33,7 @@ class LanguageServerRenameExtension implements Extension
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
                 $container->get(TextDocumentLocator::class),
                 $container->get(Renamer::class),
+                $container->get(ClientApi::class)
             );
         }, [
             LanguageServerExtension::TAG_METHOD_HANDLER => []
