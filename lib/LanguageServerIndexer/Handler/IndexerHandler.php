@@ -17,6 +17,7 @@ use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\Indexer\Model\Indexer;
 use Phpactor\LanguageServer\Core\Service\ServiceManager;
 use Phpactor\LanguageServer\Core\Service\ServiceProvider;
+use Phpactor\TextDocument\Exception\TextDocumentNotFound;
 use Phpactor\TextDocument\TextDocumentBuilder;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
@@ -165,7 +166,15 @@ class IndexerHandler implements Handler, ServiceProvider
                     break;
                 }
 
-                $this->indexer->index(TextDocumentBuilder::fromUri($file->path())->build());
+                try {
+                    $this->indexer->index(TextDocumentBuilder::fromUri($file->path())->build());
+                } catch (TextDocumentNotFound $error) {
+                    $this->logger->warning(sprintf(
+                        'Trired to index non-existing file "%s"',
+                        $file->path()
+                    ));
+                    continue;
+                }
                 $this->logger->debug(sprintf('Indexed file: %s', $file->path()));
                 yield new Delayed(0);
             }
