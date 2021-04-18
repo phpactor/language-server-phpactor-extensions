@@ -47,7 +47,7 @@ class LanguageServerWatcher implements Watcher, WatcherProcess, ListenerProvider
     public function isSupported(): Promise
     {
         if (!$this->clientCapabilities) {
-            return false;
+            return new Success(false);
         }
 
         return new Success(
