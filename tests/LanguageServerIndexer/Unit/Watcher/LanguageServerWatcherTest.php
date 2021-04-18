@@ -48,7 +48,7 @@ class LanguageServerWatcherTest extends TestCase
             ->enableFileEvents()
             ->build();
 
-        $server->notify(DidChangeWatchedFilesHandler::METHOD, new DidChangeWatchedFilesParams([
+        $server->notify('workspace/didChangeWatchedFiles', new DidChangeWatchedFilesParams([
             new FileEvent('file:///foobar', FileChangeType::CREATED)
         ]));
 
