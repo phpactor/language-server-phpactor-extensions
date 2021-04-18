@@ -70,6 +70,15 @@ class ActionDeciderTest extends TestCase
                 new FileEvent('file:///one/two/file1', FileChangeType::DELETED),
                 new FileEvent('file:///one/two/file2', FileChangeType::DELETED),
                 new FileEvent('file:///one/two/file1', FileChangeType::CREATED),
+            ),
+            ActionDecider::ACTION_NONE
+        ];
+
+        yield [
+            new FilesChanged(
+                new FileEvent('file:///one/two/file1', FileChangeType::DELETED),
+                new FileEvent('file:///one/two/file2', FileChangeType::DELETED),
+                new FileEvent('file:///one/two/file1', FileChangeType::CREATED),
                 new FileEvent('file:///one/two/file2', FileChangeType::CREATED),
             ),
             ActionDecider::ACTION_FOLDER

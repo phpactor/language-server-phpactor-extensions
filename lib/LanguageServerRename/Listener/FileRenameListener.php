@@ -3,6 +3,7 @@
 namespace Phpactor\Extension\LanguageServerRename\Listener;
 
 use Amp\Promise;
+use Phpactor\Extension\LanguageServerRename\Listener\FileRename\ActionDecider;
 use Phpactor\Extension\LanguageServerRename\Model\FileRenamer;
 use Phpactor\LanguageServerProtocol\MessageActionItem;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
@@ -20,10 +21,9 @@ use function spl_object_hash;
 
 final class FileRenameListener implements ListenerProviderInterface
 {
-    const RENAME_FRAME_MICROSECONDS = 100;
-    const ACTION_FILE = 'file';
-    const ACTION_FOLDER = 'folder';
-    const ACTION_NONE = 'none';
+    public const ACTION_FILE = 'file';
+    public const ACTION_FOLDER = 'folder';
+    public const ACTION_NONE = 'none';
 
 
     /**
@@ -51,11 +51,17 @@ final class FileRenameListener implements ListenerProviderInterface
      */
     private $renamer;
 
+    /**
+     * @var ActionDecider
+     */
+    private $decider;
+
     public function __construct(TextDocumentLocator $locator, ClientApi $api, FileRenamer $renamer)
     {
         $this->locator = $locator;
         $this->api = $api;
         $this->renamer = $renamer;
+        $this->decider = new ActionDecider();
     }
 
     /**
@@ -75,7 +81,7 @@ final class FileRenameListener implements ListenerProviderInterface
 
     public function handleEvent(FilesChanged $changed): void
     {
-        $action = $this->determineAction($changed);
+        $action = $this->decider->determineAction($changed);
 
         if ($action === self::ACTION_NONE) {
             return;
@@ -92,27 +98,6 @@ final class FileRenameListener implements ListenerProviderInterface
                 return;
             }
         });
-    }
-
-    /**
-     * @return self::ACTION_*
-     */
-    private function determineAction(FilesChanged $changed): string
-    {
-        $eventCount = count($changed->events());
-        if ($eventCount === 2) {
-            [$event1, $event2] = $changed->events();
-        
-            if ($event1->type + $event2->type === 4) {
-                return self::ACTION_FILE;
-            }
-        }
-
-        if ($eventCount === $eventCount * 4) {
-            return self::ACTION_FOLDER;
-        }
-
-        return self::ACTION_NONE;
     }
 
     private function moveFile(FilesChanged $changed): Promise
@@ -143,3 +128,4 @@ final class FileRenameListener implements ListenerProviderInterface
             sprintf('Potential folder move detected, no action available though'),
         );
     }
+}
