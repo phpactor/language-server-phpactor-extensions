@@ -36,6 +36,15 @@ class LanguageServerIndexerExtension implements Extension
                 new WorkspaceSymbolProvider($container->get(SearchClient::class), $container->get(TextDocumentLocator::class))
             );
         }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [] ]);
+
+        $container->register(LanguageServerWatcher::class, function (Container $container) {
+            return new LanguageServerWatcher();
+        }, [
+            IndexerExtension::TAG_WATCHER => [
+                'name' => 'lsp',
+            ],
+            LanguageServerExtension::TAG_LISTENER_PROVIDER => []
+        ]);
     }
 
     public function configure(Resolver $schema): void
