@@ -16,6 +16,7 @@ use Phpactor\Extension\Logger\LoggingExtension;
 use Phpactor\Indexer\Extension\IndexerExtension;
 use Phpactor\Indexer\Model\Indexer;
 use Phpactor\Indexer\Model\SearchClient;
+use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Core\Service\ServiceManager;
 use Phpactor\MapResolver\Resolver;
@@ -38,7 +39,7 @@ class LanguageServerIndexerExtension implements Extension
         }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [] ]);
 
         $container->register(LanguageServerWatcher::class, function (Container $container) {
-            return new LanguageServerWatcher();
+            return new LanguageServerWatcher($container->get(ClientCapabilities::class));
         }, [
             IndexerExtension::TAG_WATCHER => [
                 'name' => 'lsp',

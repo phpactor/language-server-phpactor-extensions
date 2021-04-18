@@ -8,6 +8,7 @@ use Amp\Success;
 use Phpactor\AmpFsWatch\ModifiedFileBuilder;
 use Phpactor\AmpFsWatch\Watcher;
 use Phpactor\AmpFsWatch\WatcherProcess;
+use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\LanguageServerProtocol\FileEvent;
 use Phpactor\LanguageServer\Event\FilesChanged;
 use Phpactor\TextDocument\TextDocumentUri;
@@ -21,9 +22,15 @@ class LanguageServerWatcher implements Watcher, WatcherProcess, ListenerProvider
      */
     private $deferred;
 
-    public function __construct()
+    /**
+     * @var ClientCapabilities
+     */
+    private $clientCapabilities;
+
+    public function __construct(ClientCapabilities $clientCapabilities)
     {
         $this->deferred = new Deferred();
+        $this->clientCapabilities = $clientCapabilities;
     }
 
     /**
@@ -39,7 +46,9 @@ class LanguageServerWatcher implements Watcher, WatcherProcess, ListenerProvider
      */
     public function isSupported(): Promise
     {
-        return new Success(true);
+        return new Success(
+            (bool)$this->clientCapabilities->workspace['didChangeWatchedFiles'] ?? false
+        );
     }
 
     /**
