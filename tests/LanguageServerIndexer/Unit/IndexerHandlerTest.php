@@ -2,6 +2,7 @@
 
 namespace Phpactor\Extension\LanguageServerIndexer\Tests\Unit;
 
+use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\LanguageServer\LanguageServerBuilder;
 use Phpactor\LanguageServer\Test\LanguageServerTester;
 use Phpactor\LanguageServer\Test\ProtocolFactory;
@@ -18,7 +19,9 @@ class IndexerHandlerTest extends IntegrationTestCase
 
     protected function setUp(): void
     {
-        $container = $this->container();
+        $container = $this->container([
+            LanguageServerExtension::PARAM_FILE_EVENTS => false,
+        ]);
         $this->tester = $container->get(LanguageServerBuilder::class)->tester(
             ProtocolFactory::initializeParams($this->workspace()->path())
         );
@@ -84,6 +87,7 @@ class IndexerHandlerTest extends IntegrationTestCase
         wait(delay(10));
 
 
+        $tester->transmitter()->shift();
         $tester->transmitter()->shift();
         $tester->transmitter()->shift();
 
