@@ -17,7 +17,7 @@ use function Amp\call;
 class LanguageServerWatcher implements Watcher, WatcherProcess, ListenerProviderInterface
 {
     /**
-     * @var Deferred
+     * @var Deferred<FilesChanged>
      */
     private $deferred;
 
