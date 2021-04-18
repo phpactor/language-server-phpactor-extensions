@@ -8,7 +8,7 @@ use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
 use Phpactor\Extension\LanguageServerBridge\TextDocument\FilesystemWorkspaceLocator;
 use Phpactor\Extension\LanguageServerReferenceFinder\Adapter\Indexer\WorkspaceUpdateReferenceFinder;
-use Phpactor\Extension\LanguageServerRename\Adapter\ClassToFile\FileRenameListener;
+use Phpactor\Extension\LanguageServerRename\Listener\FileRenameListener;
 use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\ClassMover\ClassRenamer;
 use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\MemberRenamer;
 use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\VariableRenamer;

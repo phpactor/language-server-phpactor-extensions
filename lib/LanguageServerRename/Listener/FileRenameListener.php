@@ -1,10 +1,12 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerRename\Adapter\ClassToFile;
+namespace Phpactor\Extension\LanguageServerRename\Listener;
 
+use Amp\Promise;
 use Phpactor\Extension\LanguageServerRename\Model\FileRenamer;
 use Phpactor\LanguageServerProtocol\MessageActionItem;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
+use Phpactor\LanguageServer\Event\FilesChanged;
 use Phpactor\LanguageServer\Event\TextDocumentClosed;
 use Phpactor\LanguageServer\Event\TextDocumentOpened;
 use Phpactor\TextDocument\TextDocument;
@@ -13,11 +15,16 @@ use Phpactor\TextDocument\TextDocumentUri;
 use Psr\EventDispatcher\ListenerProviderInterface;
 use function Amp\asyncCall;
 use function Amp\asyncCoroutine;
+use function Amp\call;
 use function spl_object_hash;
 
 final class FileRenameListener implements ListenerProviderInterface
 {
     const RENAME_FRAME_MICROSECONDS = 100;
+    const ACTION_FILE = 'file';
+    const ACTION_FOLDER = 'folder';
+    const ACTION_NONE = 'none';
+
 
     /**
      * @var TextDocumentLocator
@@ -56,41 +63,61 @@ final class FileRenameListener implements ListenerProviderInterface
      */
     public function getListenersForEvent(object $event): iterable
     {
-        if ($event instanceof TextDocumentClosed) {
+        if ($event instanceof FilesChanged) {
             return [[
                 $this,
-                'registerClose'
-            ]];
-        }
-
-        if ($event instanceof TextDocumentOpened) {
-            return [[
-                $this,
-                'registerOpen'
+                'handleEvent'
             ]];
         }
 
         return [];
     }
 
-    public function registerClose(TextDocumentClosed $closed): void
+    public function handleEvent(FilesChanged $changed): void
     {
-        $this->lastClosedTime = microtime(true);
-        $this->lastClosed = $closed;
+        $action = $this->determineAction($changed);
+
+        if ($action === self::ACTION_NONE) {
+            return;
+        }
+
+        asyncCall(function () use ($changed, $action) {
+            if ($action === self::ACTION_FILE) {
+                yield $this->moveFile($changed);
+                return;
+            }
+
+            if ($action === self::ACTION_FOLDER) {
+                yield $this->moveFolder($changed);
+                return;
+            }
+        });
     }
 
-    public function registerOpen(TextDocumentOpened $opened): void
+    /**
+     * @return self::ACTION_*
+     */
+    private function determineAction(FilesChanged $changed): string
     {
-        if (!$this->lastClosedTime) {
-            return;
+        $eventCount = count($changed->events());
+        if ($eventCount === 2) {
+            [$event1, $event2] = $changed->events();
+        
+            if ($event1->type + $event2->type === 4) {
+                return self::ACTION_FILE;
+            }
         }
 
-        if (microtime(true) - $this->lastClosedTime > self::RENAME_FRAME_MICROSECONDS) {
-            $this->lastClosedTime = null;
-            return;
+        if ($eventCount === $eventCount * 4) {
+            return self::ACTION_FOLDER;
         }
 
-        asyncCall(function () use ($opened) {
+        return self::ACTION_NONE;
+    }
+
+    private function moveFile(FilesChanged $changed): Promise
+    {
+        return call(function () {
             $item = yield $this->api->window()->showMessageRequest()->info(
                 sprintf('Potential file move detected, move class contained in file?'),
                 new MessageActionItem('Yes'),
@@ -109,4 +136,10 @@ final class FileRenameListener implements ListenerProviderInterface
             );
         });
     }
-}
+
+    private function moveFolder(FilesChanged $changed): void
+    {
+        $this->api->window()->showMessage()->info(
+            sprintf('Potential folder move detected, no action available though'),
+        );
+    }
