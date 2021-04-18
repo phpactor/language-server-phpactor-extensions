@@ -10,7 +10,6 @@ use Phpactor\LanguageServerProtocol\DidChangeConfigurationClientCapabilities;
 use Phpactor\LanguageServerProtocol\DidChangeWatchedFilesParams;
 use Phpactor\LanguageServerProtocol\FileChangeType;
 use Phpactor\LanguageServerProtocol\FileEvent;
-use Phpactor\LanguageServer\Handler\Workspace\DidChangeWatchedFilesHandler;
 use Phpactor\LanguageServer\LanguageServerTesterBuilder;
 use function Amp\Promise\wait;
 
