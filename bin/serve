@@ -70,6 +70,8 @@ $container = PhpactorContainer::fromExtensions([
     IndexerExtension::PARAM_INDEX_PATH => realpath(__DIR__ . '/..') . '/cache',
     LoggingExtension::PARAM_FORMATTER => 'pretty',
     LoggingExtension::PARAM_LEVEL => 'debug',
+    LoggingExtension::PARAM_ENABLED => true,
+    LoggingExtension::PARAM_PATH => __DIR__ . '/../cache/phpactlor.log',
     CodeTransformExtension::PARAM_TEMPLATE_PATHS => [],
 ]);
 
