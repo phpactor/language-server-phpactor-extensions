@@ -39,7 +39,9 @@ class LanguageServerIndexerExtension implements Extension
         }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [] ]);
 
         $container->register(LanguageServerWatcher::class, function (Container $container) {
-            return new LanguageServerWatcher($container->get(ClientCapabilities::class));
+            return new LanguageServerWatcher(
+                $container->has(ClientCapabilities::class) ? $container->get(ClientCapabilities::class) : null
+            );
         }, [
             IndexerExtension::TAG_WATCHER => [
                 'name' => 'lsp',

@@ -23,11 +23,11 @@ class LanguageServerWatcher implements Watcher, WatcherProcess, ListenerProvider
     private $deferred;
 
     /**
-     * @var ClientCapabilities
+     * @var ClientCapabilities|null
      */
     private $clientCapabilities;
 
-    public function __construct(ClientCapabilities $clientCapabilities)
+    public function __construct(?ClientCapabilities $clientCapabilities)
     {
         $this->deferred = new Deferred();
         $this->clientCapabilities = $clientCapabilities;
@@ -46,6 +46,10 @@ class LanguageServerWatcher implements Watcher, WatcherProcess, ListenerProvider
      */
     public function isSupported(): Promise
     {
+        if (!$this->clientCapabilities) {
+            return false;
+        }
+
         return new Success(
             (bool)$this->clientCapabilities->workspace['didChangeWatchedFiles'] ?? false
         );
