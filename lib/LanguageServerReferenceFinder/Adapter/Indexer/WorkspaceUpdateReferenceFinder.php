@@ -8,6 +8,7 @@ use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\ReferenceFinder\ReferenceFinder;
 use Phpactor\TextDocument\ByteOffset;
+use Phpactor\TextDocument\Exception\TextDocumentNotFound;
 use Phpactor\TextDocument\TextDocument;
 use Phpactor\TextDocument\TextDocumentBuilder;
 
@@ -48,9 +49,12 @@ class WorkspaceUpdateReferenceFinder implements ReferenceFinder
         // ensure that the index is current with the workspace
         foreach ($this->workspace as $document) {
             assert($document instanceof TextDocumentItem);
-            $this->indexer->indexDirty(
-                TextDocumentBuilder::fromUri($document->uri)->text($document->text)->build()
-            );
+            try {
+                $this->indexer->indexDirty(
+                    TextDocumentBuilder::fromUri($document->uri)->text($document->text)->build()
+                );
+            } catch (TextDocumentNotFound $e) {
+            }
         }
     }
 }
