@@ -45,6 +45,7 @@
         "phpspec/prophecy-phpunit": "^2.0",
         "phpstan/phpstan": "~0.12.0",
         "phpunit/phpunit": "^9.0",
+        "phpactor/php-extension": "^0.1.1",
         "symfony/var-dumper": "^5.1"
     },
     "extra": {

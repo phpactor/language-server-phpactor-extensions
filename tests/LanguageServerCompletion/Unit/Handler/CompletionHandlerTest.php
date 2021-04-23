@@ -5,12 +5,7 @@ namespace Phpactor\Extension\LanguageServerCompletion\Tests\Unit\Handler;
 use Amp\Delayed;
 use DTL\Invoke\Invoke;
 use Generator;
-use Phpactor\LanguageServerProtocol\CompletionItem;
-use Phpactor\LanguageServerProtocol\CompletionList;
-use Phpactor\LanguageServerProtocol\Position;
-use Phpactor\LanguageServerProtocol\Range;
-use Phpactor\LanguageServerProtocol\TextEdit;
-use PHPUnit\Framework\TestCase;
+use Phpactor\CodeBuilder\Domain\Updater;
 use Phpactor\Completion\Core\Completor;
 use Phpactor\Completion\Core\Range as PhpactorRange;
 use Phpactor\Completion\Core\Suggestion;
@@ -20,8 +15,16 @@ use Phpactor\Extension\LanguageServerCompletion\Util\SuggestionNameFormatter;
 use Phpactor\LanguageServer\LanguageServerTesterBuilder;
 use Phpactor\LanguageServer\Test\LanguageServerTester;
 use Phpactor\LanguageServer\Test\ProtocolFactory;
+use Phpactor\LanguageServerProtocol\CompletionItem;
+use Phpactor\LanguageServerProtocol\CompletionList;
+use Phpactor\LanguageServerProtocol\Position;
+use Phpactor\LanguageServerProtocol\Range;
+use Phpactor\LanguageServerProtocol\TextEdit;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocument;
+use Phpactor\TextDocument\TextEdit as PhpactorTextEdit;
+use Phpactor\TextDocument\TextEdits;
+use PHPUnit\Framework\TestCase;
 
 class CompletionHandlerTest extends TestCase
 {
@@ -103,6 +106,56 @@ class CompletionHandlerTest extends TestCase
                 'hello'
             )])
         ], $response->result->items);
+        $this->assertFalse($response->result->isIncomplete);
+    }
+
+    public function testSuggestionWithImport(): void
+    {
+        $tester = $this->create(
+            [
+                Suggestion::createWithOptions(
+                    'hello',
+                    [
+                        'type'        => 'class',
+                        'name_import' => '\Foo\Bar'
+                    ]
+                ),
+            ],
+            true,
+            false,
+            [
+                new TextEdits(PhpactorTextEdit::create(0, 4, 'world'))
+            ]
+        );
+        $response = $tester->requestAndWait(
+            'textDocument/completion',
+            [
+                'textDocument' => ProtocolFactory::textDocumentIdentifier(self::EXAMPLE_URI),
+                'position'     => ProtocolFactory::position(0, 0)
+            ]
+        );
+        $this->assertEquals(
+            [
+                self::completionItem(
+                    'hello',
+                    null,
+                    [
+                        'kind' => 7,
+                        'detail' => '↓ ',
+                        'additionalTextEdits' => [
+                            TextEdit::fromArray([
+                                'newText' => 'world',
+                                'range' => Range::fromArray([
+                                    'start' => Position::fromArray(['line' => 0, 'character' => 0]),
+                                    'end' => Position::fromArray(['line' => 0, 'character' => 4]),
+                                ])
+                            ])
+                        ]
+                    ]
+                )
+            ],
+            $response->result->items
+        );
         $this->assertFalse($response->result->isIncomplete);
     }
 
@@ -246,8 +299,12 @@ class CompletionHandlerTest extends TestCase
         ], $data));
     }
 
-    private function create(array $suggestions, bool $supportSnippets = true, bool $isIncomplete = false): LanguageServerTester
-    {
+    private function create(
+        array $suggestions,
+        bool $supportSnippets = true,
+        bool $isIncomplete = false,
+        array $textEditsFor = []
+    ): LanguageServerTester {
         $completor = $this->createCompletor($suggestions, $isIncomplete);
         $registry = new TypedCompletorRegistry([
             'php' => $completor,
@@ -257,12 +314,22 @@ class CompletionHandlerTest extends TestCase
             $builder->workspace(),
             $registry,
             new SuggestionNameFormatter(true),
+            $this->createUpdater($textEditsFor),
             $supportSnippets,
             true
         ))->build();
         $tester->textDocument()->open(self::EXAMPLE_URI, self::EXAMPLE_TEXT);
 
         return $tester;
+    }
+
+    private function createUpdater(array $textEditsFor = []): Updater
+    {
+        $updater = $this->getMockForAbstractClass(Updater::class);
+        $updater->method('textEditsFor')
+            ->with(self::anything(), self::EXAMPLE_TEXT)
+            ->willReturnOnConsecutiveCalls(...$textEditsFor);
+        return $updater;
     }
 
     private function createCompletor(array $suggestions, bool $isIncomplete = false): Completor

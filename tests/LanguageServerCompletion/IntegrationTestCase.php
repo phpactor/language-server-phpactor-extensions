@@ -2,6 +2,9 @@
 
 namespace Phpactor\Extension\LanguageServerCompletion\Tests;
 
+use Phpactor\Extension\CodeTransform\CodeTransformExtension;
+use Phpactor\Extension\LanguageServerCompletion\Tests\Extension\TestExtension;
+use Phpactor\Extension\Php\PhpExtension;
 use PHPUnit\Framework\TestCase;
 use Phpactor\Container\PhpactorContainer;
 use Phpactor\Extension\ClassToFile\ClassToFileExtension;
@@ -53,12 +56,15 @@ class IntegrationTestCase extends TestCase
             ReferenceFinderExtension::class,
 
             LanguageServerBridgeExtension::class,
+            CodeTransformExtension::class,
+            PhpExtension::class,
+            TestExtension::class,
         ], [
             FilePathResolverExtension::PARAM_APPLICATION_ROOT => __DIR__ .'/../../',
             LanguageServerHoverExtension::PARAM_TEMPLATE_PATHS => [],
             IndexerExtension::PARAM_ENABLED_WATCHERS => [],
         ]);
-        
+
         $builder = $container->get(LanguageServerBuilder::class);
         $this->assertInstanceOf(LanguageServerBuilder::class, $builder);
 

@@ -2,6 +2,7 @@
 
 namespace Phpactor\Extension\LanguageServerCompletion;
 
+use Phpactor\CodeBuilder\Domain\Updater;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
@@ -45,6 +46,7 @@ class LanguageServerCompletionExtension implements Extension
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
                 $container->get(CompletionExtension::SERVICE_REGISTRY),
                 $container->get(SuggestionNameFormatter::class),
+                $container->get(Updater::class),
                 $this->clientCapabilities($container)->textDocument->completion->completionItem['snippetSupport'] ?? false
             );
         }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [
