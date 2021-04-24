@@ -8,6 +8,7 @@ use Phpactor\Container\Extension;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer\ChainRenamer;
 use Phpactor\Extension\LanguageServerRename\Handler\RenameHandler;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
+use Phpactor\Extension\LanguageServerRename\Util\LocatedTextEditConverter;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\MapResolver\Resolver;
@@ -30,7 +31,7 @@ class LanguageServerRenameExtension implements Extension
 
         $container->register(RenameHandler::class, function (Container $container) {
             return new RenameHandler(
-                $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
+                $container->get(LocatedTextEditConverter::class),
                 $container->get(TextDocumentLocator::class),
                 $container->get(Renamer::class),
                 $container->get(ClientApi::class)
@@ -38,6 +39,13 @@ class LanguageServerRenameExtension implements Extension
         }, [
             LanguageServerExtension::TAG_METHOD_HANDLER => []
         ]);
+
+        $container->register(LocatedTextEditConverter::class, function (Container $container) {
+            return new LocatedTextEditConverter(
+                $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
+                $container->get(TextDocumentLocator::class),
+            );
+        });
     }
 
     /**

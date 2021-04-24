@@ -27,6 +27,16 @@ class LanguageServerWatcher implements Watcher, WatcherProcess, ListenerProvider
      */
     private $clientCapabilities;
 
+    /**
+     * @var FileEvent[]
+     */
+    private $queue = [];
+
+    /**
+     * @var bool
+     */
+    private $running = false;
+
     public function __construct(?ClientCapabilities $clientCapabilities)
     {
         $this->deferred = new Deferred();
@@ -78,7 +88,11 @@ class LanguageServerWatcher implements Watcher, WatcherProcess, ListenerProvider
     public function enqueue(FilesChanged $filesChanged): void
     {
         foreach ($filesChanged->events() as $changedFile) {
-            $this->deferred->resolve($changedFile);
+            $this->queue[] = $changedFile;
+        }
+        if (!$this->running) {
+            $this->deferred->resolve();
+            $this->running = true;
         }
     }
 
@@ -92,10 +106,22 @@ class LanguageServerWatcher implements Watcher, WatcherProcess, ListenerProvider
     public function wait(): Promise
     {
         return call(function () {
-            $event = yield $this->deferred->promise();
+            while (true) {
+                yield $this->deferred->promise();
+                $this->deferred = new Deferred();
+                $this->running = false;
+                $event = array_shift($this->queue);
+                if ($event === null) {
+                    continue;
+                }
+                break;
+            }
+
             assert($event instanceof FileEvent);
 
-            $this->deferred = new Deferred();
+            if ($this->queue) {
+                $this->deferred->resolve();
+            }
 
             return ModifiedFileBuilder::fromPath(
                 TextDocumentUri::fromString($event->uri)->path(),

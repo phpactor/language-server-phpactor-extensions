@@ -2,17 +2,26 @@
 
 namespace Phpactor\Extension\LanguageServerRename;
 
+use Phly\EventDispatcher\ListenerProvider\ListenerProviderAggregate;
 use Phpactor\ClassMover\ClassMover;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
+use Phpactor\Extension\ClassToFile\ClassToFileExtension;
 use Phpactor\Extension\LanguageServerReferenceFinder\Adapter\Indexer\WorkspaceUpdateReferenceFinder;
+use Phpactor\Extension\LanguageServerRename\Adapter\ClassMover\FileRenamer;
+use Phpactor\Extension\LanguageServerRename\Adapter\ClassMover\FileRenamer as PhpactorFileRenamer;
+use Phpactor\Extension\LanguageServerRename\Adapter\ClassToFile\ClassToFileUriToNameConverter;
+use Phpactor\Extension\LanguageServerRename\Listener\FileRenameListener;
 use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\ClassMover\ClassRenamer;
 use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\MemberRenamer;
 use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\VariableRenamer;
+use Phpactor\Extension\LanguageServerRename\Util\LocatedTextEditConverter;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
 use Phpactor\Indexer\Model\Indexer;
+use Phpactor\Indexer\Model\QueryClient;
+use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\MapResolver\Resolver;
 use Phpactor\ReferenceFinder\DefinitionAndReferenceFinder;
 use Phpactor\ReferenceFinder\ReferenceFinder;
@@ -22,6 +31,8 @@ use Phpactor\WorseReferenceFinder\TolerantVariableReferenceFinder;
 class LanguageServerRenameWorseExtension implements Extension
 {
     public const TAG_RENAMER = 'language_server_rename.renamer';
+    public const PARAM_FILE_RENAME = 'language_server_rename.file_rename';
+
     /**
 
      * {@inheritDoc}
@@ -73,6 +84,29 @@ class LanguageServerRenameWorseExtension implements Extension
                 )
             );
         });
+
+        $container->register(FileRenameListener::class, function (Container $container) {
+            if ($container->getParameter(self::PARAM_FILE_RENAME)) {
+                return new ListenerProviderAggregate();
+            }
+
+            return new FileRenameListener(
+                $container->get(LocatedTextEditConverter::class),
+                $container->get(ClientApi::class),
+                $container->get(FileRenamer::class)
+            );
+        }, [
+            LanguageServerExtension::TAG_LISTENER_PROVIDER => []
+        ]);
+
+        $container->register(FileRenamer::class, function (Container $container) {
+            return new PhpactorFileRenamer(
+                new ClassToFileUriToNameConverter($container->get(ClassToFileExtension::SERVICE_CONVERTER)),
+                $container->get(TextDocumentLocator::class),
+                $container->get(QueryClient::class),
+                $container->get(ClassMover::class)
+            );
+        });
     }
 
     /**
@@ -80,5 +114,11 @@ class LanguageServerRenameWorseExtension implements Extension
      */
     public function configure(Resolver $schema): void
     {
+        $schema->setDefaults([
+            self::PARAM_FILE_RENAME => false,
+        ]);
+        $schema->setDescriptions([
+            self::PARAM_FILE_RENAME => '(experimental) Support for moving classes when a file move is detected'
+        ]);
     }
 }

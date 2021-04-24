@@ -5,11 +5,11 @@ namespace Phpactor\Extension\LanguageServerRename\Handler;
 use Amp\Promise;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\LanguageServerBridge\Converter\RangeConverter;
-use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
 use Phpactor\Extension\LanguageServerRename\Model\Exception\CouldNotRename;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdit;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEditsMap;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
+use Phpactor\Extension\LanguageServerRename\Util\LocatedTextEditConverter;
 use Phpactor\LanguageServerProtocol\PrepareRenameParams;
 use Phpactor\LanguageServerProtocol\PrepareRenameRequest;
 use Phpactor\LanguageServerProtocol\Range;
@@ -17,13 +17,10 @@ use Phpactor\LanguageServerProtocol\RenameOptions;
 use Phpactor\LanguageServerProtocol\RenameParams;
 use Phpactor\LanguageServerProtocol\RenameRequest;
 use Phpactor\LanguageServerProtocol\ServerCapabilities;
-use Phpactor\LanguageServerProtocol\TextDocumentEdit;
-use Phpactor\LanguageServerProtocol\VersionedTextDocumentIdentifier;
 use Phpactor\LanguageServerProtocol\WorkspaceEdit;
 use Phpactor\LanguageServer\Core\Handler\CanRegisterCapabilities;
 use Phpactor\LanguageServer\Core\Handler\Handler;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
-use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\TextDocument\TextDocumentLocator;
 use Phpactor\TextDocument\TextDocumentUri;
 use function Amp\delay;
@@ -34,30 +31,32 @@ class RenameHandler implements Handler, CanRegisterCapabilities
      * @var Renamer
      */
     private $renamer;
-    /**
-     * @var Workspace
-     */
-    private $workspace;
-    /**
-     * @var TextDocumentLocator
-     */
-    private $documentLocator;
 
     /**
      * @var ClientApi
      */
     private $clientApi;
 
+    /**
+     * @var LocatedTextEditConverter
+     */
+    private $converter;
+
+    /**
+     * @var TextDocumentLocator
+     */
+    private $documentLocator;
+
     public function __construct(
-        Workspace $workspace,
+        LocatedTextEditConverter $converter,
         TextDocumentLocator $documentLocator,
         Renamer $renamer,
         ClientApi $clientApi
     ) {
         $this->renamer = $renamer;
-        $this->workspace = $workspace;
-        $this->documentLocator = $documentLocator;
         $this->clientApi = $clientApi;
+        $this->converter = $converter;
+        $this->documentLocator = $documentLocator;
     }
     /**
      * {@inheritDoc}
@@ -136,27 +135,8 @@ class RenameHandler implements Handler, CanRegisterCapabilities
      */
     private function resultToWorkspaceEdit(array $locatedEdits): WorkspaceEdit
     {
-        $documentEdits = [];
-        $map = LocatedTextEditsMap::fromLocatedEdits($locatedEdits);
-
-        foreach ($map->toLocatedTextEdits() as $result) {
-            $version = $this->getDocumentVersion((string)$result->documentUri());
-            $documentEdits[] = new TextDocumentEdit(
-                new VersionedTextDocumentIdentifier(
-                    (string)$result->documentUri(),
-                    $version
-                ),
-                TextEditConverter::toLspTextEdits(
-                    $result->textEdits(),
-                    (string)$this->documentLocator->get($result->documentUri())
-                )
-            );
-        }
-        return new WorkspaceEdit(null, $documentEdits);
-    }
-
-    private function getDocumentVersion(string $uri): int
-    {
-        return $this->workspace->has($uri) ? $this->workspace->get($uri)->version : 0;
+        return $this->converter->toWorkspaceEdit(
+            LocatedTextEditsMap::fromLocatedEdits($locatedEdits)
+        );
     }
 }
