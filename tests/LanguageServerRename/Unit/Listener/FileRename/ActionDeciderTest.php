@@ -18,7 +18,7 @@ class ActionDeciderTest extends TestCase
      * @dataProvider provideDecideFile
      * @dataProvider provideDecideFolder
      */
-    public function testDecide(FilesChanged $changed, string $expected)
+    public function testDecide(FilesChanged $changed, string $expected): void
     {
         self::assertEquals($expected, (new ActionDecider())->determineAction($changed));
     }

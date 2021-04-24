@@ -32,6 +32,9 @@ class LanguageServerWatcher implements Watcher, WatcherProcess, ListenerProvider
      */
     private $queue = [];
 
+    /**
+     * @var bool
+     */
     private $running = false;
 
     public function __construct(?ClientCapabilities $clientCapabilities)

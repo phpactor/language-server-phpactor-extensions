@@ -5,7 +5,6 @@ namespace Phpactor\Extension\LanguageServerRename\Handler;
 use Amp\Promise;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\LanguageServerBridge\Converter\RangeConverter;
-use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
 use Phpactor\Extension\LanguageServerRename\Model\Exception\CouldNotRename;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdit;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEditsMap;
@@ -18,13 +17,10 @@ use Phpactor\LanguageServerProtocol\RenameOptions;
 use Phpactor\LanguageServerProtocol\RenameParams;
 use Phpactor\LanguageServerProtocol\RenameRequest;
 use Phpactor\LanguageServerProtocol\ServerCapabilities;
-use Phpactor\LanguageServerProtocol\TextDocumentEdit;
-use Phpactor\LanguageServerProtocol\VersionedTextDocumentIdentifier;
 use Phpactor\LanguageServerProtocol\WorkspaceEdit;
 use Phpactor\LanguageServer\Core\Handler\CanRegisterCapabilities;
 use Phpactor\LanguageServer\Core\Handler\Handler;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
-use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\TextDocument\TextDocumentLocator;
 use Phpactor\TextDocument\TextDocumentUri;
 use function Amp\delay;
@@ -140,8 +136,7 @@ class RenameHandler implements Handler, CanRegisterCapabilities
     private function resultToWorkspaceEdit(array $locatedEdits): WorkspaceEdit
     {
         return $this->converter->toWorkspaceEdit(
-            LocatedTextEditsMap::fromLocatedEdits($locatedEdits),
-            $this->documentLocator
+            LocatedTextEditsMap::fromLocatedEdits($locatedEdits)
         );
     }
 }

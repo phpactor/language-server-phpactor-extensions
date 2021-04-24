@@ -2,8 +2,6 @@
 
 namespace Phpactor\Extension\LanguageServerRename\Tests\Unit\Adapter\ReferenceFinder\ClassMover;
 
-use Closure;
-use PHPUnit\Framework\TestCase;
 use Phpactor\ClassFileConverter\Adapter\Simple\SimpleFileToClass;
 use Phpactor\ClassMover\ClassMover;
 use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\ClassMover\FileRenamer;
@@ -14,12 +12,9 @@ use Phpactor\Indexer\Model\QueryClient;
 use Phpactor\Indexer\Model\RecordReference;
 use Phpactor\Indexer\Model\Record\ClassRecord;
 use Phpactor\Indexer\Model\Record\FileRecord;
-use Phpactor\Indexer\Model\SearchClient;
 use Phpactor\TextDocument\TextDocument;
 use Phpactor\TextDocument\TextDocumentBuilder;
 use Phpactor\TextDocument\TextDocumentLocator\InMemoryDocumentLocator;
-use Phpactor\TextDocument\TextDocumentUri;
-use Phpactor\TextDocument\TextEdits;
 use function Amp\Promise\wait;
 
 class FileRenamerTest extends IntegrationTestCase

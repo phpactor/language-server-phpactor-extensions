@@ -22,6 +22,7 @@ class ActionDecider
             return $event->type;
         }, $changed->events()));
 
+        /** @phpstan-ignore-next-line */
         if ($eventCount === 2 && $sum === 4) {
             return self::ACTION_FILE;
         }

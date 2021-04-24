@@ -3,18 +3,13 @@
 namespace Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\ClassMover;
 
 use Amp\Promise;
-use Phpactor\ClassFileConverter\ClassToFileConverter;
 use Phpactor\ClassFileConverter\Domain\ClassName;
-use Phpactor\ClassFileConverter\Domain\ClassToFile;
 use Phpactor\ClassFileConverter\Domain\FilePath;
 use Phpactor\ClassFileConverter\Domain\FileToClass;
 use Phpactor\ClassMover\ClassMover;
-use Phpactor\Extension\LanguageServerRename\Model\Exception\CouldNotRename;
 use Phpactor\Extension\LanguageServerRename\Model\FileRenamer as PhpactorFileRenamer;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdit;
-use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdits;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEditsMap;
-use Phpactor\Indexer\IndexAgent;
 use Phpactor\Indexer\Model\QueryClient;
 use Phpactor\TextDocument\TextDocumentLocator;
 use Phpactor\TextDocument\TextDocumentUri;
@@ -48,14 +43,16 @@ class FileRenamer implements PhpactorFileRenamer
         TextDocumentLocator $locator,
         QueryClient $client,
         ClassMover $mover
-    )
-    {
+    ) {
         $this->fileToClass = $fileToClass;
         $this->client = $client;
         $this->mover = $mover;
         $this->locator = $locator;
     }
 
+    /**
+     * @return Promise<LocatedTextEditsMap>
+     */
     public function renameFile(TextDocumentUri $from, TextDocumentUri $to): Promise
     {
         return call(function () use ($from, $to) {
@@ -87,7 +84,7 @@ class FileRenamer implements PhpactorFileRenamer
                     $this->mover->findReferences($document->__toString(), $fromClass),
                     $toClass
                 ) as $edit) {
-                $locatedEdits[] = new LocatedTextEdit($reference->location()->uri(), $edit);
+                    $locatedEdits[] = new LocatedTextEdit($reference->location()->uri(), $edit);
                 }
             }
 

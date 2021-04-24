@@ -3,25 +3,17 @@
 namespace Phpactor\Extension\LanguageServerRename\Listener;
 
 use Amp\Promise;
-use Error;
 use Phpactor\Extension\LanguageServerRename\Listener\FileRename\ActionDecider;
 use Phpactor\Extension\LanguageServerRename\Model\FileRenamer;
 use Phpactor\Extension\LanguageServerRename\Util\LocatedTextEditConverter;
 use Phpactor\LanguageServerProtocol\FileChangeType;
 use Phpactor\LanguageServerProtocol\MessageActionItem;
-use Phpactor\LanguageServerProtocol\WorkspaceEdit;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Event\FilesChanged;
-use Phpactor\LanguageServer\Event\TextDocumentClosed;
-use Phpactor\LanguageServer\Event\TextDocumentOpened;
-use Phpactor\TextDocument\TextDocument;
-use Phpactor\TextDocument\TextDocumentLocator;
 use Phpactor\TextDocument\TextDocumentUri;
 use Psr\EventDispatcher\ListenerProviderInterface;
 use function Amp\asyncCall;
-use function Amp\asyncCoroutine;
 use function Amp\call;
-use function spl_object_hash;
 
 final class FileRenameListener implements ListenerProviderInterface
 {
@@ -99,6 +91,9 @@ final class FileRenameListener implements ListenerProviderInterface
         });
     }
 
+    /**
+     * @return Promise<void>
+     */
     private function moveFile(FilesChanged $changed): Promise
     {
         return call(function () use ($changed) {
@@ -129,8 +124,8 @@ final class FileRenameListener implements ListenerProviderInterface
 
     private function moveFolder(FilesChanged $changed): void
     {
-        $this->api->window()->showMessage()->info(
-            sprintf('Potential folder move detected, no action available though'),
+        $this->api->window()->showMessage()->log(
+            sprintf('Folder move detected, but folder move not supported yet'),
         );
     }
 }

@@ -2,7 +2,6 @@
 
 namespace Phpactor\Extension\LanguageServerRename\Tests\Unit\Listener;
 
-use Amp\Loop;
 use PHPUnit\Framework\TestCase;
 use Phpactor\Extension\LanguageServerRename\Listener\FileRenameListener;
 use Phpactor\Extension\LanguageServerRename\Model\FileRenamer\NullFileRenamer;
@@ -10,11 +9,8 @@ use Phpactor\Extension\LanguageServerRename\Util\LocatedTextEditConverter;
 use Phpactor\LanguageServerProtocol\DidChangeWatchedFilesParams;
 use Phpactor\LanguageServerProtocol\FileChangeType;
 use Phpactor\LanguageServerProtocol\FileEvent;
-use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\LanguageServer\LanguageServerTesterBuilder;
 use Phpactor\TextDocument\TextDocumentLocator\InMemoryDocumentLocator;
-use function Amp\Promise\wait;
-use function Amp\delay;
 
 class FileRenameListenerTest extends TestCase
 {
