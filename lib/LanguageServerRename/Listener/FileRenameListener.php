@@ -6,6 +6,7 @@ use Amp\Promise;
 use Phpactor\Extension\LanguageServerRename\Listener\FileRename\ActionDecider;
 use Phpactor\Extension\LanguageServerRename\Model\Exception\CouldNotRename;
 use Phpactor\Extension\LanguageServerRename\Model\FileRenamer;
+use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEditsMap;
 use Phpactor\Extension\LanguageServerRename\Util\LocatedTextEditConverter;
 use Phpactor\LanguageServerProtocol\FileChangeType;
 use Phpactor\LanguageServerProtocol\MessageActionItem;
@@ -21,6 +22,8 @@ final class FileRenameListener implements ListenerProviderInterface
     public const ACTION_FILE = 'file';
     public const ACTION_FOLDER = 'folder';
     public const ACTION_NONE = 'none';
+    const ANSWER_YES = 'Yes';
+    const ANSWER_NO = 'No';
 
     /**
      * @var ClientApi
@@ -108,13 +111,13 @@ final class FileRenameListener implements ListenerProviderInterface
             if ($this->interactive) {
                 $item = yield $this->api->window()->showMessageRequest()->info(
                     sprintf('Potential file move detected, move class contained in file?'),
-                    new MessageActionItem('Yes'),
-                    new MessageActionItem('No')
+                    new MessageActionItem(self::ANSWER_YES),
+                    new MessageActionItem(self::ANSWER_NO)
                 );
 
                 assert($item instanceof MessageActionItem);
 
-                if ($item->title === 'No') {
+                if ($item->title === self::ANSWER_NO) {
                     return;
                 }
             }
@@ -130,10 +133,38 @@ final class FileRenameListener implements ListenerProviderInterface
         });
     }
 
-    private function moveFolder(FilesChanged $changed): void
+    /**
+     * @return Promise<void>
+     */
+    private function moveFolder(FilesChanged $changed): Promise
     {
-        $this->api->window()->showMessage()->log(
-            sprintf('Folder move detected, but folder move not supported yet'),
-        );
+        return call(function () use ($changed) {
+            if ($this->interactive) {
+                $item = yield $this->api->window()->showMessageRequest()->info(
+                    sprintf('Potential folder move detected, move all classes contained in folder?'),
+                    new MessageActionItem(self::ANSWER_YES),
+                    new MessageActionItem(self::ANSWER_NO)
+                );
+
+                assert($item instanceof MessageActionItem);
+
+                if ($item->title === self::ANSWER_NO) {
+                    return;
+                }
+            }
+
+
+            $map = LocatedTextEditsMap::create();
+
+            foreach ($this->renamesResolver->resolve($changed) as $rename) {
+                $map = $map->merge(yield $this->renamer->renameFile(
+                    TextDocumentUri::fromString($rename->from),
+                    TextDocumentUri::fromString($rename->to)
+                ));
+                assert($map instanceof LocatedTextEditsMap);
+            }
+
+            $this->api->workspace()->applyEdit($this->converter->toWorkspaceEdit($map));
+        });
     }
 }

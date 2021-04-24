@@ -90,6 +90,7 @@ class LanguageServerWatcher implements Watcher, WatcherProcess, ListenerProvider
         foreach ($filesChanged->events() as $changedFile) {
             $this->queue[] = $changedFile;
         }
+
         if (!$this->running) {
             $this->running = true;
             $this->deferred->resolve();
