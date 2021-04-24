@@ -14,6 +14,8 @@ use Phpactor\Indexer\IndexAgent;
 use Phpactor\Indexer\Model\QueryClient;
 use Phpactor\TextDocument\TextDocumentLocator;
 use Phpactor\TextDocument\TextDocumentUri;
+use Phpactor\TextDocument\TextEdits;
+use function Amp\call;
 
 class FileRenamer implements PhpactorFileRenamer
 {
@@ -52,23 +54,28 @@ class FileRenamer implements PhpactorFileRenamer
 
     public function renameFile(TextDocumentUri $from, TextDocumentUri $to): Promise
     {
-        $fromClass = $this->fileToClass->fileToClassCandidates(
-            FilePath::fromString($from->path())
-        )->best();
+        return call(function () use ($from, $to) {
+            $fromClass = $this->fileToClass->fileToClassCandidates(
+                FilePath::fromString($from->path())
+            )->best();
 
-        $toClass = $this->fileToClass->fileToClassCandidates(
-            FilePath::fromString($to->path())
-        )->best();
+            $toClass = $this->fileToClass->fileToClassCandidates(
+                FilePath::fromString($to->path())
+            )->best();
 
-        $references = $this->client->class()->referencesTo($fromClass->__toString());
+            $references = $this->client->class()->referencesTo($fromClass->__toString());
 
-        foreach ($references as $reference) {
-            $document = $this->locator->get($reference->location()->uri());
+            $edits = TextEdits::none();
+            foreach ($references as $reference) {
+                $document = $this->locator->get($reference->location()->uri());
 
-            $this->mover->replaceReferences(
-                $this->mover->findReferences($document->__toString(), $fromClass),
-                $toClass
-            );
-        }
+                $edits = $edits->merge($this->mover->replaceReferences(
+                    $this->mover->findReferences($document->__toString(), $fromClass),
+                    $toClass
+                ));
+            }
+
+            return $edits;
+        });
     }
 }
