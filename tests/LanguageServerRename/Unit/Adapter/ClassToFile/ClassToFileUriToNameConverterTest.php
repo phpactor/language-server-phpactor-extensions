@@ -2,7 +2,6 @@
 
 namespace Phpactor\Extension\LanguageServerRename\Tests\Unit\Adapter\ClassToFile;
 
-use PHPUnit\Framework\TestCase;
 use Phpactor\ClassFileConverter\Adapter\Simple\SimpleFileToClass;
 use Phpactor\Extension\LanguageServerRename\Adapter\ClassToFile\ClassToFileUriToNameConverter;
 use Phpactor\Extension\LanguageServerRename\Model\Exception\CouldNotConvertUriToClass;

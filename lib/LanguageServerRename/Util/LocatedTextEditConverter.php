@@ -10,7 +10,7 @@ use Phpactor\LanguageServerProtocol\WorkspaceEdit;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\TextDocument\TextDocumentLocator;
 
-class LocatedTextEditConverter
+final class LocatedTextEditConverter
 {
     /**
      * @var Workspace

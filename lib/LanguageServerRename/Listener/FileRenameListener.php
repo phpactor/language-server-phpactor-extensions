@@ -4,6 +4,7 @@ namespace Phpactor\Extension\LanguageServerRename\Listener;
 
 use Amp\Promise;
 use Phpactor\Extension\LanguageServerRename\Listener\FileRename\ActionDecider;
+use Phpactor\Extension\LanguageServerRename\Model\Exception\CouldNotRename;
 use Phpactor\Extension\LanguageServerRename\Model\FileRenamer;
 use Phpactor\Extension\LanguageServerRename\Util\LocatedTextEditConverter;
 use Phpactor\LanguageServerProtocol\FileChangeType;
@@ -79,14 +80,21 @@ final class FileRenameListener implements ListenerProviderInterface
         }
 
         asyncCall(function () use ($changed, $action) {
-            if ($action === self::ACTION_FILE) {
-                yield $this->moveFile($changed);
-                return;
-            }
+            try {
+                if ($action === self::ACTION_FILE) {
+                    yield $this->moveFile($changed);
+                    return;
+                }
 
-            if ($action === self::ACTION_FOLDER) {
-                $this->moveFolder($changed);
-                return;
+                if ($action === self::ACTION_FOLDER) {
+                    $this->moveFolder($changed);
+                    return;
+                }
+            } catch (CouldNotRename $couldNotRename) {
+                $this->api->window()->showMessage()->error(sprintf(
+                    'Could not rename: %s',
+                    $couldNotRename->getMessage()
+                ));
             }
         });
     }
