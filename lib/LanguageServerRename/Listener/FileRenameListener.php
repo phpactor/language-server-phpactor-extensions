@@ -30,16 +30,6 @@ final class FileRenameListener implements ListenerProviderInterface
     public const ACTION_NONE = 'none';
 
     /**
-     * @var TextDocument
-     */
-    private $lastClosed;
-
-    /**
-     * @var string
-     */
-    private $lastClosedTime;
-
-    /**
      * @var ClientApi
      */
     private $api;

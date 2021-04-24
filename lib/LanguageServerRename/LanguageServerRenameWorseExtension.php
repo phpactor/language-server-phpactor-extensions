@@ -13,6 +13,7 @@ use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\ClassMover\C
 use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\MemberRenamer;
 use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\VariableRenamer;
 use Phpactor\Extension\LanguageServerRename\Model\FileRenamer\NullFileRenamer;
+use Phpactor\Extension\LanguageServerRename\Util\LocatedTextEditConverter;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
 use Phpactor\Indexer\Model\Indexer;
@@ -82,7 +83,7 @@ class LanguageServerRenameWorseExtension implements Extension
 
         $container->register(FileRenameListener::class, function (Container $container) {
             return new FileRenameListener(
-                new FilesystemWorkspaceLocator(),
+                $container->get(LocatedTextEditConverter::class),
                 $container->get(ClientApi::class),
                 new NullFileRenamer()
             );
