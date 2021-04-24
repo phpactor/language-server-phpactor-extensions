@@ -86,7 +86,7 @@ class LanguageServerRenameWorseExtension implements Extension
         });
 
         $container->register(FileRenameListener::class, function (Container $container) {
-            if ($container->getParameter(self::PARAM_FILE_RENAME)) {
+            if (false === $container->getParameter(self::PARAM_FILE_RENAME)) {
                 return new ListenerProviderAggregate();
             }
 
