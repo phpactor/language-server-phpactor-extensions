@@ -3,9 +3,13 @@
 namespace Phpactor\Extension\LanguageServerRename\Listener;
 
 use Amp\Promise;
+use Error;
 use Phpactor\Extension\LanguageServerRename\Listener\FileRename\ActionDecider;
 use Phpactor\Extension\LanguageServerRename\Model\FileRenamer;
+use Phpactor\Extension\LanguageServerRename\Util\LocatedTextEditConverter;
+use Phpactor\LanguageServerProtocol\FileChangeType;
 use Phpactor\LanguageServerProtocol\MessageActionItem;
+use Phpactor\LanguageServerProtocol\WorkspaceEdit;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Event\FilesChanged;
 use Phpactor\LanguageServer\Event\TextDocumentClosed;
@@ -56,12 +60,18 @@ final class FileRenameListener implements ListenerProviderInterface
      */
     private $decider;
 
-    public function __construct(TextDocumentLocator $locator, ClientApi $api, FileRenamer $renamer)
+    /**
+     * @var bool
+     */
+    private $interactive;
+
+    public function __construct(TextDocumentLocator $locator, ClientApi $api, FileRenamer $renamer, bool $interactive = true)
     {
         $this->locator = $locator;
         $this->api = $api;
         $this->renamer = $renamer;
         $this->decider = new ActionDecider();
+        $this->interactive = $interactive;
     }
 
     /**
@@ -94,7 +104,7 @@ final class FileRenameListener implements ListenerProviderInterface
             }
 
             if ($action === self::ACTION_FOLDER) {
-                yield $this->moveFolder($changed);
+                $this->moveFolder($changed);
                 return;
             }
         });
@@ -102,23 +112,29 @@ final class FileRenameListener implements ListenerProviderInterface
 
     private function moveFile(FilesChanged $changed): Promise
     {
-        return call(function () {
-            $item = yield $this->api->window()->showMessageRequest()->info(
-                sprintf('Potential file move detected, move class contained in file?'),
-                new MessageActionItem('Yes'),
-                new MessageActionItem('No')
-            );
+        return call(function () use ($changed) {
+            if ($this->interactive) {
+                $item = yield $this->api->window()->showMessageRequest()->info(
+                    sprintf('Potential file move detected, move class contained in file?'),
+                    new MessageActionItem('Yes'),
+                    new MessageActionItem('No')
+                );
 
-            assert($item instanceof MessageActionItem);
+                assert($item instanceof MessageActionItem);
 
-            if ($item->title === 'No') {
-                return;
+                if ($item->title === 'No') {
+                    return;
+                }
             }
 
-            yield $this->renamer->renameFile(
-                $this->lastClosed->uri(),
-                TextDocumentUri::fromString($opened->textDocument()->uriA)
+            $closed = $changed->byType(FileChangeType::DELETED)->first();
+            $opened = $changed->byType(FileChangeType::CREATED)->first();
+
+            $map = yield $this->renamer->renameFile(
+                TextDocumentUri::fromString($closed->uri),
+                TextDocumentUri::fromString($opened->uri)
             );
+            $this->api->workspace()->applyEdit(LocatedTextEditConverter::toWorkspaceEdit($map));
         });
     }
 

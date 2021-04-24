@@ -10,6 +10,7 @@ use Phpactor\Extension\LanguageServerRename\Model\Exception\CouldNotRename;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdit;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEditsMap;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
+use Phpactor\Extension\LanguageServerRename\Util\LocatedTextEditConverter;
 use Phpactor\LanguageServerProtocol\PrepareRenameParams;
 use Phpactor\LanguageServerProtocol\PrepareRenameRequest;
 use Phpactor\LanguageServerProtocol\Range;
@@ -136,23 +137,7 @@ class RenameHandler implements Handler, CanRegisterCapabilities
      */
     private function resultToWorkspaceEdit(array $locatedEdits): WorkspaceEdit
     {
-        $documentEdits = [];
-        $map = LocatedTextEditsMap::fromLocatedEdits($locatedEdits);
-
-        foreach ($map->toLocatedTextEdits() as $result) {
-            $version = $this->getDocumentVersion((string)$result->documentUri());
-            $documentEdits[] = new TextDocumentEdit(
-                new VersionedTextDocumentIdentifier(
-                    (string)$result->documentUri(),
-                    $version
-                ),
-                TextEditConverter::toLspTextEdits(
-                    $result->textEdits(),
-                    (string)$this->documentLocator->get($result->documentUri())
-                )
-            );
-        }
-        return new WorkspaceEdit(null, $documentEdits);
+        return LocatedTextEditConverter::toWorkspaceEdit(LocatedTextEditsMap::fromLocatedEdits($locatedEdits));
     }
 
     private function getDocumentVersion(string $uri): int

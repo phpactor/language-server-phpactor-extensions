@@ -2,6 +2,7 @@
 
 namespace Phpactor\Extension\LanguageServerRename\Tests\Unit\Listener;
 
+use Amp\Loop;
 use PHPUnit\Framework\TestCase;
 use Phpactor\Extension\LanguageServerRename\Listener\FileRenameListener;
 use Phpactor\Extension\LanguageServerRename\Model\FileRenamer\NullFileRenamer;
@@ -15,14 +16,14 @@ use function Amp\delay;
 
 class FileRenameListenerTest extends TestCase
 {
-    public function testMoveFile(): void
+    public function testMoveFileInteractive(): void
     {
         $builder = LanguageServerTesterBuilder::createBare()
             ->enableFileEvents();
         $builder->addListenerProvider(new FileRenameListener(
             InMemoryDocumentLocator::new(),
             $builder->clientApi(),
-            new NullFileRenamer()
+            new NullFileRenamer(),
         ));
         $server = $builder->build();
         $server->initialize();
@@ -61,5 +62,29 @@ class FileRenameListenerTest extends TestCase
         self::assertNotNull($dialog);
         self::assertEquals('window/showMessage', $dialog->method);
         self::assertStringContainsString('folder move', $dialog->params['message']);
+    }
+
+    public function testMoveFile(): void
+    {
+        $builder = LanguageServerTesterBuilder::createBare()
+            ->enableFileEvents();
+        $builder->addListenerProvider(new FileRenameListener(
+            InMemoryDocumentLocator::new(),
+            $builder->clientApi(),
+            new NullFileRenamer(),
+            false
+        ));
+        $server = $builder->build();
+        $server->initialize();
+        $server->notify('workspace/didChangeWatchedFiles', new DidChangeWatchedFilesParams([
+            new FileEvent('file:///file1', FileChangeType::DELETED),
+            new FileEvent('file:///file2', FileChangeType::CREATED),
+        ]));
+
+        $server->transmitter()->shift();
+
+        $apply = $server->transmitter()->shift();
+        self::assertNotNull($apply);
+        self::assertEquals('workspace/applyEdit', $apply->method);
     }
 }
