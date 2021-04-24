@@ -1,15 +1,15 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\ClassMover;
+namespace Phpactor\Extension\LanguageServerRename\Adapter\ClassMover;
 
 use Amp\Promise;
-use Phpactor\ClassFileConverter\Domain\ClassName;
-use Phpactor\ClassFileConverter\Domain\FilePath;
-use Phpactor\ClassFileConverter\Domain\FileToClass;
 use Phpactor\ClassMover\ClassMover;
+use Phpactor\Extension\LanguageServerRename\Model\Exception\CouldNotConvertUriToClass;
+use Phpactor\Extension\LanguageServerRename\Model\Exception\CouldNotRename;
 use Phpactor\Extension\LanguageServerRename\Model\FileRenamer as PhpactorFileRenamer;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdit;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEditsMap;
+use Phpactor\Extension\LanguageServerRename\Model\UriToNameConverter;
 use Phpactor\Indexer\Model\QueryClient;
 use Phpactor\TextDocument\TextDocumentLocator;
 use Phpactor\TextDocument\TextDocumentUri;
@@ -18,11 +18,6 @@ use function Amp\call;
 
 class FileRenamer implements PhpactorFileRenamer
 {
-    /**
-     * @var FileToClass
-     */
-    private $fileToClass;
-
     /**
      * @var QueryClient
      */
@@ -38,16 +33,21 @@ class FileRenamer implements PhpactorFileRenamer
      */
     private $locator;
 
+    /**
+     * @var UriToNameConverter
+     */
+    private $converter;
+
     public function __construct(
-        FileToClass $fileToClass,
+        UriToNameConverter $converter,
         TextDocumentLocator $locator,
         QueryClient $client,
         ClassMover $mover
     ) {
-        $this->fileToClass = $fileToClass;
         $this->client = $client;
         $this->mover = $mover;
         $this->locator = $locator;
+        $this->converter = $converter;
     }
 
     /**
@@ -56,15 +56,14 @@ class FileRenamer implements PhpactorFileRenamer
     public function renameFile(TextDocumentUri $from, TextDocumentUri $to): Promise
     {
         return call(function () use ($from, $to) {
-            $fromClass = $this->fileToClass->fileToClassCandidates(
-                FilePath::fromString($from->path())
-            )->best();
+            try {
+                $fromClass = $this->converter->convert($from);
+                $toClass = $this->converter->convert($to);
+            } catch (CouldNotConvertUriToClass $error) {
+                throw new CouldNotRename($error->getMessage(), 0, $error);
+            }
 
-            $toClass = $this->fileToClass->fileToClassCandidates(
-                FilePath::fromString($to->path())
-            )->best();
-
-            $references = $this->client->class()->referencesTo($fromClass->__toString());
+            $references = $this->client->class()->referencesTo($fromClass);
 
             // rename class definition
             $locatedEdits = $this->replaceDefinition($to, $fromClass, $toClass);
@@ -92,7 +91,7 @@ class FileRenamer implements PhpactorFileRenamer
         });
     }
 
-    private function replaceDefinition(TextDocumentUri $file, ClassName $fromClass, ClassName $toClass): array
+    private function replaceDefinition(TextDocumentUri $file, string $fromClass, string $toClass): array
     {
         $document = $this->locator->get($file);
         $locatedEdits = [];

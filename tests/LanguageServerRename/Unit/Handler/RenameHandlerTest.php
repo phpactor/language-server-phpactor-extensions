@@ -1,6 +1,6 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerRename\Tests\Integration\Handler;
+namespace Phpactor\Extension\LanguageServerRename\Tests\Unit\Handler;
 
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdit;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer\InMemoryRenamer;

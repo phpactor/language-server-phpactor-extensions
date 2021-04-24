@@ -1,10 +1,11 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerRename\Tests\Unit\Adapter\ReferenceFinder\ClassMover;
+namespace Phpactor\Extension\LanguageServerRename\Tests\Unit\Adapter\ClassMover;
 
 use Phpactor\ClassFileConverter\Adapter\Simple\SimpleFileToClass;
 use Phpactor\ClassMover\ClassMover;
-use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\ClassMover\FileRenamer;
+use Phpactor\Extension\LanguageServerRename\Adapter\ClassMover\FileRenamer;
+use Phpactor\Extension\LanguageServerRename\Adapter\ClassToFile\ClassToFileUriToNameConverter;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEditsMap;
 use Phpactor\Extension\LanguageServerRename\Tests\IntegrationTestCase;
 use Phpactor\Indexer\Adapter\Php\InMemory\InMemoryIndex;
@@ -55,7 +56,7 @@ class FileRenamerTest extends IntegrationTestCase
         }
 
         return new FileRenamer(
-            new SimpleFileToClass(),
+            new ClassToFileUriToNameConverter(new SimpleFileToClass()),
             InMemoryDocumentLocator::fromTextDocuments($textDocuments),
             new QueryClient(new InMemoryIndex($records)),
             new ClassMover(),
