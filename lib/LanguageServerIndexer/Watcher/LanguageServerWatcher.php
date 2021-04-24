@@ -91,8 +91,8 @@ class LanguageServerWatcher implements Watcher, WatcherProcess, ListenerProvider
             $this->queue[] = $changedFile;
         }
         if (!$this->running) {
-            $this->deferred->resolve();
             $this->running = true;
+            $this->deferred->resolve();
         }
     }
 
@@ -108,8 +108,8 @@ class LanguageServerWatcher implements Watcher, WatcherProcess, ListenerProvider
         return call(function () {
             while (true) {
                 yield $this->deferred->promise();
-                $this->deferred = new Deferred();
                 $this->running = false;
+                $this->deferred = new Deferred();
                 $event = array_shift($this->queue);
                 if ($event === null) {
                     continue;
