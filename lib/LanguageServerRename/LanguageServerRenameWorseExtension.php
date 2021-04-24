@@ -2,6 +2,7 @@
 
 namespace Phpactor\Extension\LanguageServerRename;
 
+use Phly\EventDispatcher\ListenerProvider\ListenerProviderAggregate;
 use Phpactor\ClassMover\ClassMover;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
@@ -30,7 +31,7 @@ use Phpactor\WorseReferenceFinder\TolerantVariableReferenceFinder;
 class LanguageServerRenameWorseExtension implements Extension
 {
     public const TAG_RENAMER = 'language_server_rename.renamer';
-    const PARAM_FILE_RENAME = 'language_server_rename.file_rename';
+    public const PARAM_FILE_RENAME = 'language_server_rename.file_rename';
 
     /**
 
@@ -85,6 +86,10 @@ class LanguageServerRenameWorseExtension implements Extension
         });
 
         $container->register(FileRenameListener::class, function (Container $container) {
+            if ($container->getParameter(self::PARAM_FILE_RENAME)) {
+                return new ListenerProviderAggregate();
+            }
+
             return new FileRenameListener(
                 $container->get(LocatedTextEditConverter::class),
                 $container->get(ClientApi::class),
@@ -113,7 +118,7 @@ class LanguageServerRenameWorseExtension implements Extension
             self::PARAM_FILE_RENAME => false,
         ]);
         $schema->setDescriptions([
-            self::PARAM_FILE_RENAME => 'Exerimental support for moving classes when a file move is detected'
+            self::PARAM_FILE_RENAME => '(experimental) Support for moving classes when a file move is detected'
         ]);
     }
 }
