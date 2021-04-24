@@ -6,9 +6,11 @@ use Amp\Loop;
 use PHPUnit\Framework\TestCase;
 use Phpactor\Extension\LanguageServerRename\Listener\FileRenameListener;
 use Phpactor\Extension\LanguageServerRename\Model\FileRenamer\NullFileRenamer;
+use Phpactor\Extension\LanguageServerRename\Util\LocatedTextEditConverter;
 use Phpactor\LanguageServerProtocol\DidChangeWatchedFilesParams;
 use Phpactor\LanguageServerProtocol\FileChangeType;
 use Phpactor\LanguageServerProtocol\FileEvent;
+use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\LanguageServer\LanguageServerTesterBuilder;
 use Phpactor\TextDocument\TextDocumentLocator\InMemoryDocumentLocator;
 use function Amp\Promise\wait;
@@ -20,11 +22,7 @@ class FileRenameListenerTest extends TestCase
     {
         $builder = LanguageServerTesterBuilder::createBare()
             ->enableFileEvents();
-        $builder->addListenerProvider(new FileRenameListener(
-            InMemoryDocumentLocator::new(),
-            $builder->clientApi(),
-            new NullFileRenamer(),
-        ));
+        $builder->addListenerProvider($this->createListener($builder));
         $server = $builder->build();
         $server->initialize();
         $server->notify('workspace/didChangeWatchedFiles', new DidChangeWatchedFilesParams([
@@ -43,11 +41,7 @@ class FileRenameListenerTest extends TestCase
     {
         $builder = LanguageServerTesterBuilder::createBare()
             ->enableFileEvents();
-        $builder->addListenerProvider(new FileRenameListener(
-            InMemoryDocumentLocator::new(),
-            $builder->clientApi(),
-            new NullFileRenamer()
-        ));
+        $builder->addListenerProvider($this->createListener($builder));
         $server = $builder->build();
         $server->initialize();
         $server->notify('workspace/didChangeWatchedFiles', new DidChangeWatchedFilesParams([
@@ -68,12 +62,7 @@ class FileRenameListenerTest extends TestCase
     {
         $builder = LanguageServerTesterBuilder::createBare()
             ->enableFileEvents();
-        $builder->addListenerProvider(new FileRenameListener(
-            InMemoryDocumentLocator::new(),
-            $builder->clientApi(),
-            new NullFileRenamer(),
-            false
-        ));
+        $builder->addListenerProvider($this->createListener($builder, false));
         $server = $builder->build();
         $server->initialize();
         $server->notify('workspace/didChangeWatchedFiles', new DidChangeWatchedFilesParams([
@@ -84,7 +73,18 @@ class FileRenameListenerTest extends TestCase
         $server->transmitter()->shift();
 
         $apply = $server->transmitter()->shift();
+
         self::assertNotNull($apply);
         self::assertEquals('workspace/applyEdit', $apply->method);
+    }
+
+    private function createListener(LanguageServerTesterBuilder $builder, bool $interactive = true): FileRenameListener
+    {
+        return new FileRenameListener(
+            new LocatedTextEditConverter($builder->workspace(), InMemoryDocumentLocator::new()),
+            $builder->clientApi(),
+            new NullFileRenamer(),
+            $interactive
+        );
     }
 }

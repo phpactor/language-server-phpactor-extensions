@@ -7,10 +7,27 @@ use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEditsMap;
 use Phpactor\LanguageServerProtocol\TextDocumentEdit;
 use Phpactor\LanguageServerProtocol\VersionedTextDocumentIdentifier;
 use Phpactor\LanguageServerProtocol\WorkspaceEdit;
+use Phpactor\LanguageServer\Core\Workspace\Workspace;
+use Phpactor\TextDocument\TextDocumentLocator;
 
 class LocatedTextEditConverter
 {
-    public static function toWorkspaceEdit(LocatedTextEditsMap $map): WorkspaceEdit
+    /**
+     * @var Workspace
+     */
+    private $workspace;
+    /**
+     * @var TextDocumentLocator
+     */
+    private $locator;
+
+    public function __construct(Workspace $workspace, TextDocumentLocator $locator)
+    {
+        $this->workspace = $workspace;
+        $this->locator = $locator;
+    }
+
+    public function toWorkspaceEdit(LocatedTextEditsMap $map): WorkspaceEdit
     {
         $documentEdits = [];
         foreach ($map->toLocatedTextEdits() as $result) {
@@ -22,10 +39,15 @@ class LocatedTextEditConverter
                 ),
                 TextEditConverter::toLspTextEdits(
                     $result->textEdits(),
-                    (string)$this->documentLocator->get($result->documentUri())
+                    (string)$this->locator->get($result->documentUri())
                 )
             );
         }
         return new WorkspaceEdit(null, $documentEdits);
+    }
+
+    private function getDocumentVersion(string $uri): int
+    {
+        return $this->workspace->has($uri) ? $this->workspace->get($uri)->version : 0;
     }
 }

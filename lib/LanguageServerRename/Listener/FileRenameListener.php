@@ -29,12 +29,6 @@ final class FileRenameListener implements ListenerProviderInterface
     public const ACTION_FOLDER = 'folder';
     public const ACTION_NONE = 'none';
 
-
-    /**
-     * @var TextDocumentLocator
-     */
-    private $locator;
-
     /**
      * @var TextDocument
      */
@@ -65,13 +59,18 @@ final class FileRenameListener implements ListenerProviderInterface
      */
     private $interactive;
 
-    public function __construct(TextDocumentLocator $locator, ClientApi $api, FileRenamer $renamer, bool $interactive = true)
+    /**
+     * @var LocatedTextEditConverter
+     */
+    private $converter;
+
+    public function __construct(LocatedTextEditConverter $converter, ClientApi $api, FileRenamer $renamer, bool $interactive = true)
     {
-        $this->locator = $locator;
         $this->api = $api;
         $this->renamer = $renamer;
         $this->decider = new ActionDecider();
         $this->interactive = $interactive;
+        $this->converter = $converter;
     }
 
     /**
@@ -134,7 +133,7 @@ final class FileRenameListener implements ListenerProviderInterface
                 TextDocumentUri::fromString($closed->uri),
                 TextDocumentUri::fromString($opened->uri)
             );
-            $this->api->workspace()->applyEdit(LocatedTextEditConverter::toWorkspaceEdit($map));
+            $this->api->workspace()->applyEdit($this->converter->toWorkspaceEdit($map));
         });
     }
 

@@ -35,30 +35,32 @@ class RenameHandler implements Handler, CanRegisterCapabilities
      * @var Renamer
      */
     private $renamer;
-    /**
-     * @var Workspace
-     */
-    private $workspace;
-    /**
-     * @var TextDocumentLocator
-     */
-    private $documentLocator;
 
     /**
      * @var ClientApi
      */
     private $clientApi;
 
+    /**
+     * @var LocatedTextEditConverter
+     */
+    private $converter;
+
+    /**
+     * @var TextDocumentLocator
+     */
+    private $documentLocator;
+
     public function __construct(
-        Workspace $workspace,
+        LocatedTextEditConverter $converter,
         TextDocumentLocator $documentLocator,
         Renamer $renamer,
         ClientApi $clientApi
     ) {
         $this->renamer = $renamer;
-        $this->workspace = $workspace;
-        $this->documentLocator = $documentLocator;
         $this->clientApi = $clientApi;
+        $this->converter = $converter;
+        $this->documentLocator = $documentLocator;
     }
     /**
      * {@inheritDoc}
@@ -137,11 +139,9 @@ class RenameHandler implements Handler, CanRegisterCapabilities
      */
     private function resultToWorkspaceEdit(array $locatedEdits): WorkspaceEdit
     {
-        return LocatedTextEditConverter::toWorkspaceEdit(LocatedTextEditsMap::fromLocatedEdits($locatedEdits));
-    }
-
-    private function getDocumentVersion(string $uri): int
-    {
-        return $this->workspace->has($uri) ? $this->workspace->get($uri)->version : 0;
+        return $this->converter->toWorkspaceEdit(
+            LocatedTextEditsMap::fromLocatedEdits($locatedEdits),
+            $this->documentLocator
+        );
     }
 }
