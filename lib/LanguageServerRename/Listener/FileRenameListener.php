@@ -169,7 +169,6 @@ final class FileRenameListener implements ListenerProviderInterface
                     TextDocumentUri::fromString($rename->from),
                     TextDocumentUri::fromString($rename->to)
                 ));
-                yield delay(1);
             }
 
             $this->api->workspace()->applyEdit($this->converter->toWorkspaceEdit($map));

@@ -16,8 +16,10 @@ use Phpactor\Extension\LanguageServerRename\Listener\FileRenameListener;
 use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\ClassMover\ClassRenamer;
 use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\MemberRenamer;
 use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\VariableRenamer;
+use Phpactor\Extension\LanguageServerRename\Model\FileRenamer\LoggingFileRenamer;
 use Phpactor\Extension\LanguageServerRename\Util\LocatedTextEditConverter;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
+use Phpactor\Extension\Logger\LoggingExtension;
 use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
 use Phpactor\Indexer\Model\Indexer;
 use Phpactor\Indexer\Model\QueryClient;
@@ -100,11 +102,15 @@ class LanguageServerRenameWorseExtension implements Extension
         ]);
 
         $container->register(FileRenamer::class, function (Container $container) {
-            return new PhpactorFileRenamer(
+            $renamer = new PhpactorFileRenamer(
                 new ClassToFileUriToNameConverter($container->get(ClassToFileExtension::SERVICE_CONVERTER)),
                 $container->get(TextDocumentLocator::class),
                 $container->get(QueryClient::class),
                 $container->get(ClassMover::class)
+            );
+            return new LoggingFileRenamer(
+                $renamer,
+                $container->get(LoggingExtension::SERVICE_LOGGER)
             );
         });
     }
