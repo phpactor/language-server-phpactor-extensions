@@ -47,6 +47,17 @@ final class LocatedTextEditsMap
         return new self($map);
     }
 
+    public function merge(self $map): self
+    {
+        $me = $this;
+
+        foreach ($map->toLocatedTextEdits() as $textEdit) {
+            $me = $me->withTextEdit($textEdit);
+        }
+
+        return $me;
+    }
+
     /**
      * @return LocatedTextEdits[]
      */

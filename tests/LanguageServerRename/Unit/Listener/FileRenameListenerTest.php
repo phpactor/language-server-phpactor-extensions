@@ -30,7 +30,7 @@ class FileRenameListenerTest extends TestCase
         self::assertStringContainsString('file move', $dialog->params['message']);
     }
 
-    public function testMoveFolder(): void
+    public function testMoveFolderInteractive(): void
     {
         $server = $this->createServerWithListener();
 
@@ -42,9 +42,9 @@ class FileRenameListenerTest extends TestCase
         ]));
 
         $server->transmitter()->shift();
-        $dialog = $server->transmitter()->shiftNotification();
+        $dialog = $server->transmitter()->shiftRequest();
         self::assertNotNull($dialog);
-        self::assertEquals('window/showMessage', $dialog->method);
+        self::assertEquals('window/showMessageRequest', $dialog->method);
         self::assertStringContainsString('folder move', $dialog->params['message']);
     }
 
@@ -81,6 +81,24 @@ class FileRenameListenerTest extends TestCase
         self::assertNotNull($apply);
         self::assertEquals('window/showMessage', $apply->method);
         self::assertEquals('Could not rename: There was a problem', $apply->params['message']);
+    }
+
+    public function testMoveFolder(): void
+    {
+        $server = $this->createServerWithListener(false);
+
+        $server->notify('workspace/didChangeWatchedFiles', new DidChangeWatchedFilesParams([
+            new FileEvent('file:///file1', FileChangeType::DELETED),
+            new FileEvent('file:///file2', FileChangeType::CREATED),
+            new FileEvent('file:///file1', FileChangeType::DELETED),
+            new FileEvent('file:///file2', FileChangeType::CREATED),
+        ]));
+
+        $server->transmitter()->shift();
+        $apply = $server->transmitter()->shift();
+
+        self::assertNotNull($apply);
+        self::assertEquals('workspace/applyEdit', $apply->method);
     }
 
     private function createServerWithListener(bool $interactive = true, bool $willFail = false): LanguageServerTester

@@ -4,6 +4,7 @@ namespace Phpactor\Extension\LanguageServerRename\Listener;
 
 use Amp\Promise;
 use Phpactor\Extension\LanguageServerRename\Listener\FileRename\ActionDecider;
+use Phpactor\Extension\LanguageServerRename\Listener\FileRename\RenamesResolver;
 use Phpactor\Extension\LanguageServerRename\Model\Exception\CouldNotRename;
 use Phpactor\Extension\LanguageServerRename\Model\FileRenamer;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEditsMap;
@@ -16,6 +17,7 @@ use Phpactor\TextDocument\TextDocumentUri;
 use Psr\EventDispatcher\ListenerProviderInterface;
 use function Amp\asyncCall;
 use function Amp\call;
+use function Amp\delay;
 
 final class FileRenameListener implements ListenerProviderInterface
 {
@@ -50,11 +52,17 @@ final class FileRenameListener implements ListenerProviderInterface
      */
     private $converter;
 
+    /**
+     * @var RenamesResolver
+     */
+    private $renamesResolver;
+
     public function __construct(LocatedTextEditConverter $converter, ClientApi $api, FileRenamer $renamer, bool $interactive = true)
     {
         $this->api = $api;
         $this->renamer = $renamer;
         $this->decider = new ActionDecider();
+        $this->renamesResolver = new RenamesResolver();
         $this->interactive = $interactive;
         $this->converter = $converter;
     }
@@ -161,7 +169,7 @@ final class FileRenameListener implements ListenerProviderInterface
                     TextDocumentUri::fromString($rename->from),
                     TextDocumentUri::fromString($rename->to)
                 ));
-                assert($map instanceof LocatedTextEditsMap);
+                yield delay(1);
             }
 
             $this->api->workspace()->applyEdit($this->converter->toWorkspaceEdit($map));
