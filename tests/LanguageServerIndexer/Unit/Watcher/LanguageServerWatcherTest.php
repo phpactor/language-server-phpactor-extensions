@@ -54,4 +54,26 @@ class LanguageServerWatcherTest extends TestCase
         $event = wait($watcher->wait());
         self::assertInstanceOf(ModifiedFile::class, $event);
     }
+
+    public function testWatchMultipleFilesChanged(): void
+    {
+        $watcher = new LanguageServerWatcher(new ClientCapabilities());
+        $server = LanguageServerTesterBuilder::create()
+            ->addListenerProvider($watcher)
+            ->enableFileEvents()
+            ->build();
+
+        $server->notify('workspace/didChangeWatchedFiles', new DidChangeWatchedFilesParams([
+            new FileEvent('file:///foobar1', FileChangeType::CREATED),
+            new FileEvent('file:///foobar2', FileChangeType::CREATED),
+            new FileEvent('file:///foobar3', FileChangeType::CREATED),
+        ]));
+
+        $event = wait($watcher->wait());
+        self::assertInstanceOf(ModifiedFile::class, $event);
+        $event = wait($watcher->wait());
+        self::assertInstanceOf(ModifiedFile::class, $event);
+        $event = wait($watcher->wait());
+        self::assertInstanceOf(ModifiedFile::class, $event);
+    }
 }
