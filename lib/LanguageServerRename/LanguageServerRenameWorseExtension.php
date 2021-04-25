@@ -2,27 +2,24 @@
 
 namespace Phpactor\Extension\LanguageServerRename;
 
-use Phly\EventDispatcher\ListenerProvider\ListenerProviderAggregate;
 use Phpactor\ClassMover\ClassMover;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
 use Phpactor\Extension\ClassToFile\ClassToFileExtension;
 use Phpactor\Extension\LanguageServerReferenceFinder\Adapter\Indexer\WorkspaceUpdateReferenceFinder;
-use Phpactor\Extension\LanguageServerRename\Adapter\ClassMover\FileRenamer;
 use Phpactor\Extension\LanguageServerRename\Adapter\ClassMover\FileRenamer as PhpactorFileRenamer;
 use Phpactor\Extension\LanguageServerRename\Adapter\ClassToFile\ClassToFileUriToNameConverter;
-use Phpactor\Extension\LanguageServerRename\Listener\FileRenameListener;
 use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\ClassMover\ClassRenamer;
 use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\MemberRenamer;
 use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\VariableRenamer;
+use Phpactor\Extension\LanguageServerRename\Model\FileRenamer;
 use Phpactor\Extension\LanguageServerRename\Model\FileRenamer\LoggingFileRenamer;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\Logger\LoggingExtension;
 use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
 use Phpactor\Indexer\Model\Indexer;
 use Phpactor\Indexer\Model\QueryClient;
-use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\MapResolver\Resolver;
 use Phpactor\ReferenceFinder\DefinitionAndReferenceFinder;
 use Phpactor\ReferenceFinder\ReferenceFinder;
@@ -86,20 +83,6 @@ class LanguageServerRenameWorseExtension implements Extension
             );
         });
 
-        $container->register(FileRenameListener::class, function (Container $container) {
-            if (false === $container->getParameter(self::PARAM_FILE_RENAME_LISTENER)) {
-                return new ListenerProviderAggregate();
-            }
-
-            return new FileRenameListener(
-                $container->get(TextDocumentLocator::class),
-                $container->get(ClientApi::class),
-                $container->get(FileRenamer::class)
-            );
-        }, [
-            LanguageServerExtension::TAG_LISTENER_PROVIDER => []
-        ]);
-
         $container->register(FileRenamer::class, function (Container $container) {
             $renamer = new PhpactorFileRenamer(
                 new ClassToFileUriToNameConverter($container->get(ClassToFileExtension::SERVICE_CONVERTER)),
@@ -119,11 +102,5 @@ class LanguageServerRenameWorseExtension implements Extension
      */
     public function configure(Resolver $schema): void
     {
-        $schema->setDefaults([
-            self::PARAM_FILE_RENAME_LISTENER => false,
-        ]);
-        $schema->setDescriptions([
-            self::PARAM_FILE_RENAME_LISTENER => '(experimental) Support for moving classes when a file move is detected'
-        ]);
     }
 }

@@ -6,6 +6,8 @@ use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
 use Phpactor\Extension\LanguageServerRename\LanguageServerRenameExtension;
+use Phpactor\Extension\LanguageServerRename\Model\FileRenamer;
+use Phpactor\Extension\LanguageServerRename\Model\FileRenamer\TestFileRenamer;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer\InMemoryRenamer;
 use Phpactor\MapResolver\Resolver;
 use Phpactor\TextDocument\ByteOffsetRange;
@@ -24,6 +26,12 @@ class TestExtension implements Extension
             );
         }, [
             LanguageServerRenameExtension::TAG_RENAMER => []
+        ]);
+
+        $container->register(FileRenamer::class, function (Container $container) {
+            return new TestFileRenamer(
+            );
+        }, [
         ]);
     }
 

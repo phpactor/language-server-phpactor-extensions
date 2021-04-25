@@ -5,6 +5,8 @@ namespace Phpactor\Extension\LanguageServerRename;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
+use Phpactor\Extension\LanguageServerRename\Handler\FileRenameHandler;
+use Phpactor\Extension\LanguageServerRename\Model\FileRenamer;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer\ChainRenamer;
 use Phpactor\Extension\LanguageServerRename\Handler\RenameHandler;
 use Phpactor\Extension\LanguageServerRename\Model\Renamer;
@@ -35,6 +37,15 @@ class LanguageServerRenameExtension implements Extension
                 $container->get(TextDocumentLocator::class),
                 $container->get(Renamer::class),
                 $container->get(ClientApi::class)
+            );
+        }, [
+            LanguageServerExtension::TAG_METHOD_HANDLER => []
+        ]);
+
+        $container->register(FileRenameHandler::class, function (Container $container) {
+            return new FileRenameHandler(
+                $container->get(FileRenamer::class),
+                $container->get(LocatedTextEditConverter::class),
             );
         }, [
             LanguageServerExtension::TAG_METHOD_HANDLER => []
