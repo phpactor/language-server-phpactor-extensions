@@ -109,17 +109,20 @@ final class FileRenameListener implements ListenerProviderInterface
     private function rename(FilesChanged $changed): Promise
     {
         return call(function () use ($changed) {
-            $action = $this->decider->determineAction($changed);
-            if ($action === ActionDecider::ACTION_NONE) {
+            $renames = $this->renamesResolver->resolve($changed);
+
+            if (!$renames) {
                 return;
             }
+
+            $action = count($renames) === 1 ? 'file' : 'folder';
 
             if ($this->interactive) {
                 $item = yield $this->api->window()->showMessageRequest()->info(
                     (function (string $action): string {
                         return sprintf(<<<'EOT'
 Potential %s move detected. Rename any PSR compliant classes on disk?
-Note this operation is destructive and changes may not sync back to the editor
+Note this operation IS DESTRUCTIVE and changes may not sync back to the editor
 EOT
                         , $action);
                     })($action),
@@ -139,7 +142,7 @@ EOT
 
             $map = LocatedTextEditsMap::create();
 
-            foreach ($this->renamesResolver->resolve($changed) as $rename) {
+            foreach ($renames as $rename) {
                 $map = $map->merge(yield $this->renamer->renameFile(
                     TextDocumentUri::fromString($rename->from),
                     TextDocumentUri::fromString($rename->to)
