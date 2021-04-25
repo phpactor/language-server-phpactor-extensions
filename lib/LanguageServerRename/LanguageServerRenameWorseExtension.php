@@ -93,7 +93,7 @@ class LanguageServerRenameWorseExtension implements Extension
             }
 
             return new FileRenameListener(
-                $container->get(LocatedTextEditConverter::class),
+                $container->get(TextDocumentLocator::class),
                 $container->get(ClientApi::class),
                 $container->get(FileRenamer::class)
             );

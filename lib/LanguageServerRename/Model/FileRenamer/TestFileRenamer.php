@@ -17,9 +17,15 @@ class TestFileRenamer implements FileRenamer
      */
     private $throw;
 
-    public function __construct(bool $throw = false)
+    /**
+     * @var LocatedTextEditsMap
+     */
+    private $workspaceEdits;
+
+    public function __construct(bool $throw = false, LocatedTextEditsMap $workspaceEdits)
     {
         $this->throw = $throw;
+        $this->workspaceEdits = $workspaceEdits ?: LocatedTextEditsMap::create();
     }
 
     public function renameFile(TextDocumentUri $from, TextDocumentUri $to): Promise
@@ -27,6 +33,6 @@ class TestFileRenamer implements FileRenamer
         if ($this->throw) {
             return new Failure(new CouldNotRename('There was a problem'));
         }
-        return new Success(LocatedTextEditsMap::create());
+        return new Success($this->workspaceEdits);
     }
 }

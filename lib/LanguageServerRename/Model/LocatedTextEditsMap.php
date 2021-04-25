@@ -52,7 +52,9 @@ final class LocatedTextEditsMap
         $me = $this;
 
         foreach ($map->toLocatedTextEdits() as $textEdit) {
-            $me = $me->withTextEdit($textEdit);
+            foreach ($textEdit->textEdits() as $edit) {
+                $me = $me->withTextEdit(new LocatedTextEdit($textEdit->documentUri(), $edit));
+            }
         }
 
         return $me;

@@ -21,6 +21,17 @@ class RenamesResolver
             return $event->type;
         }, $changed->events()));
 
+        $deleted = $changed->byType(FileChangeType::DELETED);
+        $created = $changed->byType(FileChangeType::CREATED);
+
+        if (count($deleted->events()) === 0) {
+            return [];
+        }
+
+        if (count($deleted->events()) !== count($created->events())) {
+            return [];
+        }
+
         if ($sum !== ($eventCount / 2) + ($eventCount / 2) * 3) {
             return [];
         }
@@ -28,8 +39,8 @@ class RenamesResolver
         if ($eventCount === 2 && $sum === 4) {
             return [
                 new Rename(
-                    TextDocumentUri::fromString($changed->byType(FileChangeType::DELETED)->first()->uri),
-                    TextDocumentUri::fromString($changed->byType(FileChangeType::CREATED)->first()->uri),
+                    TextDocumentUri::fromString($deleted->first()->uri),
+                    TextDocumentUri::fromString($created->first()->uri),
                 )
             ];
         }

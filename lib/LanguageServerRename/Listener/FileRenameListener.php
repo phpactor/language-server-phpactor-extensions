@@ -13,6 +13,7 @@ use Phpactor\LanguageServerProtocol\FileChangeType;
 use Phpactor\LanguageServerProtocol\MessageActionItem;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Event\FilesChanged;
+use Phpactor\TextDocument\TextDocumentLocator;
 use Phpactor\TextDocument\TextDocumentUri;
 use Psr\EventDispatcher\ListenerProviderInterface;
 use function Amp\asyncCall;
@@ -48,23 +49,23 @@ final class FileRenameListener implements ListenerProviderInterface
     private $interactive;
 
     /**
-     * @var LocatedTextEditConverter
-     */
-    private $converter;
-
-    /**
      * @var RenamesResolver
      */
     private $renamesResolver;
 
-    public function __construct(LocatedTextEditConverter $converter, ClientApi $api, FileRenamer $renamer, bool $interactive = true)
+    /**
+     * @var TextDocumentLocator
+     */
+    private $locator;
+
+    public function __construct(TextDocumentLocator $locator, ClientApi $api, FileRenamer $renamer, bool $interactive = true)
     {
         $this->api = $api;
         $this->renamer = $renamer;
         $this->decider = new ActionDecider();
         $this->renamesResolver = new RenamesResolver();
         $this->interactive = $interactive;
-        $this->converter = $converter;
+        $this->locator = $locator;
     }
 
     /**
@@ -116,16 +117,19 @@ final class FileRenameListener implements ListenerProviderInterface
             if ($this->interactive) {
                 $item = yield $this->api->window()->showMessageRequest()->info(
                     (function (string $action): string {
-                        if ($action === ActionDecider::ACTION_FOLDER) {
-                            return sprintf('Potential folder move detected, move all PSR classes contained in folder?');
-                        }
-                        return sprintf('Potential file move detected, PSR class?');
+                        return sprintf(<<<'EOT'
+Potential %s move detected. Rename any PSR compliant classes on disk?
+Note this operation is destructive and changes may not sync back to the editor
+EOT
+                        , $action);
                     })($action),
                     new MessageActionItem(self::ANSWER_YES),
                     new MessageActionItem(self::ANSWER_NO)
                 );
 
-                assert($item instanceof MessageActionItem);
+                if (!$item instanceof MessageActionItem) {
+                    return;
+                }
 
                 if ($item->title === self::ANSWER_NO) {
                     return;
@@ -142,7 +146,19 @@ final class FileRenameListener implements ListenerProviderInterface
                 ));
             }
 
-            $this->api->workspace()->applyEdit($this->converter->toWorkspaceEdit($map));
+            foreach ($map->toLocatedTextEdits() as $edit) {
+                $success = @file_put_contents(
+                    $edit->documentUri()->path(),
+                    $edit->textEdits()->apply($this->locator->get($edit->documentUri())->__toString())
+                );
+
+                if (!$success) {
+                    $this->api->window()->logMessage()->warning(sprintf(
+                        'Could not save file "%s"',
+                        $edit->documentUri()->__toString()
+                    ));
+                }
+            }
         });
     }
 }
