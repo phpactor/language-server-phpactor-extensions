@@ -3,6 +3,7 @@
 namespace Phpactor\Extension\LanguageServerCodeTransform;
 
 use Phpactor\CodeTransform\Domain\Helper\UnresolvableClassNameFinder;
+use Phpactor\CodeTransform\Domain\Refactor\GenerateMethod;
 use Phpactor\CodeTransform\Domain\Refactor\ImportName;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
@@ -11,9 +12,11 @@ use Phpactor\Extension\ClassToFile\ClassToFileExtension;
 use Phpactor\Extension\CodeTransform\CodeTransformExtension;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
 use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\CreateClassProvider;
+use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\GenerateMethodProvider;
 use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\ImportNameProvider;
 use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\TransformerCodeActionPovider;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\CreateClassCommand;
+use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\GenerateMethodCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportNameCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\TransformCommand;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
@@ -87,6 +90,19 @@ class LanguageServerCodeTransformExtension implements Extension
                 'name' => CreateClassCommand::NAME
             ],
         ]);
+
+        $container->register(GenerateMethodCommand::class, function (Container $container) {
+            return new GenerateMethodCommand(
+                $container->get(ClientApi::class),
+                $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
+                $container->get(GenerateMethod::class)
+                // $container->get('worse_reflection.tolerant_parser')
+            );
+        }, [
+            LanguageServerExtension::TAG_COMMAND => [
+                'name' => GenerateMethodCommand::NAME
+            ],
+        ]);
     }
 
     private function registerCodeActions(ContainerBuilder $container): void
@@ -158,6 +174,16 @@ class LanguageServerCodeTransformExtension implements Extension
             );
         }, [
             LanguageServerExtension::TAG_DIAGNOSTICS_PROVIDER => [],
+            LanguageServerExtension::TAG_CODE_ACTION_PROVIDER => []
+        ]);
+
+        $container->register(GenerateMethodProvider::class, function (Container $container) {
+            return new GenerateMethodProvider(
+                // $container->get(CodeTransformExtension::SERVICE_CLASS_GENERATORS),
+                // $container->get('worse_reflection.tolerant_parser')
+            );
+        }, [
+            // LanguageServerExtension::TAG_DIAGNOSTICS_PROVIDER => [],
             LanguageServerExtension::TAG_CODE_ACTION_PROVIDER => []
         ]);
     }
