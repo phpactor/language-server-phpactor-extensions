@@ -62,7 +62,6 @@ final class FileRenameListener implements ListenerProviderInterface
     {
         $this->api = $api;
         $this->renamer = $renamer;
-        $this->decider = new ActionDecider();
         $this->renamesResolver = new RenamesResolver();
         $this->interactive = $interactive;
         $this->locator = $locator;
@@ -85,15 +84,15 @@ final class FileRenameListener implements ListenerProviderInterface
 
     public function handleEvent(FilesChanged $changed): void
     {
-        $action = $this->decider->determineAction($changed);
+        $renames = $this->renamesResolver->resolve($changed);
 
-        if ($action === self::ACTION_NONE) {
+        if (empty($renames)) {
             return;
         }
 
-        asyncCall(function () use ($changed, $action) {
+        asyncCall(function () use ($renames) {
             try {
-                yield $this->rename($changed);
+                yield $this->rename($renames);
             } catch (CouldNotRename $couldNotRename) {
                 $this->api->window()->showMessage()->error(sprintf(
                     'Could not rename: %s',
@@ -106,15 +105,9 @@ final class FileRenameListener implements ListenerProviderInterface
     /**
      * @return Promise<void>
      */
-    private function rename(FilesChanged $changed): Promise
+    private function rename(array $renames): Promise
     {
-        return call(function () use ($changed) {
-            $renames = $this->renamesResolver->resolve($changed);
-
-            if (!$renames) {
-                return;
-            }
-
+        return call(function () use ($renames) {
             $action = count($renames) === 1 ? 'file' : 'folder';
 
             if ($this->interactive) {
