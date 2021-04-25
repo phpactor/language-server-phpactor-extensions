@@ -92,15 +92,7 @@ final class FileRenameListener implements ListenerProviderInterface
 
         asyncCall(function () use ($changed, $action) {
             try {
-                if ($action === self::ACTION_FILE) {
-                    yield $this->moveFile($changed);
-                    return;
-                }
-
-                if ($action === self::ACTION_FOLDER) {
-                    $this->moveFolder($changed);
-                    return;
-                }
+                yield $this->rename($changed);
             } catch (CouldNotRename $couldNotRename) {
                 $this->api->window()->showMessage()->error(sprintf(
                     'Could not rename: %s',
@@ -113,43 +105,22 @@ final class FileRenameListener implements ListenerProviderInterface
     /**
      * @return Promise<void>
      */
-    private function moveFile(FilesChanged $changed): Promise
+    private function rename(FilesChanged $changed): Promise
     {
         return call(function () use ($changed) {
-            if ($this->interactive) {
-                $item = yield $this->api->window()->showMessageRequest()->info(
-                    sprintf('Potential file move detected, move class contained in file?'),
-                    new MessageActionItem(self::ANSWER_YES),
-                    new MessageActionItem(self::ANSWER_NO)
-                );
-
-                assert($item instanceof MessageActionItem);
-
-                if ($item->title === self::ANSWER_NO) {
-                    return;
-                }
+            $action = $this->decider->determineAction($changed);
+            if ($action === ActionDecider::ACTION_NONE) {
+                return;
             }
 
-            $closed = $changed->byType(FileChangeType::DELETED)->first();
-            $opened = $changed->byType(FileChangeType::CREATED)->first();
-
-            $map = yield $this->renamer->renameFile(
-                TextDocumentUri::fromString($closed->uri),
-                TextDocumentUri::fromString($opened->uri)
-            );
-            $this->api->workspace()->applyEdit($this->converter->toWorkspaceEdit($map));
-        });
-    }
-
-    /**
-     * @return Promise<void>
-     */
-    private function moveFolder(FilesChanged $changed): Promise
-    {
-        return call(function () use ($changed) {
             if ($this->interactive) {
                 $item = yield $this->api->window()->showMessageRequest()->info(
-                    sprintf('Potential folder move detected, move all classes contained in folder?'),
+                    (function (string $action): string {
+                        if ($action === ActionDecider::ACTION_FOLDER) {
+                            return sprintf('Potential folder move detected, move all PSR classes contained in folder?');
+                        }
+                        return sprintf('Potential file move detected, PSR class?');
+                    })($action),
                     new MessageActionItem(self::ANSWER_YES),
                     new MessageActionItem(self::ANSWER_NO)
                 );
