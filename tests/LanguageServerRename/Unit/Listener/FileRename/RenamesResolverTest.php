@@ -4,7 +4,6 @@ namespace Phpactor\Extension\LanguageServerRename\Tests\Unit\Listener\FileRename
 
 use Generator;
 use PHPUnit\Framework\TestCase;
-use Phpactor\Extension\LanguageServerRename\Listener\FileRename\ActionDecider;
 use Phpactor\Extension\LanguageServerRename\Listener\FileRename\Rename;
 use Phpactor\Extension\LanguageServerRename\Listener\FileRename\RenamesResolver;
 use Phpactor\LanguageServerProtocol\FileChangeType;

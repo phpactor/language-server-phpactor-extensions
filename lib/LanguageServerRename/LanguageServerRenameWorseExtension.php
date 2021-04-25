@@ -17,7 +17,6 @@ use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\ClassMover\C
 use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\MemberRenamer;
 use Phpactor\Extension\LanguageServerRename\Adapter\ReferenceFinder\VariableRenamer;
 use Phpactor\Extension\LanguageServerRename\Model\FileRenamer\LoggingFileRenamer;
-use Phpactor\Extension\LanguageServerRename\Util\LocatedTextEditConverter;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\Logger\LoggingExtension;
 use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;

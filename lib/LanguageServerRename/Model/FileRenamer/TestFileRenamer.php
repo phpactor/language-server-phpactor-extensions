@@ -22,7 +22,7 @@ class TestFileRenamer implements FileRenamer
      */
     private $workspaceEdits;
 
-    public function __construct(bool $throw = false, LocatedTextEditsMap $workspaceEdits)
+    public function __construct(bool $throw = false, ?LocatedTextEditsMap $workspaceEdits = null)
     {
         $this->throw = $throw;
         $this->workspaceEdits = $workspaceEdits ?: LocatedTextEditsMap::create();

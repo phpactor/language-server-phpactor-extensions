@@ -3,13 +3,10 @@
 namespace Phpactor\Extension\LanguageServerRename\Listener;
 
 use Amp\Promise;
-use Phpactor\Extension\LanguageServerRename\Listener\FileRename\ActionDecider;
 use Phpactor\Extension\LanguageServerRename\Listener\FileRename\RenamesResolver;
 use Phpactor\Extension\LanguageServerRename\Model\Exception\CouldNotRename;
 use Phpactor\Extension\LanguageServerRename\Model\FileRenamer;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEditsMap;
-use Phpactor\Extension\LanguageServerRename\Util\LocatedTextEditConverter;
-use Phpactor\LanguageServerProtocol\FileChangeType;
 use Phpactor\LanguageServerProtocol\MessageActionItem;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Event\FilesChanged;
@@ -18,7 +15,6 @@ use Phpactor\TextDocument\TextDocumentUri;
 use Psr\EventDispatcher\ListenerProviderInterface;
 use function Amp\asyncCall;
 use function Amp\call;
-use function Amp\delay;
 
 final class FileRenameListener implements ListenerProviderInterface
 {
@@ -37,11 +33,6 @@ final class FileRenameListener implements ListenerProviderInterface
      * @var FileRenamer
      */
     private $renamer;
-
-    /**
-     * @var ActionDecider
-     */
-    private $decider;
 
     /**
      * @var bool
@@ -114,9 +105,9 @@ final class FileRenameListener implements ListenerProviderInterface
                 $item = yield $this->api->window()->showMessageRequest()->info(
                     (function (string $action): string {
                         return sprintf(<<<'EOT'
-Potential %s move detected. Rename any PSR compliant classes on disk?
-Note this operation IS DESTRUCTIVE and changes may not sync back to the editor
-EOT
+                            Potential %s move detected. Rename any PSR compliant classes on disk?
+                            Note this operation IS DESTRUCTIVE and changes may not sync back to the editor
+                            EOT
                         , $action);
                     })($action),
                     new MessageActionItem(self::ANSWER_YES),

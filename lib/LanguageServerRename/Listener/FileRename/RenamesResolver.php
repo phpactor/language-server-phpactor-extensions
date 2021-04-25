@@ -36,6 +36,7 @@ class RenamesResolver
             return [];
         }
 
+        /** @phpstan-ignore-next-line */
         if ($eventCount === 2 && $sum === 4) {
             return [
                 new Rename(
@@ -71,4 +72,3 @@ class RenamesResolver
         }, $filesChanged->events()));
     }
 }
-

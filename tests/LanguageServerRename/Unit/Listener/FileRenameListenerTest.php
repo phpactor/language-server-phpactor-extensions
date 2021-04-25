@@ -2,19 +2,16 @@
 
 namespace Phpactor\Extension\LanguageServerRename\Tests\Unit\Listener;
 
-use PHPUnit\Framework\TestCase;
 use Phpactor\Extension\LanguageServerBridge\TextDocument\FilesystemWorkspaceLocator;
 use Phpactor\Extension\LanguageServerRename\Listener\FileRenameListener;
 use Phpactor\Extension\LanguageServerRename\Model\FileRenamer\TestFileRenamer;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEditsMap;
 use Phpactor\Extension\LanguageServerRename\Tests\IntegrationTestCase;
-use Phpactor\Extension\LanguageServerRename\Util\LocatedTextEditConverter;
 use Phpactor\LanguageServerProtocol\DidChangeWatchedFilesParams;
 use Phpactor\LanguageServerProtocol\FileChangeType;
 use Phpactor\LanguageServerProtocol\FileEvent;
 use Phpactor\LanguageServer\LanguageServerTesterBuilder;
 use Phpactor\LanguageServer\Test\LanguageServerTester;
-use Phpactor\TextDocument\TextDocumentLocator\InMemoryDocumentLocator;
 use Phpactor\TextDocument\TextEdit;
 use Phpactor\TextDocument\TextEdits;
 
