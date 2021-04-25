@@ -52,19 +52,19 @@ class GenerateMethodCommand implements Command
             TextDocumentUri::fromString($document->uri)->path()
         );
 
-        $textEdits = [];
+        $textEdits = null;
         try {
             $textEdits = $this->generateMethod->generateMethod($sourceCode, $offset);
         } catch (TransformException $error) {
-			$this->clientApi->window()->showMessage()->warning($error->getMessage());
+            $this->clientApi->window()->showMessage()->warning($error->getMessage());
             return new Success(null);
         } catch (MethodCallNotFound $error) {
-			$this->clientApi->window()->showMessage()->warning($error->getMessage());
+            $this->clientApi->window()->showMessage()->warning($error->getMessage());
             return new Success(null);
-		}
+        }
 
         return $this->clientApi->workspace()->applyEdit(new WorkspaceEdit([
-            $uri => TextEditConverter::toLspTextEdits($textEdits, $document->text)
+            $textEdits->uri()->path() => TextEditConverter::toLspTextEdits($textEdits->textEdits(), $document->text)
         ]), 'Generate method');
     }
 }
