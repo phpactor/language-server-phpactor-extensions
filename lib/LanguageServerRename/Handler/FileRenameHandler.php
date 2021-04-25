@@ -12,6 +12,7 @@ use Phpactor\LanguageServerProtocol\FileOperationRegistrationOptions;
 use Phpactor\LanguageServerProtocol\FileRename;
 use Phpactor\LanguageServerProtocol\RenameFilesParams;
 use Phpactor\LanguageServerProtocol\ServerCapabilities;
+use Phpactor\LanguageServerProtocol\WorkspaceEdit;
 use Phpactor\LanguageServer\Core\Handler\CanRegisterCapabilities;
 use Phpactor\LanguageServer\Core\Handler\Handler;
 use Phpactor\TextDocument\TextDocumentUri;
@@ -45,6 +46,9 @@ class FileRenameHandler implements Handler, CanRegisterCapabilities
         ];
     }
 
+    /**
+     * @return Promise<WorkspaceEdit>
+     */
     public function willRenameFiles(RenameFilesParams $params): Promise
     {
         return call(function () use ($params) {
@@ -68,4 +72,3 @@ class FileRenameHandler implements Handler, CanRegisterCapabilities
         ]);
     }
 }
-

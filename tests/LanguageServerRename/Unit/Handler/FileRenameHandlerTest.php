@@ -2,26 +2,19 @@
 
 namespace Phpactor\Extension\LanguageServerRename\Tests\Unit\Handler;
 
-use Phpactor\Extension\LanguageServerBridge\TextDocument\FilesystemWorkspaceLocator;
 use Phpactor\Extension\LanguageServerBridge\TextDocument\WorkspaceTextDocumentLocator;
 use Phpactor\Extension\LanguageServerRename\Handler\FileRenameHandler;
-use Phpactor\Extension\LanguageServerRename\Listener\FileRenameListener;
 use Phpactor\Extension\LanguageServerRename\Model\FileRenamer\TestFileRenamer;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEditsMap;
 use Phpactor\Extension\LanguageServerRename\Tests\IntegrationTestCase;
 use Phpactor\Extension\LanguageServerRename\Util\LocatedTextEditConverter;
-use Phpactor\LanguageServerProtocol\DidChangeWatchedFilesParams;
-use Phpactor\LanguageServerProtocol\FileChangeType;
-use Phpactor\LanguageServerProtocol\FileEvent;
 use Phpactor\LanguageServerProtocol\FileOperationRegistrationOptions;
 use Phpactor\LanguageServerProtocol\FileRename;
 use Phpactor\LanguageServerProtocol\RenameFilesParams;
 use Phpactor\LanguageServerProtocol\WorkspaceEdit;
 use Phpactor\LanguageServer\Core\Rpc\ResponseMessage;
-use Phpactor\LanguageServer\LanguageServerBuilder;
 use Phpactor\LanguageServer\LanguageServerTesterBuilder;
 use Phpactor\LanguageServer\Test\LanguageServerTester;
-use Phpactor\TextDocument\TextDocumentLocator\InMemoryDocumentLocator;
 use Phpactor\TextDocument\TextEdit;
 use Phpactor\TextDocument\TextEdits;
 use function Amp\Promise\wait;
