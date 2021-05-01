@@ -17,8 +17,9 @@ use Phpactor\MapResolver\Resolver;
 
 class LanguageServerHoverExtension implements Extension
 {
+    public const PARAM_TEMPLATE_PATHS = 'language_server_hover.template_paths';
+    
     private const SERVICE_MARKDOWN_RENDERER = 'language_server_completion.object_renderer.markdown';
-    private const PARAM_TEMPLATE_PATHS = 'language_server_hover.template_paths';
 
     /**
      * {@inheritDoc}
