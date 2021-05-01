@@ -11,6 +11,7 @@ use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEdit;
 use Phpactor\Extension\LanguageServerRename\Model\LocatedTextEditsMap;
 use Phpactor\Extension\LanguageServerRename\Model\UriToNameConverter;
 use Phpactor\Indexer\Model\QueryClient;
+use Phpactor\TextDocument\Exception\TextDocumentNotFound;
 use Phpactor\TextDocument\TextDocumentLocator;
 use Phpactor\TextDocument\TextDocumentUri;
 use Phpactor\TextDocument\TextEdits;
@@ -77,7 +78,11 @@ class FileRenamer implements PhpactorFileRenamer
 
                 $seen[$reference->location()->uri()->path()] = true;
 
-                $document = $this->locator->get($reference->location()->uri());
+                try {
+                    $document = $this->locator->get($reference->location()->uri());
+                } catch (TextDocumentNotFound $notFound) {
+                    continue;
+                }
 
                 foreach ($this->mover->replaceReferences(
                     $this->mover->findReferences($document->__toString(), $fromClass),
