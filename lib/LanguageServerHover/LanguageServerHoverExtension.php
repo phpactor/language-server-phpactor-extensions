@@ -2,10 +2,13 @@
 
 namespace Phpactor\Extension\LanguageServerHover;
 
+use Phpactor\CodeBuilder\Domain\TemplatePathResolver\PhpVersionPathResolver;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Extension\Logger\LoggingExtension;
+use Phpactor\Extension\Php\Model\PhpVersionResolver;
 use Phpactor\Extension\WorseReflection\WorseReflectionExtension;
+use Phpactor\FilePathResolverExtension\FilePathResolverExtension;
 use Phpactor\ObjectRenderer\ObjectRendererBuilder;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\LanguageServerHover\Handler\HoverHandler;
@@ -14,6 +17,8 @@ use Phpactor\MapResolver\Resolver;
 
 class LanguageServerHoverExtension implements Extension
 {
+    public const PARAM_TEMPLATE_PATHS = 'language_server_hover.template_paths';
+    
     private const SERVICE_MARKDOWN_RENDERER = 'language_server_completion.object_renderer.markdown';
 
     /**
@@ -21,6 +26,16 @@ class LanguageServerHoverExtension implements Extension
      */
     public function configure(Resolver $schema): void
     {
+        $schema->setDefaults([
+            self::PARAM_TEMPLATE_PATHS => [
+                '%project_config%/templates/markdown',
+                '%config%/templates/markdown',
+            ]
+        ]);
+
+        $schema->setDescriptions([
+            self::PARAM_TEMPLATE_PATHS => 'Paths in which to look for templates for hover information.'
+        ]);
     }
 
     /**
@@ -37,12 +52,27 @@ class LanguageServerHoverExtension implements Extension
         }, [ LanguageServerExtension::TAG_METHOD_HANDLER => []]);
 
         $container->register(self::SERVICE_MARKDOWN_RENDERER, function (Container $container) {
-            return ObjectRendererBuilder::create()
+            $resolver = $container->get(FilePathResolverExtension::SERVICE_FILE_PATH_RESOLVER);
+            $templatePaths = $container->getParameter(self::PARAM_TEMPLATE_PATHS);
+            $templatePaths[] = __DIR__ . '/../../templates/markdown';
+
+            $resolvedTemplatePaths = array_map(function (string $path) use ($resolver) {
+                return $resolver->resolve($path);
+            }, $templatePaths);
+
+            $phpVersion = $container->get(PhpVersionResolver::class)->resolve();
+            $paths = (new PhpVersionPathResolver($phpVersion))->resolve($resolvedTemplatePaths);
+
+            $builder = ObjectRendererBuilder::create()
                 ->setLogger($container->get(LoggingExtension::SERVICE_LOGGER))
-                ->addTemplatePath(__DIR__ . '/../../templates/markdown')
                 ->enableInterfaceCandidates()
-                ->renderEmptyOnNotFound()
-                ->build();
+                ->renderEmptyOnNotFound();
+
+            foreach ($paths as $path) {
+                $builder = $builder->addTemplatePath($path);
+            }
+            
+            return $builder->build();
         });
     }
 }
