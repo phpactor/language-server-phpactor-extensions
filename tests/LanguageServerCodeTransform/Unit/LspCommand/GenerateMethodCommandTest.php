@@ -115,8 +115,8 @@ class GenerateMethodCommandTest extends TestCase
         );
 
         $rpcClient = new class() implements RpcClient {
-            public ?string $lastMethod = '';
-            public ?array $lastParams = [];
+            public ?string $lastMethod;
+            public ?array $lastParams;
 
             public function notification(string $method, array $params): void
             {
