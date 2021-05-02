@@ -166,8 +166,8 @@ class GenerateMethodCommandTest extends TestCase
     public function provideExceptions(): array
     {
         return [
-            'TransformException' => [new TransformException('Error message!')],
-            'MethodCallNotFound' => [new MethodCallNotFound('Error message!')],
+            'TransformException' => [ new TransformException('Error message!') ],
+            'MethodCallNotFound' => [ new MethodCallNotFound('Error message!') ],
         ];
     }
 }
