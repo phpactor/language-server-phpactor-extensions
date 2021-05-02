@@ -180,7 +180,7 @@ class LanguageServerCodeTransformExtension implements Extension
         $container->register(GenerateMethodProvider::class, function (Container $container) {
             return new GenerateMethodProvider(
                 // $container->get(CodeTransformExtension::SERVICE_CLASS_GENERATORS),
-                // $container->get('worse_reflection.tolerant_parser')
+                $container->get('worse_reflection.tolerant_parser')
             );
         }, [
             // LanguageServerExtension::TAG_DIAGNOSTICS_PROVIDER => [],
