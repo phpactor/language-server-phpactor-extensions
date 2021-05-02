@@ -23,6 +23,7 @@ use Phpactor\TextDocument\TextEdits;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use stdClass;
+use Exception;
 
 class GenerateMethodCommandTest extends TestCase
 {
@@ -98,8 +99,8 @@ class GenerateMethodCommandTest extends TestCase
             'label' => 'Generate method'
         ], $rpcClient->lastParams);
     }
-	/** @dataProvider provideExceptions */
-    public function testFailureCall(\Exception $exception): void
+    /** @dataProvider provideExceptions */
+    public function testFailureCall(Exception $exception): void
     {
         $uri = 'file:///file.php';
         $offset = 5;
@@ -162,11 +163,11 @@ class GenerateMethodCommandTest extends TestCase
         ], $rpcClient->lastParams);
     }
 
-	public function provideExceptions(): array
-	{
-		return [
-			'TransformException' => [new TransformException('Error message!')],
-			'MethodCallNotFound' => [new MethodCallNotFound('Error message!')],
-		];
-	}
+    public function provideExceptions(): array
+    {
+        return [
+            'TransformException' => [new TransformException('Error message!')],
+            'MethodCallNotFound' => [new MethodCallNotFound('Error message!')],
+        ];
+    }
 }
