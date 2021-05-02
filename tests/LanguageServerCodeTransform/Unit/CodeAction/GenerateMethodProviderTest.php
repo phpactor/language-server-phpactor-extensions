@@ -35,7 +35,7 @@ class GenerateMethodProviderTest extends TestCase
             );
         }, $result->ranges('diagnosticsRanges'));
 
-        $provider = new GenerateMethodProvider(new Parser());
+        $provider = $this->createProvider();
         self::assertEquals(
             $expectedDiagnostics,
             wait($provider->provideDiagnostics(new TextDocumentItem('file:///somefile.php', 'php', 1, $result->source())))
@@ -79,10 +79,10 @@ class GenerateMethodProviderTest extends TestCase
             ],
         ];
     }
-    
+
     public function testNoActionsAreProvidedWhenRangeIsNotAnInsertionPoint(): void
     {
-        $provider = new GenerateMethodProvider(new Parser());
+        $provider = $this->createProvider();
         self::assertEquals(
             [],
             wait($provider->provideActionsFor(new TextDocumentItem('file:///somefile.php', 'php', 1, '<?php $var = 5;'), new Range(
@@ -99,7 +99,7 @@ class GenerateMethodProviderTest extends TestCase
             ->registerOffset('selection', '<>')
             ->parse($text);
 
-        $provider = new GenerateMethodProvider(new Parser());
+        $provider = $this->createProvider();
         $selectionPosition = PositionConverter::byteOffsetToPosition($result->offset('selection'), $result->source());
         $uri = 'file:///somefile.php';
 
@@ -207,5 +207,9 @@ class GenerateMethodProviderTest extends TestCase
                 false
             ],
         ];
+    }
+    private function createProvider(): GenerateMethodProvider
+    {
+        return new GenerateMethodProvider(new Parser());
     }
 }

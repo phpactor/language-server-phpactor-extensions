@@ -8,11 +8,11 @@ use Phpactor\CodeTransform\Domain\Exception\TransformException;
 use Phpactor\CodeTransform\Domain\Refactor\GenerateMethod;
 use Phpactor\CodeTransform\Domain\SourceCode;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
-use Phpactor\LanguageServerProtocol\ApplyWorkspaceEditResponse;
 use Phpactor\LanguageServer\Core\Command\Command;
-use Phpactor\LanguageServerProtocol\WorkspaceEdit;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
+use Phpactor\LanguageServerProtocol\ApplyWorkspaceEditResponse;
+use Phpactor\LanguageServerProtocol\WorkspaceEdit;
 use Phpactor\TextDocument\TextDocumentUri;
 use Phpactor\WorseReflection\Core\Exception\MethodCallNotFound;
 
@@ -63,8 +63,14 @@ class GenerateMethodCommand implements Command
             return new Success(null);
         }
 
-        return $this->clientApi->workspace()->applyEdit(new WorkspaceEdit([
-            $textEdits->uri()->path() => TextEditConverter::toLspTextEdits($textEdits->textEdits(), $document->text)
-        ]), 'Generate method');
+        return $this->clientApi->workspace()->applyEdit(
+            new WorkspaceEdit([
+                $textEdits->uri()->path() => TextEditConverter::toLspTextEdits(
+                    $textEdits->textEdits(),
+                    $document->text
+                )
+            ]),
+            'Generate method'
+        );
     }
 }
