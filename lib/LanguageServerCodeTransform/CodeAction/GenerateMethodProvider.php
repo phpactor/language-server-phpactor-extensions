@@ -21,7 +21,7 @@ use Phpactor\LanguageServer\Core\CodeAction\CodeActionProvider;
 use Phpactor\TextDocument\ByteOffset;
 use function Amp\call;
 
-class GenerateMethodProvider implements CodeActionProvider
+class GenerateMethodProvider implements DiagnosticsProvider, CodeActionProvider
 {
     public const KIND = 'quickfix.generate_method';
     /**
