@@ -123,7 +123,6 @@ class GenerateMethodCommandTest extends TestCase
             {
                 $this->lastMethod = $method;
                 $this->lastParams = $params;
-                // empty
             }
             public function request(string $method, array $params): Promise
             {
