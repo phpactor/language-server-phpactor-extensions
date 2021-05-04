@@ -4,54 +4,28 @@ namespace Phpactor\Extension\LanguageServerCodeTransform\LspCommand;
 
 use Amp\Promise;
 use Amp\Success;
-use Phpactor\LanguageServerProtocol\WorkspaceEdit;
-use Phpactor\CodeTransform\Domain\Exception\TransformException;
-use Phpactor\CodeTransform\Domain\Refactor\ImportClass\AliasAlreadyUsedException;
-use Phpactor\CodeTransform\Domain\Refactor\ImportClass\NameAlreadyImportedException;
-use Phpactor\CodeTransform\Domain\Refactor\ImportClass\NameImport;
-use Phpactor\CodeTransform\Domain\Refactor\ImportName;
-use Phpactor\CodeTransform\Domain\SourceCode;
-use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
+use Phpactor\Extension\LanguageServerNameImport\Service\NameImport;
 use Phpactor\LanguageServer\Core\Command\Command;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
-use Phpactor\LanguageServer\Core\Workspace\Workspace;
-use Phpactor\Name\FullyQualifiedName;
-use Phpactor\TextDocument\ByteOffset;
-use Phpactor\TextDocument\TextDocumentUri;
+use Phpactor\LanguageServerProtocol\WorkspaceEdit;
 
 class ImportNameCommand implements Command
 {
     public const NAME = 'name_import';
 
     /**
-     * @var ImportName
+     * @var NameImport
      */
-    private $importName;
-
-    /**
-     * @var Workspace
-     */
-    private $workspace;
-
-    /**
-     * @var TextEditConverter
-     */
-    private $textEditConverter;
+    private $nameImport;
 
     /**
      * @var ClientApi
      */
     private $client;
 
-    public function __construct(
-        ImportName $importName,
-        Workspace $workspace,
-        TextEditConverter $textEditConverter,
-        ClientApi $client
-    ) {
-        $this->importName = $importName;
-        $this->workspace = $workspace;
-        $this->textEditConverter = $textEditConverter;
+    public function __construct(NameImport $nameImport, ClientApi $client)
+    {
+        $this->nameImport = $nameImport;
         $this->client = $client;
     }
 
@@ -62,44 +36,19 @@ class ImportNameCommand implements Command
         string $fqn,
         ?string $alias = null
     ): Promise {
-        $document = $this->workspace->get($uri);
-        $sourceCode = SourceCode::fromStringAndPath(
-            $document->text,
-            TextDocumentUri::fromString($document->uri)->path()
-        );
+        $result = $this->nameImport->import($uri, $offset, $type, $fqn, $alias);
 
-        $nameImport = $type === 'function' ?
-            NameImport::forFunction($fqn, $alias) :
-            NameImport::forClass($fqn, $alias);
-
-        try {
-            $textEdits = $this->importName->importName(
-                $sourceCode,
-                ByteOffset::fromInt($offset),
-                $nameImport
+        if ($result->isSuccess()) {
+            return $this->client->workspace()->applyEdit(
+                new WorkspaceEdit([
+                    $uri => $result->getTextEdits()
+                ]),
+                'Import class'
             );
-        } catch (NameAlreadyImportedException $error) {
-            if ($error->existingName() === $fqn) {
-                return new Success(null);
-            }
-
-            $name = FullyQualifiedName::fromString($fqn);
-            $prefix = 'Aliased';
-            if (isset($name->toArray()[0])) {
-                $prefix = $name->toArray()[0];
-            }
-
-            return $this->__invoke($uri, $offset, $type, $fqn, $prefix . $error->name());
-        } catch (AliasAlreadyUsedException $error) {
-            $prefix = 'Aliased';
-            return $this->__invoke($uri, $offset, $type, $fqn, $prefix . $error->name());
-        } catch (TransformException $error) {
-            $this->client->window()->showMessage()->warning($error->getMessage());
-            return new Success(null);
         }
 
-        return $this->client->workspace()->applyEdit(new WorkspaceEdit([
-            $uri => $this->textEditConverter->toLspTextEdits($textEdits, $document->text)
-        ]), 'Import class');
+        $error = $result->getError();
+        $this->client->window()->showMessage()->warning($error->getMessage());
+        return new Success(null);
     }
 }

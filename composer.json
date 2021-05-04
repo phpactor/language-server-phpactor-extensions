@@ -73,7 +73,8 @@
             "Phpactor\\Extension\\LanguageServerRename\\Tests\\": "tests/LanguageServerRename/",
             "Phpactor\\Extension\\LanguageServerWorseReflection\\Tests\\": "tests/LanguageServerWorseReflection/",
             "Phpactor\\Extension\\LanguageServerBridge\\Tests\\": "tests/LanguageServerBridge/",
-            "Phpactor\\Extension\\LanguageServerCodeTransform\\Tests\\": "tests/LanguageServerCodeTransform/"
+            "Phpactor\\Extension\\LanguageServerCodeTransform\\Tests\\": "tests/LanguageServerCodeTransform/",
+            "Phpactor\\Extension\\LanguageServerNameImport\\Tests\\": "tests/LanguageServerNameImport/"
         }
     },
     "minimum-stability": "dev",

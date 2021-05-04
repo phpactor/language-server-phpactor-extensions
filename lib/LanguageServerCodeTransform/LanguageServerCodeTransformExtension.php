@@ -5,13 +5,12 @@ namespace Phpactor\Extension\LanguageServerCodeTransform;
 use Phpactor\CodeTransform\Domain\Helper\MissingMethodFinder;
 use Phpactor\CodeTransform\Domain\Helper\UnresolvableClassNameFinder;
 use Phpactor\CodeTransform\Domain\Refactor\GenerateMethod;
-use Phpactor\CodeTransform\Domain\Refactor\ImportName;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
 use Phpactor\Extension\ClassToFile\ClassToFileExtension;
 use Phpactor\Extension\CodeTransform\CodeTransformExtension;
-use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
+use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\CreateClassProvider;
 use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\GenerateMethodProvider;
 use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\ImportNameProvider;
@@ -20,7 +19,7 @@ use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\CreateClassCommand
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\GenerateMethodCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportNameCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\TransformCommand;
-use Phpactor\Extension\LanguageServer\LanguageServerExtension;
+use Phpactor\Extension\LanguageServerNameImport\Service\NameImport;
 use Phpactor\Extension\WorseReflection\WorseReflectionExtension;
 use Phpactor\Indexer\Model\SearchClient;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
@@ -57,9 +56,7 @@ class LanguageServerCodeTransformExtension implements Extension
     {
         $container->register(ImportNameCommand::class, function (Container $container) {
             return new ImportNameCommand(
-                $container->get(ImportName::class),
-                $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
-                $container->get(TextEditConverter::class),
+                $container->get(NameImport::class),
                 $container->get(ClientApi::class)
             );
         }, [

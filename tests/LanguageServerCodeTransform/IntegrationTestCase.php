@@ -2,6 +2,7 @@
 
 namespace Phpactor\Extension\LanguageServerCodeTransform\Tests;
 
+use Phpactor\Extension\LanguageServerNameImport\LanguageServerNameImportExtension;
 use PHPUnit\Framework\TestCase;
 use Phpactor\Container\Container;
 use Phpactor\Container\PhpactorContainer;
@@ -42,6 +43,7 @@ class IntegrationTestCase extends TestCase
             PhpExtension::class,
             LanguageServerBridgeExtension::class,
             TestLanguageServerSessionExtension::class,
+            LanguageServerNameImportExtension::class,
         ], array_merge([
             FilePathResolverExtension::PARAM_APPLICATION_ROOT => __DIR__ .'/../../',
             WorseReflectionExtension::PARAM_STUB_DIR => __DIR__. '/Empty',
@@ -64,7 +66,7 @@ class IntegrationTestCase extends TestCase
     protected function createTester(): ServerTester
     {
         $container = $this->container();
-        
+
         $builder = $container->get(LanguageServerExtension::SERVICE_LANGUAGE_SERVER_BUILDER);
         $this->assertInstanceOf(LanguageServerBuilder::class, $builder);
 
