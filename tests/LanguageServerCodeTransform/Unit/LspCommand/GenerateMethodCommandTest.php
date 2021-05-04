@@ -3,6 +3,7 @@
 namespace Phpactor\Extension\LanguageServerCodeTransform\Tests\Unit\LspCommand;
 
 use Amp\Promise;
+use Phpactor\WorseReflection\Core\Exception\CouldNotResolveNode;
 use function Amp\Promise\wait;
 use Phpactor\CodeTransform\Domain\Exception\TransformException;
 use Phpactor\WorseReflection\Core\Exception\MethodCallNotFound;
@@ -106,7 +107,7 @@ class GenerateMethodCommandTest extends TestCase
         ], $rpcClient->lastParams);
     }
     /** @dataProvider provideExceptions */
-    public function testFailureCall(Exception $exception): void
+    public function testFailedCall(Exception $exception): void
     {
         $uri = 'file:///file.php';
         $offset = 5;
@@ -177,8 +178,9 @@ class GenerateMethodCommandTest extends TestCase
     public function provideExceptions(): array
     {
         return [
-            'TransformException' => [ new TransformException('Error message!') ],
-            'MethodCallNotFound' => [ new MethodCallNotFound('Error message!') ],
+            TransformException::class => [ new TransformException('Error message!') ],
+            MethodCallNotFound::class => [ new MethodCallNotFound('Error message!') ],
+            CouldNotResolveNode::class => [ new CouldNotResolveNode('Error message!') ],
         ];
     }
 }

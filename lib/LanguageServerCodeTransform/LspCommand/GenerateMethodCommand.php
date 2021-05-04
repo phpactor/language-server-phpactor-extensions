@@ -14,6 +14,7 @@ use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\LanguageServerProtocol\ApplyWorkspaceEditResponse;
 use Phpactor\LanguageServerProtocol\WorkspaceEdit;
 use Phpactor\TextDocument\TextDocumentUri;
+use Phpactor\WorseReflection\Core\Exception\CouldNotResolveNode;
 use Phpactor\WorseReflection\Core\Exception\MethodCallNotFound;
 
 class GenerateMethodCommand implements Command
@@ -59,6 +60,9 @@ class GenerateMethodCommand implements Command
             $this->clientApi->window()->showMessage()->warning($error->getMessage());
             return new Success(null);
         } catch (MethodCallNotFound $error) {
+            $this->clientApi->window()->showMessage()->warning($error->getMessage());
+            return new Success(null);
+        } catch (CouldNotResolveNode $error) {
             $this->clientApi->window()->showMessage()->warning($error->getMessage());
             return new Success(null);
         }
