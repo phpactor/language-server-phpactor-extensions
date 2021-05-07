@@ -3,6 +3,7 @@
 namespace Phpactor\Extension\LanguageServerCodeTransform\Tests\Unit\LspCommand;
 
 use Amp\Promise;
+use Phpactor\LanguageServer\Core\Server\RpcClient\TestRpcClient;
 use Phpactor\WorseReflection\Core\Exception\CouldNotResolveNode;
 use function Amp\Promise\wait;
 use Phpactor\CodeTransform\Domain\Exception\TransformException;
@@ -45,37 +46,7 @@ class GenerateMethodCommandTest extends TestCase
             new TextEdits(TextEdit::create(5, 1, 'test'))
         );
 
-        $rpcClient = new class() implements RpcClient {
-            /**
-             * @var string
-             */
-            public $lastMethod;
-            /**
-             * @var array
-             */
-            public $lastParams;
-
-            public function notification(string $method, array $params): void
-            {
-                // empty
-            }
-            public function request(string $method, array $params): Promise
-            {
-                $this->lastMethod = $method;
-                $this->lastParams = $params;
-
-                return new class implements Promise {
-                    // @phpstan-ignore-next-line
-                    public function onResolve(callable $onResolved): void
-                    {
-                        $obj = new stdClass();
-                        $obj->result = new ApplyWorkspaceEditResponse(true, null, null);
-                        $onResolved(null, $obj);
-                    }
-                };
-            }
-        };
-        $apiClient = new ClientApi($rpcClient);
+        $rpcClient = TestRpcClient::create();
 
         $workspace = $this->prophesize(Workspace::class);
         // @phpstan-ignore-next-line
@@ -89,13 +60,16 @@ class GenerateMethodCommandTest extends TestCase
             ->willReturn($textEdits);
 
         $command = new GenerateMethodCommand(
-            $apiClient,
+            new ClientApi($rpcClient),
             $workspace->reveal(), // @phpstan-ignore-line
             $generateMethod->reveal() // @phpstan-ignore-line
         );
         
-        wait($command->__invoke($uri, $offset));
-        self::assertEquals('workspace/applyEdit', $rpcClient->lastMethod);
+        $command->__invoke($uri, $offset);
+        
+        $applyEdit = $rpcClient->transmitter()->filterByMethod('workspace/applyEdit')->shiftRequest();
+
+        self::assertNotNull($applyEdit);
         self::assertEquals([
             'edit' => new WorkspaceEdit([
                 $textEdits->uri()->path() => TextEditConverter::toLspTextEdits(
@@ -104,7 +78,7 @@ class GenerateMethodCommandTest extends TestCase
                 )
             ]),
             'label' => 'Generate method'
-        ], $rpcClient->lastParams);
+        ], $applyEdit->params);
     }
     /** @dataProvider provideExceptions */
     public function testFailedCall(Exception $exception): void
@@ -122,33 +96,7 @@ class GenerateMethodCommandTest extends TestCase
             new TextEdits(TextEdit::create(5, 1, 'test'))
         );
 
-        $rpcClient = new class() implements RpcClient {
-            /**
-             * @var string
-             */
-            public $lastMethod;
-            /**
-             * @var array
-             */
-            public $lastParams;
-
-            public function notification(string $method, array $params): void
-            {
-                $this->lastMethod = $method;
-                $this->lastParams = $params;
-            }
-            public function request(string $method, array $params): Promise
-            {
-                return new class implements Promise {
-                    // @phpstan-ignore-next-line
-                    public function onResolve(callable $onResolved): void
-                    {
-                        $onResolved(null, null);
-                    }
-                };
-            }
-        };
-        $apiClient = new ClientApi($rpcClient);
+        $rpcClient = TestRpcClient::create();
 
         $workspace = $this->prophesize(Workspace::class);
         // @phpstan-ignore-next-line
@@ -162,17 +110,19 @@ class GenerateMethodCommandTest extends TestCase
             ->willThrow($exception);
 
         $command = new GenerateMethodCommand(
-            $apiClient,
+            new ClientApi($rpcClient),
             $workspace->reveal(), // @phpstan-ignore-line
             $generateMethod->reveal() // @phpstan-ignore-line
         );
         
-        wait($command->__invoke($uri, $offset));
-        self::assertEquals('window/showMessage', $rpcClient->lastMethod);
+        $command->__invoke($uri, $offset);
+        $showMessage = $rpcClient->transmitter()->filterByMethod('window/showMessage')->shiftNotification();
+
+        self::assertNotNull($showMessage);
         self::assertEquals([
             'type' => 2,
             'message' => $exception->getMessage()
-        ], $rpcClient->lastParams);
+        ], $showMessage->params);
     }
 
     public function provideExceptions(): array
