@@ -68,7 +68,9 @@ class GenerateMethodProvider implements DiagnosticsProvider, CodeActionProvider
                 return CodeAction::fromArray([
                     'title' => sprintf('Fix "%s"', $diagnostic->message),
                     'kind' => self::KIND,
-                    'diagnostics' => $diagnostics,
+                    'diagnostics' => [
+                        $diagnostic
+                    ],
                     'command' => new Command(
                         'Generate method',
                         GenerateMethodCommand::NAME,
