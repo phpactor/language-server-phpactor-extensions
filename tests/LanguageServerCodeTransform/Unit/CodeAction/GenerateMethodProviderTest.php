@@ -2,6 +2,7 @@
 
 namespace Phpactor\Extension\LanguageServerCodeTransform\Tests\Unit\CodeAction;
 
+use Generator;
 use Microsoft\PhpParser\Parser;
 use PHPUnit\Framework\TestCase;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
@@ -21,7 +22,9 @@ use function Amp\Promise\wait;
 
 class GenerateMethodProviderTest extends TestCase
 {
-    /** @dataProvider provideDiagnosticsTestData */
+    /**
+     * @dataProvider provideDiagnosticsTestData
+     */
     public function testDiagnostics(string $text): void
     {
         $result = OffsetExtractor::create()->registerRange('diagnosticsRanges', '{{', '}}')->parse($text);
@@ -36,19 +39,19 @@ class GenerateMethodProviderTest extends TestCase
         }, $result->ranges('diagnosticsRanges'));
 
         $provider = $this->createProvider();
+
         self::assertEquals(
             $expectedDiagnostics,
             wait($provider->provideDiagnostics(new TextDocumentItem('file:///somefile.php', 'php', 1, $result->source())))
         );
     }
 
-    public function provideDiagnosticsTestData(): array
+    public function provideDiagnosticsTestData(): Generator
     {
-        return [
-            'Empty file' => [
+        yield 'Empty file' => [
                 '<?php '
-            ],
-            'Class with no methods calls' => [
+            ];
+        yield 'Class with no methods calls' => [
                 '<?php 
 				class Class1 
 				{
@@ -60,8 +63,8 @@ class GenerateMethodProviderTest extends TestCase
 					}
 				}
 				'
-            ],
-            'Class with methods calls' => [
+            ];
+        yield 'Class with methods calls' => [
                 '<?php 
 				class Class1 
 				{
@@ -76,8 +79,7 @@ class GenerateMethodProviderTest extends TestCase
 					}
 				}
 				'
-            ],
-        ];
+            ];
     }
 
     public function testNoActionsAreProvidedWhenRangeIsNotAnInsertionPoint(): void
@@ -139,74 +141,74 @@ class GenerateMethodProviderTest extends TestCase
         );
     }
 
-    public function provideActionsTestData(): array
+    public function provideActionsTestData(): Generator
     {
-        return [
+        yield
             'Empty file' => [
                 '<?php <>',
                 false
-            ],
-            'Outside methods calls' => [
-                '<?php 
-				class Class1 
-				{
-					public function __construct() {
-					}
+            ];
 
-					public function someOtherMethod() {
-						$v<>ar = 5;
-						$this->methodThatIsCalled();
-					}
-				}
-				',
-                false
-            ],
-            'Instance method call' => [
-                '<?php 
-				class Class1 
-				{
-					public function __construct() {
-					}
+        yield 'Outside methods calls' => [
+            '<?php 
+class Class1 
+{
+    public function __construct() {
+    }
 
-					public function someOtherMethod() {
-						$var = 5;
-						$this->{{methodTh<>atIsCalled}}();
-					}
-				}
-				',
-                true
-            ],
-            'Static method call' => [
-                '<?php 
-				class Class1 
-				{
-					public function __construct() {
-					}
-
-					public function someOtherMethod() {
-						$var = 5;
-						self::{{methodTh<>atIsCalled}}();
-					}
-				}
-				',
-                true
-            ],
-            'Dynamic method name call' => [
-                '<?php 
-				class Class1 
-				{
-					public function __construct() {
-					}
-
-					public function someOtherMethod() {
-						$var = 5;
-						self::{$v<>ar}();
-					}
-				}
-				',
-                false
-            ],
+    public function someOtherMethod() {
+        $v<>ar = 5;
+        $this->methodThatIsCalled();
+    }
+    }
+',
+                            false
         ];
+        yield 'Instance method call' => [
+                '<?php 
+class Class1 
+{
+    public function __construct() {
+    }
+
+    public function someOtherMethod() {
+        $var = 5;
+        $this->{{methodTh<>atIsCalled}}();
+    }
+    }
+',
+                            true
+            ];
+        yield 'Static method call' => [
+                '<?php 
+class Class1 
+{
+    public function __construct() {
+    }
+
+    public function someOtherMethod() {
+        $var = 5;
+        self::{{methodTh<>atIsCalled}}();
+    }
+    }
+',
+                            true
+            ];
+        yield 'Dynamic method name call' => [
+                '<?php 
+class Class1 
+{
+    public function __construct() {
+    }
+
+    public function someOtherMethod() {
+        $var = 5;
+        self::{$v<>ar}();
+    }
+    }
+',
+                            false
+            ];
     }
     private function createProvider(): GenerateMethodProvider
     {

@@ -2,7 +2,9 @@
 
 namespace Phpactor\Extension\LanguageServerCodeTransform\Tests\Unit\LspCommand;
 
-use Phpactor\LanguageServer\Core\Server\RpcClient\TestRpcClient;
+use Phpactor\LanguageServerProtocol\ApplyWorkspaceEditResponse;
+use Phpactor\LanguageServerProtocol\MessageType;
+use Phpactor\LanguageServer\LanguageServerTesterBuilder;
 use Phpactor\WorseReflection\Core\Exception\CouldNotResolveNode;
 use Phpactor\CodeTransform\Domain\Exception\TransformException;
 use Phpactor\WorseReflection\Core\Exception\MethodCallNotFound;
@@ -10,112 +12,69 @@ use Phpactor\CodeTransform\Domain\Refactor\GenerateMethod;
 use Phpactor\CodeTransform\Domain\SourceCode;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\GenerateMethodCommand;
-use Phpactor\LanguageServer\Core\Server\ClientApi;
-use Phpactor\LanguageServer\Core\Workspace\Workspace;
-use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\LanguageServerProtocol\WorkspaceEdit;
 use Phpactor\TextDocument\TextDocumentEdits;
 use Phpactor\TextDocument\TextDocumentUri;
 use Phpactor\TextDocument\TextEdit;
 use Phpactor\TextDocument\TextEdits;
 use PHPUnit\Framework\TestCase;
+use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Exception;
+use Prophecy\Prophecy\ObjectProphecy;
 
 class GenerateMethodCommandTest extends TestCase
 {
     use ProphecyTrait;
+    const EXAMPLE_SOURCE = '<?php ';
+    const EXAMPLE_URI = 'file:///file.php';
+    const EXAMPLE_OFFSET = 5;
 
     public function testSuccessfulCall(): void
     {
-        $uri = 'file:///file.php';
-        $offset = 5;
-        $textDocumentItem = new TextDocumentItem($uri, 'php', 1, '<?php ');
-        $textDocumentUri = TextDocumentUri::fromString($textDocumentItem->uri);
-        $sourceCode = SourceCode::fromStringAndPath(
-            $textDocumentItem->text,
-            $textDocumentUri->path()
-        );
         $textEdits = new TextDocumentEdits(
-            $textDocumentUri,
-            new TextEdits(TextEdit::create(5, 1, 'test'))
+            TextDocumentUri::fromString(self::EXAMPLE_URI),
+            new TextEdits(TextEdit::create(self::EXAMPLE_OFFSET, 1, 'test'))
         );
-
-        $rpcClient = TestRpcClient::create();
-
-        $workspace = $this->prophesize(Workspace::class);
-        // @phpstan-ignore-next-line
-        $workspace->get($uri)
-            ->willReturn($textDocumentItem);
 
         $generateMethod = $this->prophesize(GenerateMethod::class);
-        // @phpstan-ignore-next-line
-        $generateMethod->generateMethod($sourceCode, $offset)
+        $generateMethod->generateMethod(Argument::type(SourceCode::class), self::EXAMPLE_OFFSET)
             ->shouldBeCalled()
             ->willReturn($textEdits);
 
-        $command = new GenerateMethodCommand(
-            new ClientApi($rpcClient),
-            $workspace->reveal(), // @phpstan-ignore-line
-            $generateMethod->reveal() // @phpstan-ignore-line
-        );
-        
-        $command->__invoke($uri, $offset);
-        
-        $applyEdit = $rpcClient->transmitter()->filterByMethod('workspace/applyEdit')->shiftRequest();
+        $builder = $this->createTester($generateMethod);
+        $builder->responseWatcher()->resolveLastResponse(new ApplyWorkspaceEditResponse(true));
+        $applyEdit = $builder->transmitter()->filterByMethod('workspace/applyEdit')->shiftRequest();
 
         self::assertNotNull($applyEdit);
         self::assertEquals([
             'edit' => new WorkspaceEdit([
                 $textEdits->uri()->path() => TextEditConverter::toLspTextEdits(
                     $textEdits->textEdits(),
-                    $textDocumentItem->text
+                    self::EXAMPLE_SOURCE
                 )
             ]),
             'label' => 'Generate method'
         ], $applyEdit->params);
     }
-    /** @dataProvider provideExceptions */
+
+    /**
+     * @dataProvider provideExceptions
+     */
     public function testFailedCall(Exception $exception): void
     {
-        $uri = 'file:///file.php';
-        $offset = 5;
-        $textDocumentItem = new TextDocumentItem($uri, 'php', 1, '<?php ');
-        $textDocumentUri = TextDocumentUri::fromString($textDocumentItem->uri);
-        $sourceCode = SourceCode::fromStringAndPath(
-            $textDocumentItem->text,
-            $textDocumentUri->path()
-        );
-        $textEdits = new TextDocumentEdits(
-            $textDocumentUri,
-            new TextEdits(TextEdit::create(5, 1, 'test'))
-        );
-
-        $rpcClient = TestRpcClient::create();
-
-        $workspace = $this->prophesize(Workspace::class);
-        // @phpstan-ignore-next-line
-        $workspace->get($uri)
-            ->willReturn($textDocumentItem);
-
         $generateMethod = $this->prophesize(GenerateMethod::class);
         // @phpstan-ignore-next-line
-        $generateMethod->generateMethod($sourceCode, $offset)
+        $generateMethod->generateMethod(Argument::type(SourceCode::class), self::EXAMPLE_OFFSET)
             ->shouldBeCalled()
             ->willThrow($exception);
 
-        $command = new GenerateMethodCommand(
-            new ClientApi($rpcClient),
-            $workspace->reveal(), // @phpstan-ignore-line
-            $generateMethod->reveal() // @phpstan-ignore-line
-        );
-        
-        $command->__invoke($uri, $offset);
-        $showMessage = $rpcClient->transmitter()->filterByMethod('window/showMessage')->shiftNotification();
+        $builder = $this->createTester($generateMethod);
+        $showMessage = $builder->transmitter()->filterByMethod('window/showMessage')->shiftNotification();
 
         self::assertNotNull($showMessage);
         self::assertEquals([
-            'type' => 2,
+            'type' => MessageType::WARNING,
             'message' => $exception->getMessage()
         ], $showMessage->params);
     }
@@ -127,5 +86,23 @@ class GenerateMethodCommandTest extends TestCase
             MethodCallNotFound::class => [ new MethodCallNotFound('Error message!') ],
             CouldNotResolveNode::class => [ new CouldNotResolveNode('Error message!') ],
         ];
+    }
+
+    private function createTester(ObjectProphecy $generateMethod): LanguageServerTesterBuilder
+    {
+        $builder = LanguageServerTesterBuilder::createBare()
+            ->enableTextDocuments()
+            ->enableCommands();
+        $builder->addCommand('generate', new GenerateMethodCommand(
+            $builder->clientApi(),
+            $builder->workspace(),
+            $generateMethod->reveal()
+        ));
+        
+        $tester = $builder->build();
+        $tester->textDocument()->open(self::EXAMPLE_URI, self::EXAMPLE_SOURCE);
+        
+        $promise = $tester->workspace()->executeCommand('generate', [self::EXAMPLE_URI, self::EXAMPLE_OFFSET]);
+        return $builder;
     }
 }
