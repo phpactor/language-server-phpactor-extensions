@@ -17,6 +17,7 @@ use Phpactor\LanguageServer\Core\Workspace\Workspace;
 class ExtractMethodCommand implements Command
 {
     public const NAME  = 'extract_method';
+    public const DEFAULT_METHOD_NAME  = 'newMethod';
 
     /**
      * @var ExtractMethod
@@ -52,7 +53,7 @@ class ExtractMethodCommand implements Command
                 SourceCode::fromStringAndPath($textDocument->text, $textDocument->uri),
                 $startOffset,
                 $endOffset,
-                'newMethod'
+                self::DEFAULT_METHOD_NAME
             );
         } catch (TransformException $error) {
             $this->clientApi->window()->showMessage()->warning($error->getMessage());
