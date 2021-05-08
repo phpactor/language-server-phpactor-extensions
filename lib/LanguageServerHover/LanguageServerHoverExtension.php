@@ -28,6 +28,7 @@ class LanguageServerHoverExtension implements Extension
     {
         $schema->setDefaults([
             self::PARAM_TEMPLATE_PATHS => [
+                '%project_config%/templates/markdown',
                 '%config%/templates/markdown',
             ]
         ]);

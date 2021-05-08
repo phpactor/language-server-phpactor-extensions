@@ -74,6 +74,7 @@ $container = PhpactorContainer::fromExtensions([
     LoggingExtension::PARAM_ENABLED => true,
     LoggingExtension::PARAM_PATH => __DIR__ . '/../cache/phpactlor.log',
     CodeTransformExtension::PARAM_TEMPLATE_PATHS => [],
+    LanguageServerHoverExtension::PARAM_TEMPLATE_PATHS => [],
 ]);
 
 $handler = new StreamHandler(STDERR);
