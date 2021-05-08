@@ -4,11 +4,6 @@ namespace Phpactor\Extension\LanguageServerCodeTransform\CodeAction;
 
 use Amp\Promise;
 use Amp\Success;
-use Microsoft\PhpParser\Node\Expression\CallExpression;
-use Microsoft\PhpParser\Node\Expression\MemberAccessExpression;
-use Microsoft\PhpParser\Node\Expression\ScopedPropertyAccessExpression;
-use Microsoft\PhpParser\Parser;
-use Microsoft\PhpParser\Token;
 use Phpactor\CodeTransform\Domain\Helper\MissingMethodFinder;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\LanguageServerBridge\Converter\RangeConverter;
@@ -21,10 +16,8 @@ use Phpactor\LanguageServerProtocol\Range;
 use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\LanguageServer\Core\CodeAction\CodeActionProvider;
 use Phpactor\LanguageServer\Core\Diagnostics\DiagnosticsProvider;
-use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocumentBuilder;
 use function Amp\call;
-use function array_filter;
 
 class GenerateMethodProvider implements DiagnosticsProvider, CodeActionProvider
 {
@@ -61,7 +54,7 @@ class GenerateMethodProvider implements DiagnosticsProvider, CodeActionProvider
      */
     public function provideActionsFor(TextDocumentItem $textDocument, Range $range): Promise
     {
-        return call(function () use ($textDocument, $range) {
+        return call(function () use ($textDocument) {
             $diagnostics = $this->getDiagnostics($textDocument);
 
             return array_map(function (Diagnostic $diagnostic) use ($textDocument) {

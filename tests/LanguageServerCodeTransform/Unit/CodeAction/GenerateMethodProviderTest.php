@@ -3,24 +3,17 @@
 namespace Phpactor\Extension\LanguageServerCodeTransform\Tests\Unit\CodeAction;
 
 use Generator;
-use Microsoft\PhpParser\Parser;
 use PHPUnit\Framework\TestCase;
 use Phpactor\CodeTransform\Domain\Helper\MissingMethodFinder;
 use Phpactor\CodeTransform\Domain\Helper\MissingMethodFinder\MissingMethod;
-use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
-use Phpactor\Extension\LanguageServerBridge\Converter\RangeConverter;
 use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\GenerateMethodProvider;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\GenerateMethodCommand;
-use Phpactor\Extension\LanguageServerRename\Tests\Util\OffsetExtractor;
 use Phpactor\LanguageServerProtocol\CodeAction;
 use Phpactor\LanguageServerProtocol\Command;
 use Phpactor\LanguageServerProtocol\Diagnostic;
 use Phpactor\LanguageServerProtocol\DiagnosticSeverity;
-use Phpactor\LanguageServerProtocol\Position;
-use Phpactor\LanguageServerProtocol\Range;
 use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\LanguageServer\Test\ProtocolFactory;
-use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\ByteOffsetRange;
 use Phpactor\TextDocument\TextDocument;
 use Prophecy\Argument;
@@ -75,7 +68,7 @@ class GenerateMethodProviderTest extends TestCase
             [
                 Diagnostic::fromArray([
                     'range' => ProtocolFactory::range(0, 0, 0, 5),
-                    'message' => 'Generate method "foobar"',
+                    'message' => 'Method "foobar" does not exist',
                     'severity' => DiagnosticSeverity::WARNING,
                     'source' => 'phpactor',
                 ])
@@ -83,8 +76,8 @@ class GenerateMethodProviderTest extends TestCase
         ];
     }
 
-    /** 
-     * @dataProvider provideActionsTestData 
+    /**
+     * @dataProvider provideActionsTestData
      */
     public function testProvideActions(array $missingMethods, array $expectedActions): void
     {
@@ -112,12 +105,12 @@ class GenerateMethodProviderTest extends TestCase
             ],
             [
                 CodeAction::fromArray([
-                    'title' =>  'Generate method "foobar"',
+                    'title' =>  'Fix "Method "foobar" does not exist"',
                     'kind' => GenerateMethodProvider::KIND,
                     'diagnostics' => [
                         Diagnostic::fromArray([
                             'range' => ProtocolFactory::range(0, 0, 0, 5),
-                            'message' => 'Generate method "foobar"',
+                            'message' => 'Method "foobar" does not exist',
                             'severity' => DiagnosticSeverity::WARNING,
                             'source' => 'phpactor',
                         ])
