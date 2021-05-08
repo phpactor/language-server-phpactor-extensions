@@ -9,7 +9,9 @@ use Microsoft\PhpParser\Node\Expression\MemberAccessExpression;
 use Microsoft\PhpParser\Node\Expression\ScopedPropertyAccessExpression;
 use Microsoft\PhpParser\Parser;
 use Microsoft\PhpParser\Token;
+use Phpactor\CodeTransform\Domain\Helper\MissingMethodFinder;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
+use Phpactor\Extension\LanguageServerBridge\Converter\RangeConverter;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\GenerateMethodCommand;
 use Phpactor\LanguageServerProtocol\CodeAction;
 use Phpactor\LanguageServerProtocol\Command;
@@ -20,21 +22,24 @@ use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\LanguageServer\Core\CodeAction\CodeActionProvider;
 use Phpactor\LanguageServer\Core\Diagnostics\DiagnosticsProvider;
 use Phpactor\TextDocument\ByteOffset;
+use Phpactor\TextDocument\TextDocumentBuilder;
 use function Amp\call;
 use function array_filter;
 
 class GenerateMethodProvider implements DiagnosticsProvider, CodeActionProvider
 {
     public const KIND = 'quickfix.generate_method';
-    /**
-     * @var Parser
-     */
-    private $parser;
 
-    public function __construct(Parser $parser)
+    /**
+     * @var MissingMethodFinder
+     */
+    private $missingMethodFinder;
+
+    public function __construct(MissingMethodFinder $missingMethodFinder)
     {
-        $this->parser = $parser;
+        $this->missingMethodFinder = $missingMethodFinder;
     }
+
     /**
      * {@inheritDoc}
      */
@@ -57,34 +62,11 @@ class GenerateMethodProvider implements DiagnosticsProvider, CodeActionProvider
     public function provideActionsFor(TextDocumentItem $textDocument, Range $range): Promise
     {
         return call(function () use ($textDocument, $range) {
-            if ($range->start != $range->end) {
-                return [];
-            }
-
             $diagnostics = $this->getDiagnostics($textDocument);
 
-            if (empty($diagnostics)) {
-                return [];
-            }
-
-            $diagnostics = array_values(
-                array_filter($diagnostics, function (Diagnostic $diag) use ($range) {
-                    return (
-                        $diag->range->start->line <= $range->start->line &&
-                        $diag->range->start->character <= $range->start->character &&
-                        $diag->range->end->line >= $range->end->line &&
-                        $diag->range->end->character >= $range->end->character
-                    );
-                })
-            );
-
-            if (count($diagnostics) === 0) {
-                return [];
-            }
-
-            return [
-                CodeAction::fromArray([
-                    'title' =>  'Generate method (if not exists)',
+            return array_map(function (Diagnostic $diagnostic) use ($textDocument) {
+                return CodeAction::fromArray([
+                    'title' => sprintf('Fix "%s"', $diagnostic->message),
                     'kind' => self::KIND,
                     'diagnostics' => $diagnostics,
                     'command' => new Command(
@@ -92,11 +74,14 @@ class GenerateMethodProvider implements DiagnosticsProvider, CodeActionProvider
                         GenerateMethodCommand::NAME,
                         [
                             $textDocument->uri,
-                            PositionConverter::positionToByteOffset($range->start, $textDocument->text)->toInt()
+                            PositionConverter::positionToByteOffset(
+                                $diagnostic->range->start,
+                                $textDocument->text
+                            )->toInt()
                         ]
                     )
-                ])
-            ];
+                ]);
+            }, $diagnostics);
         });
     }
     /**
@@ -104,43 +89,18 @@ class GenerateMethodProvider implements DiagnosticsProvider, CodeActionProvider
      */
     private function getDiagnostics(TextDocumentItem $textDocument): array
     {
-        $node = $this->parser->parseSourceFile($textDocument->text);
+        $methods = $this->missingMethodFinder->find(
+            TextDocumentBuilder::create($textDocument->text)->build()
+        );
         $diagnostics = [];
-        foreach ($node->getDescendantNodes() as $node) {
-            if ((!$node instanceof CallExpression)) {
-                continue;
-            }
-            assert($node instanceof CallExpression);
 
-            $memberName = null;
-            if ($node->callableExpression instanceof MemberAccessExpression) {
-                $memberName = $node->callableExpression->memberName;
-            } elseif ($node->callableExpression instanceof ScopedPropertyAccessExpression) {
-                $memberName = $node->callableExpression->memberName;
-            }
-            
-            if (!($memberName instanceof Token)) {
-                continue;
-            }
-
-            assert($memberName instanceof Token);
-            
-            $diagnostics[] = new Diagnostic(
-                new Range(
-                    PositionConverter::byteOffsetToPosition(
-                        ByteOffset::fromInt($memberName->start),
-                        $textDocument->text
-                    ),
-                    PositionConverter::byteOffsetToPosition(
-                        ByteOffset::fromInt($memberName->start + $memberName->length),
-                        $textDocument->text
-                    ),
-                ),
-                'Generate method',
-                DiagnosticSeverity::INFORMATION,
-                null,
-                'phpactor'
-            );
+        foreach ($methods as $method) {
+            $diagnostics[] = Diagnostic::fromArray([
+                'range' => RangeConverter::toLspRange($method->range(), $textDocument->text),
+                'message' => sprintf('Method "%s" does not exist', $method->name()),
+                'severity' => DiagnosticSeverity::WARNING,
+                'source' => 'phpactor',
+            ]);
         }
 
         usort($diagnostics, function (Diagnostic $a, Diagnostic $b) {

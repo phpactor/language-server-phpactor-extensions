@@ -73,7 +73,6 @@ $container = PhpactorContainer::fromExtensions([
     LoggingExtension::PARAM_LEVEL => 'debug',
     LoggingExtension::PARAM_ENABLED => true,
     LoggingExtension::PARAM_PATH => __DIR__ . '/../cache/phpactlor.log',
-    LanguageServerRenameWorseExtension::PARAM_FILE_RENAME_LISTENER => true,
     CodeTransformExtension::PARAM_TEMPLATE_PATHS => [],
 ]);
 

@@ -2,6 +2,7 @@
 
 namespace Phpactor\Extension\LanguageServerCodeTransform;
 
+use Phpactor\CodeTransform\Domain\Helper\MissingMethodFinder;
 use Phpactor\CodeTransform\Domain\Helper\UnresolvableClassNameFinder;
 use Phpactor\CodeTransform\Domain\Refactor\GenerateMethod;
 use Phpactor\CodeTransform\Domain\Refactor\ImportName;
@@ -178,10 +179,10 @@ class LanguageServerCodeTransformExtension implements Extension
 
         $container->register(GenerateMethodProvider::class, function (Container $container) {
             return new GenerateMethodProvider(
-                $container->get('worse_reflection.tolerant_parser')
+                $container->get(MissingMethodFinder::class)
             );
         }, [
-            // LanguageServerExtension::TAG_DIAGNOSTICS_PROVIDER => [],
+            LanguageServerExtension::TAG_DIAGNOSTICS_PROVIDER => [],
             LanguageServerExtension::TAG_CODE_ACTION_PROVIDER => []
         ]);
     }
