@@ -5,6 +5,7 @@ namespace Phpactor\Extension\LanguageServerCodeTransform\Tests\Unit\LspCommand;
 use Phpactor\LanguageServerProtocol\ApplyWorkspaceEditResponse;
 use Phpactor\LanguageServerProtocol\MessageType;
 use Phpactor\LanguageServer\LanguageServerTesterBuilder;
+use Phpactor\LanguageServer\Test\LanguageServerTester;
 use Phpactor\WorseReflection\Core\Exception\CouldNotResolveNode;
 use Phpactor\CodeTransform\Domain\Exception\TransformException;
 use Phpactor\WorseReflection\Core\Exception\MethodCallNotFound;
@@ -42,8 +43,10 @@ class GenerateMethodCommandTest extends TestCase
             ->shouldBeCalled()
             ->willReturn($textEdits);
 
-        $builder = $this->createTester($generateMethod);
+        [$tester, $builder] = $this->createTester($generateMethod);
+        $tester->workspace()->executeCommand('generate', [self::EXAMPLE_URI, self::EXAMPLE_OFFSET]);
         $builder->responseWatcher()->resolveLastResponse(new ApplyWorkspaceEditResponse(true));
+
         $applyEdit = $builder->transmitter()->filterByMethod('workspace/applyEdit')->shiftRequest();
 
         self::assertNotNull($applyEdit);
@@ -69,7 +72,8 @@ class GenerateMethodCommandTest extends TestCase
             ->shouldBeCalled()
             ->willThrow($exception);
 
-        $builder = $this->createTester($generateMethod);
+        [$tester, $builder] = $this->createTester($generateMethod);
+        $tester->workspace()->executeCommand('generate', [self::EXAMPLE_URI, self::EXAMPLE_OFFSET]);
         $showMessage = $builder->transmitter()->filterByMethod('window/showMessage')->shiftNotification();
 
         self::assertNotNull($showMessage);
@@ -88,7 +92,10 @@ class GenerateMethodCommandTest extends TestCase
         ];
     }
 
-    private function createTester(ObjectProphecy $generateMethod): LanguageServerTesterBuilder
+    /**
+     * @return {LanguageServerTester,LanguageServerTesterBuilder]
+     */
+    private function createTester(ObjectProphecy $generateMethod): array
     {
         $builder = LanguageServerTesterBuilder::createBare()
             ->enableTextDocuments()
@@ -101,8 +108,7 @@ class GenerateMethodCommandTest extends TestCase
         
         $tester = $builder->build();
         $tester->textDocument()->open(self::EXAMPLE_URI, self::EXAMPLE_SOURCE);
-        
-        $promise = $tester->workspace()->executeCommand('generate', [self::EXAMPLE_URI, self::EXAMPLE_OFFSET]);
-        return $builder;
+
+        return [$tester, $builder];
     }
 }
