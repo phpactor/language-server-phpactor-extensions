@@ -25,6 +25,7 @@ use Phpactor\Extension\WorseReflection\WorseReflectionExtension;
 use Phpactor\Indexer\Model\SearchClient;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\MapResolver\Resolver;
+use Phpactor\TextDocument\TextDocumentLocator;
 
 class LanguageServerCodeTransformExtension implements Extension
 {
@@ -96,7 +97,8 @@ class LanguageServerCodeTransformExtension implements Extension
             return new GenerateMethodCommand(
                 $container->get(ClientApi::class),
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
-                $container->get(GenerateMethod::class)
+                $container->get(GenerateMethod::class),
+                $container->get(TextDocumentLocator::class)
             );
         }, [
             LanguageServerExtension::TAG_COMMAND => [

@@ -6,6 +6,8 @@ use Phpactor\LanguageServerProtocol\ApplyWorkspaceEditResponse;
 use Phpactor\LanguageServerProtocol\MessageType;
 use Phpactor\LanguageServer\LanguageServerTesterBuilder;
 use Phpactor\LanguageServer\Test\LanguageServerTester;
+use Phpactor\TextDocument\TextDocumentBuilder;
+use Phpactor\TextDocument\TextDocumentLocator\InMemoryDocumentLocator;
 use Phpactor\WorseReflection\Core\Exception\CouldNotResolveNode;
 use Phpactor\CodeTransform\Domain\Exception\TransformException;
 use Phpactor\WorseReflection\Core\Exception\MethodCallNotFound;
@@ -103,7 +105,10 @@ class GenerateMethodCommandTest extends TestCase
         $builder->addCommand('generate', new GenerateMethodCommand(
             $builder->clientApi(),
             $builder->workspace(),
-            $generateMethod->reveal()
+            $generateMethod->reveal(),
+            InMemoryDocumentLocator::fromTextDocuments([
+                TextDocumentBuilder::create('foobar')->uri(self::EXAMPLE_URI)->build()
+            ])
         ));
         
         $tester = $builder->build();

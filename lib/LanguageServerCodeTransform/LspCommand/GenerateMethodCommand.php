@@ -13,6 +13,7 @@ use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\LanguageServerProtocol\ApplyWorkspaceEditResponse;
 use Phpactor\LanguageServerProtocol\WorkspaceEdit;
+use Phpactor\TextDocument\TextDocumentLocator;
 use Phpactor\TextDocument\TextDocumentUri;
 use Phpactor\WorseReflection\Core\Exception\NotFound;
 
@@ -32,14 +33,21 @@ class GenerateMethodCommand implements Command
      */
     private $workspace;
 
+    /**
+     * @var TextDocumentLocator
+     */
+    private $locator;
+
     public function __construct(
         ClientApi $clientApi,
         Workspace $workspace,
-        GenerateMethod $generateMethod
+        GenerateMethod $generateMethod,
+        TextDocumentLocator $locator
     ) {
         $this->clientApi = $clientApi;
         $this->generateMethod = $generateMethod;
         $this->workspace = $workspace;
+        $this->locator = $locator;
     }
     /**
      * @return Promise<?ApplyWorkspaceEditResponse>
@@ -67,7 +75,7 @@ class GenerateMethodCommand implements Command
             new WorkspaceEdit([
                 $textEdits->uri()->path() => TextEditConverter::toLspTextEdits(
                     $textEdits->textEdits(),
-                    $document->text
+                    $this->locator->get($textEdits->uri())->__toString()
                 )
             ]),
             'Generate method'
