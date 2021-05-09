@@ -3,215 +3,133 @@
 namespace Phpactor\Extension\LanguageServerCodeTransform\Tests\Unit\CodeAction;
 
 use Generator;
-use Microsoft\PhpParser\Parser;
 use PHPUnit\Framework\TestCase;
-use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
-use Phpactor\Extension\LanguageServerBridge\Converter\RangeConverter;
+use Phpactor\CodeTransform\Domain\Helper\MissingMethodFinder;
+use Phpactor\CodeTransform\Domain\Helper\MissingMethodFinder\MissingMethod;
 use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\GenerateMethodProvider;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\GenerateMethodCommand;
-use Phpactor\Extension\LanguageServerRename\Tests\Util\OffsetExtractor;
 use Phpactor\LanguageServerProtocol\CodeAction;
 use Phpactor\LanguageServerProtocol\Command;
 use Phpactor\LanguageServerProtocol\Diagnostic;
 use Phpactor\LanguageServerProtocol\DiagnosticSeverity;
-use Phpactor\LanguageServerProtocol\Position;
-use Phpactor\LanguageServerProtocol\Range;
 use Phpactor\LanguageServerProtocol\TextDocumentItem;
+use Phpactor\LanguageServer\Test\ProtocolFactory;
 use Phpactor\TextDocument\ByteOffsetRange;
+use Phpactor\TextDocument\TextDocument;
+use Prophecy\Argument;
+use Prophecy\PhpUnit\ProphecyTrait;
+use Prophecy\Prophecy\ObjectProphecy;
 use function Amp\Promise\wait;
 
 class GenerateMethodProviderTest extends TestCase
 {
+    use ProphecyTrait;
+
+    const EXAMPLE_SOURCE = 'foobar';
+    const EXAMPLE_FILE = 'file:///somefile.php';
+
+    /**
+     * @var ObjectProphecy<MissingMethodFinder>
+     */
+    private $finder;
+
+    protected function setUp(): void
+    {
+        $this->finder = $this->prophesize(MissingMethodFinder::class);
+    }
+
     /**
      * @dataProvider provideDiagnosticsTestData
      */
-    public function testDiagnostics(string $text): void
+    public function testDiagnostics(array $missingMethods, array $expectedDiagnostics): void
     {
-        $result = OffsetExtractor::create()->registerRange('diagnosticsRanges', '{{', '}}')->parse($text);
-        $expectedDiagnostics = array_map(function (ByteOffsetRange $byteRange) use ($result) {
-            return new Diagnostic(
-                RangeConverter::toLspRange($byteRange, $result->source()),
-                'Generate method',
-                DiagnosticSeverity::INFORMATION,
-                null,
-                'phpactor'
-            );
-        }, $result->ranges('diagnosticsRanges'));
-
+        $this->finder->find(Argument::type(TextDocument::class))->willReturn($missingMethods);
         $provider = $this->createProvider();
 
         self::assertEquals(
             $expectedDiagnostics,
-            wait($provider->provideDiagnostics(new TextDocumentItem('file:///somefile.php', 'php', 1, $result->source())))
+            wait($provider->provideDiagnostics(
+                new TextDocumentItem(self::EXAMPLE_FILE, 'php', 1, self::EXAMPLE_SOURCE)
+            ))
         );
     }
 
     public function provideDiagnosticsTestData(): Generator
     {
-        yield 'Empty file' => [
-                '<?php '
-            ];
-        yield 'Class with no methods calls' => [
-                '<?php 
-				class Class1 
-				{
-					public function __construct() {
-					}
-
-					public function someOtherMethod() {
-						$var = 5;
-					}
-				}
-				'
-            ];
-        yield 'Class with methods calls' => [
-                '<?php 
-				class Class1 
-				{
-					public function __construct() {
-					}
-
-					public function someOtherMethod() {
-						$var = 5;
-						$this->{{methodThatIsCalled}}()->{{otherMethod}}();
-						$this->{$var}();
-                        self::{{someStaticMethod}}();
-					}
-				}
-				'
-            ];
-    }
-
-    public function testNoActionsAreProvidedWhenRangeIsNotAnInsertionPoint(): void
-    {
-        $provider = $this->createProvider();
-        self::assertEquals(
+        yield 'No missing methods' => [
             [],
-            wait($provider->provideActionsFor(new TextDocumentItem('file:///somefile.php', 'php', 1, '<?php $var = 5;'), new Range(
-                new Position(1, 7),
-                new Position(1, 9),
-            )))
-        );
-    }
-    /** @dataProvider provideActionsTestData */
-    public function testProvideActions(string $text, bool $shouldSucceed): void
-    {
-        $result = OffsetExtractor::create()
-            ->registerRange('diagnosticsRange', '{{', '}}')
-            ->registerOffset('selection', '<>')
-            ->parse($text);
+            []
+        ];
 
-        $provider = $this->createProvider();
-        $selectionPosition = PositionConverter::byteOffsetToPosition($result->offset('selection'), $result->source());
-        $uri = 'file:///somefile.php';
-
-        if ($shouldSucceed) {
-            $expectedDiagnostic = new Diagnostic(
-                RangeConverter::toLspRange($result->range('diagnosticsRange'), $result->source()),
-                'Generate method',
-                DiagnosticSeverity::INFORMATION,
-                null,
-                'phpactor'
-            );
-            $codeActions = [
-                CodeAction::fromArray([
-                    'title' =>  'Generate method (if not exists)',
-                    'kind' => GenerateMethodProvider::KIND,
-                    'diagnostics' => [ $expectedDiagnostic ],
-                    'command' => new Command(
-                        'Generate method',
-                        GenerateMethodCommand::NAME,
-                        [
-                            $uri,
-                            $result->offset('selection')->toInt()
-                        ]
-                    )
+        yield 'Missing method' => [
+            [
+                new MissingMethod(self::EXAMPLE_SOURCE, ByteOffsetRange::fromInts(0, 5))
+            ],
+            [
+                Diagnostic::fromArray([
+                    'range' => ProtocolFactory::range(0, 0, 0, 5),
+                    'message' => 'Method "foobar" does not exist',
+                    'severity' => DiagnosticSeverity::WARNING,
+                    'source' => 'phpactor',
                 ])
-            ];
-        } else {
-            $codeActions = [];
-        }
+            ]
+        ];
+    }
 
+    /**
+     * @dataProvider provideActionsTestData
+     */
+    public function testProvideActions(array $missingMethods, array $expectedActions): void
+    {
+        $this->finder->find(Argument::type(TextDocument::class))->willReturn($missingMethods);
+        $provider = $this->createProvider();
         self::assertEquals(
-            $codeActions,
-            wait($provider->provideActionsFor(new TextDocumentItem($uri, 'php', 1, $result->source()), new Range(
-                $selectionPosition,
-                $selectionPosition,
-            )))
+            $expectedActions,
+            wait($provider->provideActionsFor(
+                new TextDocumentItem(self::EXAMPLE_FILE, 'php', 1, self::EXAMPLE_SOURCE),
+                ProtocolFactory::range(0, 0, 0, 0)
+            ))
         );
     }
 
     public function provideActionsTestData(): Generator
     {
-        yield
-            'Empty file' => [
-                '<?php <>',
-                false
-            ];
-
-        yield 'Outside methods calls' => [
-            '<?php 
-class Class1 
-{
-    public function __construct() {
-    }
-
-    public function someOtherMethod() {
-        $v<>ar = 5;
-        $this->methodThatIsCalled();
-    }
-    }
-',
-                            false
+        yield 'No missing methods' => [
+            [],
+            []
         ];
-        yield 'Instance method call' => [
-                '<?php 
-class Class1 
-{
-    public function __construct() {
+
+        yield 'Missing method' => [
+            [
+                new MissingMethod(self::EXAMPLE_SOURCE, ByteOffsetRange::fromInts(0, 5))
+            ],
+            [
+                CodeAction::fromArray([
+                    'title' =>  'Fix "Method "foobar" does not exist"',
+                    'kind' => GenerateMethodProvider::KIND,
+                    'diagnostics' => [
+                        Diagnostic::fromArray([
+                            'range' => ProtocolFactory::range(0, 0, 0, 5),
+                            'message' => 'Method "foobar" does not exist',
+                            'severity' => DiagnosticSeverity::WARNING,
+                            'source' => 'phpactor',
+                        ])
+                    ],
+                    'command' => new Command(
+                        'Generate method',
+                        GenerateMethodCommand::NAME,
+                        [
+                            self::EXAMPLE_FILE,
+                            0
+                        ]
+                    )
+                ])
+            ]
+        ];
     }
 
-    public function someOtherMethod() {
-        $var = 5;
-        $this->{{methodTh<>atIsCalled}}();
-    }
-    }
-',
-                            true
-            ];
-        yield 'Static method call' => [
-                '<?php 
-class Class1 
-{
-    public function __construct() {
-    }
-
-    public function someOtherMethod() {
-        $var = 5;
-        self::{{methodTh<>atIsCalled}}();
-    }
-    }
-',
-                            true
-            ];
-        yield 'Dynamic method name call' => [
-                '<?php 
-class Class1 
-{
-    public function __construct() {
-    }
-
-    public function someOtherMethod() {
-        $var = 5;
-        self::{$v<>ar}();
-    }
-    }
-',
-                            false
-            ];
-    }
     private function createProvider(): GenerateMethodProvider
     {
-        return new GenerateMethodProvider(new Parser());
+        return new GenerateMethodProvider($this->finder->reveal());
     }
 }
