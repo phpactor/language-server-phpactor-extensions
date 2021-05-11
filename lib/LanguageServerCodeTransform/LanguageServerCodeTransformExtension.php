@@ -203,7 +203,7 @@ class LanguageServerCodeTransformExtension implements Extension
             LanguageServerExtension::TAG_CODE_ACTION_PROVIDER => []
         ]);
 
-        $container->register(GenerateMethodProvider::class, function (Container $container) {
+        $container->register(ExtractMethodProvider::class, function (Container $container) {
             return new ExtractMethodProvider(
                 $container->get(ExtractMethod::class)
             );
