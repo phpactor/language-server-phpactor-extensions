@@ -16,7 +16,7 @@ use function Amp\call;
 
 class ExtractMethodProvider implements CodeActionProvider
 {
-    public const KIND = 'quickfix.extract_method';
+    public const KIND = 'refactor.extract.method';
 
     /**
      * @var ExtractMethod
