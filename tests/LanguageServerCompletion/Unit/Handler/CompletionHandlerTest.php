@@ -5,11 +5,13 @@ namespace Phpactor\Extension\LanguageServerCompletion\Tests\Unit\Handler;
 use Amp\Delayed;
 use DTL\Invoke\Invoke;
 use Generator;
-use Phpactor\CodeBuilder\Domain\Updater;
+use Phpactor\CodeTransform\Domain\Refactor\ImportClass\NameImport;
 use Phpactor\Completion\Core\Completor;
 use Phpactor\Completion\Core\Range as PhpactorRange;
 use Phpactor\Completion\Core\Suggestion;
 use Phpactor\Completion\Core\TypedCompletorRegistry;
+use Phpactor\Extension\LanguageServerCodeTransform\Model\ImportName\ImportName;
+use Phpactor\Extension\LanguageServerCodeTransform\Model\ImportName\ImportNameResult;
 use Phpactor\Extension\LanguageServerCompletion\Handler\CompletionHandler;
 use Phpactor\Extension\LanguageServerCompletion\Util\SuggestionNameFormatter;
 use Phpactor\LanguageServer\LanguageServerTesterBuilder;
@@ -22,8 +24,6 @@ use Phpactor\LanguageServerProtocol\Range;
 use Phpactor\LanguageServerProtocol\TextEdit;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocument;
-use Phpactor\TextDocument\TextEdit as PhpactorTextEdit;
-use Phpactor\TextDocument\TextEdits;
 use PHPUnit\Framework\TestCase;
 
 class CompletionHandlerTest extends TestCase
@@ -124,7 +124,7 @@ class CompletionHandlerTest extends TestCase
             true,
             false,
             [
-                new TextEdits(PhpactorTextEdit::create(0, 4, 'world'))
+                [new TextEdit(new Range(new Position(0, 0), new Position(0, 4)), 'world')]
             ]
         );
         $response = $tester->requestAndWait(
@@ -314,7 +314,7 @@ class CompletionHandlerTest extends TestCase
             $builder->workspace(),
             $registry,
             new SuggestionNameFormatter(true),
-            $this->createUpdater($textEditsFor),
+            $this->createImportName($suggestions, $textEditsFor),
             $supportSnippets,
             true
         ))->build();
@@ -323,13 +323,36 @@ class CompletionHandlerTest extends TestCase
         return $tester;
     }
 
-    private function createUpdater(array $textEditsFor = []): Updater
+    /**
+     * @param array<Suggestion> $suggestions
+     * @param array $textEditsFor
+     * @return ImportName
+     */
+    private function createImportName(array $suggestions, array $textEditsFor): ImportName
     {
-        $updater = $this->getMockForAbstractClass(Updater::class);
-        $updater->method('textEditsFor')
-            ->with(self::anything(), self::EXAMPLE_TEXT)
-            ->willReturnOnConsecutiveCalls(...$textEditsFor);
-        return $updater;
+        $results = [];
+
+        foreach ($suggestions as $i => $suggestion) {
+            /** @var Suggestion $suggestion */
+            $textEdits = $textEditsFor[$i] ?? null;
+
+            if ($suggestion->type() === 'function') {
+                $nameImport = NameImport::forFunction($suggestion->name());
+            } else {
+                $nameImport = NameImport::forClass($suggestion->name());
+            }
+
+            $results[] = ImportNameResult::createResult($nameImport, $textEdits);
+        }
+
+        $importNameMock = $this->getMockBuilder(ImportName::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $importNameMock->method('import')
+            ->willReturnOnConsecutiveCalls(...$results);
+
+        return $importNameMock;
     }
 
     private function createCompletor(array $suggestions, bool $isIncomplete = false): Completor

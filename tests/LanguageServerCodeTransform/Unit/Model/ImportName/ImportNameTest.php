@@ -1,6 +1,6 @@
 <?php
 
-namespace LanguageServerNameImport\Service;
+namespace Phpactor\Extension\LanguageServerCodeTransform\Tests\Unit\Model\ImportName;
 
 use Exception;
 use Generator;
@@ -11,7 +11,7 @@ use Phpactor\CodeTransform\Domain\Refactor\ImportClass\NameImport as ImportClass
 use Phpactor\CodeTransform\Domain\Refactor\ImportName as RefactorImportName;
 use Phpactor\CodeTransform\Domain\SourceCode;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
-use Phpactor\Extension\LanguageServerNameImport\Service\NameImport;
+use Phpactor\Extension\LanguageServerCodeTransform\Model\ImportName\ImportName;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\LanguageServerProtocol\TextEdit as LspTextEdit;
@@ -23,7 +23,7 @@ use Phpactor\TextDocument\TextEdits;
 use Prophecy\Prophecy\ObjectProphecy;
 use RuntimeException;
 
-class NameImportServiceTest extends TestCase
+class ImportNameTest extends TestCase
 {
     const EXAMPLE_CONTENT = 'hello this is some text';
     const EXAMPLE_PATH = '/foobar.php';
@@ -36,14 +36,14 @@ class NameImportServiceTest extends TestCase
     private $importNameProphecy;
 
     /**
-     * @var ObjectProphecy<Workspace>
+     * @var Workspace
      */
-    private $workspaceProphecy;
+    private $workspace;
 
     /**
-     * @var ObjectProphecy<TextDocumentItem>
+     * @var TextDocumentItem
      */
-    private $documentProphecy;
+    private $document;
 
     /**
      * @var array<LspTextEdit>
@@ -66,36 +66,18 @@ class NameImportServiceTest extends TestCase
     private $byteOffset;
 
     /**
-     * @var ObjectProphecy<AliasAlreadyUsedException>
-     */
-    private $aliasAlreadyUsedExceptionProphecy;
-
-    /**
-     * @var ObjectProphecy<NameAlreadyImportedException>
-     */
-    private $nameAlreadyImportedExceptionProphecy;
-
-    /**
-     * @var NameImport
+     * @var ImportName
      */
     private $subject;
 
     protected function setUp(): void
     {
-        $this->documentProphecy = $this->prophesize(TextDocumentItem::class);
-        $this->documentProphecy->text = self::EXAMPLE_CONTENT;
-        $this->documentProphecy->uri = self::EXAMPLE_PATH_URI;
-
-        $this->workspaceProphecy = $this->prophesize(Workspace::class);
-        $this->workspaceProphecy->get(self::EXAMPLE_PATH_URI)
-            ->willReturn($this->documentProphecy->reveal());
+        $this->document = new TextDocumentItem(self::EXAMPLE_PATH_URI, 'php', 1, self::EXAMPLE_CONTENT);
+        $this->workspace = new Workspace();
+        $this->workspace->open($this->document);
 
         $this->importNameProphecy = $this->prophesize(RefactorImportName::class);
         $this->byteOffset = ByteOffset::fromInt(self::EXAMPLE_OFFSET);
-        $this->aliasAlreadyUsedExceptionProphecy = $this->prophesize(AliasAlreadyUsedException::class);
-        $this->nameAlreadyImportedExceptionProphecy = $this->prophesize(
-            NameAlreadyImportedException::class
-        );
 
         $this->textEdits = TextEdits::one(
             TextEdit::create(23, 6, 'huhuhu')
@@ -108,9 +90,9 @@ class NameImportServiceTest extends TestCase
             TextDocumentUri::fromString(self::EXAMPLE_PATH_URI)->path()
         );
 
-        $this->subject = new NameImport(
+        $this->subject = new ImportName(
             $this->importNameProphecy->reveal(),
-            $this->workspaceProphecy->reveal()
+            $this->workspace
         );
     }
 
@@ -137,7 +119,7 @@ class NameImportServiceTest extends TestCase
         string $importType,
         ImportClassNameImport $importClassNameImport
     ): void {
-        $this->importNameProphecy->importName(
+        $this->importNameProphecy->importNameOnly(
             $this->sourceCode,
             $this->byteOffset,
             $importClassNameImport
@@ -160,7 +142,7 @@ class NameImportServiceTest extends TestCase
     {
         $error = new TransformException('error!!');
 
-        $this->importNameProphecy->importName(
+        $this->importNameProphecy->importNameOnly(
             $this->sourceCode,
             $this->byteOffset,
             ImportClassNameImport::forClass(Exception::class),
@@ -181,18 +163,18 @@ class NameImportServiceTest extends TestCase
 
     public function testImportAliasAlreadyUsedException(): void
     {
-        $this->aliasAlreadyUsedExceptionProphecy->name()
-            ->willReturn(Exception::class);
+        $import = ImportClassNameImport::forClass(Exception::class);
+        $aliasAlreadyUsedException = new AliasAlreadyUsedException($import);
 
-        $this->importNameProphecy->importName(
+        $this->importNameProphecy->importNameOnly(
             $this->sourceCode,
             $this->byteOffset,
-            ImportClassNameImport::forClass(Exception::class),
-        )->willThrow($this->aliasAlreadyUsedExceptionProphecy->reveal());
+            $import,
+        )->willThrow($aliasAlreadyUsedException);
 
         $aliasedNameImport = ImportClassNameImport::forClass(Exception::class, 'AliasedException');
 
-        $this->importNameProphecy->importName(
+        $this->importNameProphecy->importNameOnly(
             $this->sourceCode,
             $this->byteOffset,
             $aliasedNameImport,
@@ -213,14 +195,14 @@ class NameImportServiceTest extends TestCase
 
     public function testImportNameAlreadyImportedExceptionExisting(): void
     {
-        $this->nameAlreadyImportedExceptionProphecy->existingName()
-            ->willReturn(Exception::class);
+        $import = ImportClassNameImport::forClass(Exception::class);
+        $nameAlreadyImportedException = new NameAlreadyImportedException($import, Exception::class);
 
-        $this->importNameProphecy->importName(
+        $this->importNameProphecy->importNameOnly(
             $this->sourceCode,
             $this->byteOffset,
             ImportClassNameImport::forClass(Exception::class),
-        )->willThrow($this->nameAlreadyImportedExceptionProphecy->reveal());
+        )->willThrow($nameAlreadyImportedException);
 
         $result = $this->subject->import(
             self::EXAMPLE_PATH_URI,
@@ -231,26 +213,24 @@ class NameImportServiceTest extends TestCase
 
         self::assertTrue($result->isSuccess());
         self::assertNull($result->getNameImport());
-        self::assertSame([], $result->getTextEdits());
+        self::assertSame(null, $result->getTextEdits());
         self::assertNull($result->getError());
     }
 
     public function testImportNameAlreadyImportedExceptionNotExisting(): void
     {
-        $this->nameAlreadyImportedExceptionProphecy->existingName()
-            ->willReturn(RuntimeException::class);
-        $this->nameAlreadyImportedExceptionProphecy->name()
-            ->willReturn(Exception::class);
+        $import = ImportClassNameImport::forClass(Exception::class);
+        $nameAlreadyImportedException = new NameAlreadyImportedException($import, RuntimeException::class);
 
-        $this->importNameProphecy->importName(
+        $this->importNameProphecy->importNameOnly(
             $this->sourceCode,
             $this->byteOffset,
-            ImportClassNameImport::forClass(Exception::class),
-        )->willThrow($this->nameAlreadyImportedExceptionProphecy->reveal());
+            $import,
+        )->willThrow($nameAlreadyImportedException);
 
         $aliasedNameImport = ImportClassNameImport::forClass(Exception::class, 'ExceptionException');
 
-        $this->importNameProphecy->importName(
+        $this->importNameProphecy->importNameOnly(
             $this->sourceCode,
             $this->byteOffset,
             $aliasedNameImport,

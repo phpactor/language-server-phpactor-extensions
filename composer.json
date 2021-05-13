@@ -13,7 +13,7 @@
         "php": "^7.3 || ^8.0",
         "dantleech/object-renderer": "^0.1.1",
         "phpactor/phly-event-dispatcher": "^2.0.0",
-        "phpactor/code-transform": "^0.4.1",
+        "phpactor/code-transform": "dev-feature-cmd-addtextedits as 0.4.2",
         "phpactor/code-transform-extension": "^0.2.2",
         "phpactor/completion": "~0.4.3",
         "phpactor/completion-extension": "^0.2.4",
@@ -73,8 +73,7 @@
             "Phpactor\\Extension\\LanguageServerRename\\Tests\\": "tests/LanguageServerRename/",
             "Phpactor\\Extension\\LanguageServerWorseReflection\\Tests\\": "tests/LanguageServerWorseReflection/",
             "Phpactor\\Extension\\LanguageServerBridge\\Tests\\": "tests/LanguageServerBridge/",
-            "Phpactor\\Extension\\LanguageServerCodeTransform\\Tests\\": "tests/LanguageServerCodeTransform/",
-            "Phpactor\\Extension\\LanguageServerNameImport\\Tests\\": "tests/LanguageServerNameImport/"
+            "Phpactor\\Extension\\LanguageServerCodeTransform\\Tests\\": "tests/LanguageServerCodeTransform/"
         }
     },
     "minimum-stability": "dev",
@@ -85,5 +84,11 @@
             "./vendor/bin/phpstan analyze",
             "./vendor/bin/php-cs-fixer fix"
         ]
-    }
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "git@github.com:weeman1337/code-transform.git"
+        }
+    ]
 }

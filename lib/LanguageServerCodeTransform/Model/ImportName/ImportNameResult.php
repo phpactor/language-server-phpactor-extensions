@@ -1,12 +1,12 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerNameImport\Model;
+namespace Phpactor\Extension\LanguageServerCodeTransform\Model\ImportName;
 
 use Phpactor\CodeTransform\Domain\Refactor\ImportClass\NameImport;
 use Phpactor\LanguageServerProtocol\TextEdit as LspTextEdit;
 use Throwable;
 
-class NameImportResult
+class ImportNameResult
 {
     /**
      * @var bool
@@ -24,7 +24,7 @@ class NameImportResult
     private $textEdits;
 
     /**
-     * @var NameImport|null
+     * @var NameImport
      */
     private $nameImport;
 
@@ -63,30 +63,37 @@ class NameImportResult
         return $this->success;
     }
 
+    public function isSuccessAndHasAliasedNameImport(): bool
+    {
+        return $this->isSuccess() === true
+            && $this->getNameImport() !== null
+            && $this->getNameImport()->alias() !== null;
+    }
+
     public function getError(): ?Throwable
     {
         return $this->error;
     }
 
-    public static function createEmptyResult(): NameImportResult
+    public static function createEmptyResult(): ImportNameResult
     {
-        return new NameImportResult(true, null, [], null);
+        return new ImportNameResult(true, null, null, null);
     }
 
     /**
-     * @param array<LspTextEdit> $textEdits
      * @param NameImport $nameImport
-     * @return NameImportResult
+     * @param array<LspTextEdit>|null $textEdits
+     * @return ImportNameResult
      */
     public static function createResult(
-        array $textEdits,
-        NameImport $nameImport
-    ): NameImportResult {
-        return new NameImportResult(true, $nameImport, $textEdits, null);
+        NameImport $nameImport,
+        ?array $textEdits
+    ): ImportNameResult {
+        return new ImportNameResult(true, $nameImport, $textEdits, null);
     }
 
-    public static function createErrorResult(Throwable $error): NameImportResult
+    public static function createErrorResult(Throwable $error): ImportNameResult
     {
-        return new NameImportResult(false, null, null, $error);
+        return new ImportNameResult(false, null, null, $error);
     }
 }

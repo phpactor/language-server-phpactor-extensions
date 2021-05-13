@@ -19,7 +19,7 @@ use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\CreateClassCommand
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\GenerateMethodCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportNameCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\TransformCommand;
-use Phpactor\Extension\LanguageServerNameImport\Service\NameImport;
+use Phpactor\Extension\LanguageServerCodeTransform\Model\ImportName\ImportName;
 use Phpactor\Extension\WorseReflection\WorseReflectionExtension;
 use Phpactor\Indexer\Model\SearchClient;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
@@ -37,6 +37,7 @@ class LanguageServerCodeTransformExtension implements Extension
     {
         $this->registerCommands($container);
         $this->registerCodeActions($container);
+        $this->registerModels($container);
     }
 
     /**
@@ -56,7 +57,7 @@ class LanguageServerCodeTransformExtension implements Extension
     {
         $container->register(ImportNameCommand::class, function (Container $container) {
             return new ImportNameCommand(
-                $container->get(NameImport::class),
+                $container->get(ImportName::class),
                 $container->get(ClientApi::class)
             );
         }, [
@@ -184,5 +185,15 @@ class LanguageServerCodeTransformExtension implements Extension
             LanguageServerExtension::TAG_DIAGNOSTICS_PROVIDER => [],
             LanguageServerExtension::TAG_CODE_ACTION_PROVIDER => []
         ]);
+    }
+
+    private function registerModels(ContainerBuilder $container): void
+    {
+        $container->register(ImportName::class, function (Container $container): ImportName {
+            return new ImportName(
+                $container->get(\Phpactor\CodeTransform\Domain\Refactor\ImportName::class),
+                $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE)
+            );
+        });
     }
 }

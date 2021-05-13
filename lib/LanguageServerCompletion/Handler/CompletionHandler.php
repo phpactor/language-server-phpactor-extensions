@@ -6,11 +6,16 @@ use Amp\CancellationToken;
 use Amp\CancelledException;
 use Amp\Delayed;
 use Amp\Promise;
-use Phpactor\CodeBuilder\Domain\Builder\SourceCodeBuilder;
-use Phpactor\CodeBuilder\Domain\Code;
-use Phpactor\CodeBuilder\Domain\Updater;
+use Phpactor\Completion\Core\Suggestion;
+use Phpactor\Completion\Core\TypedCompletorRegistry;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
-use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
+use Phpactor\Extension\LanguageServerCodeTransform\Model\ImportName\ImportName;
+use Phpactor\Extension\LanguageServerCodeTransform\Model\ImportName\ImportNameResult;
+use Phpactor\Extension\LanguageServerCompletion\Util\PhpactorToLspCompletionType;
+use Phpactor\Extension\LanguageServerCompletion\Util\SuggestionNameFormatter;
+use Phpactor\LanguageServer\Core\Handler\CanRegisterCapabilities;
+use Phpactor\LanguageServer\Core\Handler\Handler;
+use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\LanguageServerProtocol\CompletionItem;
 use Phpactor\LanguageServerProtocol\CompletionList;
 use Phpactor\LanguageServerProtocol\CompletionOptions;
@@ -21,14 +26,6 @@ use Phpactor\LanguageServerProtocol\ServerCapabilities;
 use Phpactor\LanguageServerProtocol\SignatureHelpOptions;
 use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\LanguageServerProtocol\TextEdit;
-use Phpactor\Completion\Core\Suggestion;
-use Phpactor\Completion\Core\TypedCompletorRegistry;
-use Phpactor\Extension\LanguageServerCompletion\Util\PhpactorToLspCompletionType;
-use Phpactor\Extension\LanguageServerCompletion\Util\SuggestionNameFormatter;
-use Phpactor\LanguageServer\Core\Handler\CanRegisterCapabilities;
-use Phpactor\LanguageServer\Core\Handler\Handler;
-use Phpactor\LanguageServer\Core\Workspace\Workspace;
-use Phpactor\LanguageServerProtocol\TextEdit as LspTextEdit;
 use Phpactor\TextDocument\TextDocumentBuilder;
 
 class CompletionHandler implements Handler, CanRegisterCapabilities
@@ -59,22 +56,22 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
     private $supportSnippets;
 
     /**
-     * @var Updater
+     * @var ImportName
      */
-    private $updater;
+    private $importName;
 
     public function __construct(
         Workspace $workspace,
         TypedCompletorRegistry $registry,
         SuggestionNameFormatter $suggestionNameFormatter,
-        Updater $updater,
+        ImportName $importName,
         bool $supportSnippets,
         bool $provideTextEdit = false
     ) {
         $this->registry = $registry;
         $this->provideTextEdit = $provideTextEdit;
         $this->workspace = $workspace;
-        $this->updater = $updater;
+        $this->importName = $importName;
         $this->suggestionNameFormatter = $suggestionNameFormatter;
         $this->supportSnippets = $supportSnippets;
     }
@@ -115,6 +112,14 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
                     ;
                 }
 
+                $importNameResult = $this->importClassOrFunctionName($suggestion, $params);
+
+                if ($importNameResult->isSuccessAndHasAliasedNameImport()) {
+                    // todo is this the right place?
+                    $importName = $importNameResult->getNameImport()->alias();
+                    $insertText = str_replace($name, $importName, $insertText);
+                }
+
                 $items[] = CompletionItem::fromArray([
                     'label' => $name,
                     'kind' => PhpactorToLspCompletionType::fromPhpactorType($suggestion->type()),
@@ -122,8 +127,9 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
                     'documentation' => $suggestion->documentation(),
                     'insertText' => $insertText,
                     'sortText' => $this->sortText($suggestion),
+                    // todo convert text edit if there is an alias import
                     'textEdit' => $this->textEdit($suggestion, $textDocument),
-                    'additionalTextEdits' => $this->additionalTextEdits($suggestion, $textDocument),
+                    'additionalTextEdits' => $importNameResult->getTextEdits(),
                     'insertTextFormat' => $insertTextFormat
                 ]);
 
@@ -169,27 +175,32 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
         );
     }
 
-    /**
-     * @param Suggestion $suggestion
-     * @param TextDocumentItem $textDocument
-     * @return array<LspTextEdit>|null
-     */
-    private function additionalTextEdits(Suggestion $suggestion, TextDocumentItem $textDocument): ?array
-    {
-        if (!$suggestion->nameImport()) {
-            return null;
+    private function importClassOrFunctionName(
+        Suggestion $suggestion,
+        CompletionParams $params
+    ): ImportNameResult {
+        $suggestionNameImport = $suggestion->nameImport();
+
+        if (!$suggestionNameImport) {
+            return ImportNameResult::createEmptyResult();
         }
 
-        if (!in_array($suggestion->type(), [ 'class', 'function'])) {
-            return null;
+        $suggestionType = $suggestion->type();
+
+        if (!in_array($suggestionType, [ 'class', 'function'])) {
+            return ImportNameResult::createEmptyResult();
         }
 
-        $textEdits = $this->updater->textEditsFor(
-            SourceCodeBuilder::create()->use($suggestion->nameImport())->build(),
-            Code::fromString($textDocument->text)
+        $doc = $this->workspace->get($params->textDocument->uri);
+        // todo: avoid conversions?
+        $offset = PositionConverter::positionToByteOffset($params->position, $doc->text);
+
+        return $this->importName->import(
+            $params->textDocument->uri,
+            $offset->toInt(),
+            $suggestionType,
+            $suggestionNameImport
         );
-
-        return TextEditConverter::toLspTextEdits($textEdits, $textDocument->text);
     }
 
     private function formatShortDescription(Suggestion $suggestion): string

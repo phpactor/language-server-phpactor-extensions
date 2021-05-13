@@ -3,6 +3,7 @@
 namespace Phpactor\Extension\LanguageServerCompletion\Tests;
 
 use Phpactor\Extension\CodeTransform\CodeTransformExtension;
+use Phpactor\Extension\LanguageServerCodeTransform\LanguageServerCodeTransformExtension;
 use Phpactor\Extension\LanguageServerCompletion\Tests\Extension\TestExtension;
 use Phpactor\Extension\Php\PhpExtension;
 use PHPUnit\Framework\TestCase;
@@ -58,6 +59,7 @@ class IntegrationTestCase extends TestCase
             CodeTransformExtension::class,
             PhpExtension::class,
             TestExtension::class,
+            LanguageServerCodeTransformExtension::class,
         ], [
             FilePathResolverExtension::PARAM_APPLICATION_ROOT => __DIR__ .'/../../',
             LanguageServerHoverExtension::PARAM_TEMPLATE_PATHS => [],

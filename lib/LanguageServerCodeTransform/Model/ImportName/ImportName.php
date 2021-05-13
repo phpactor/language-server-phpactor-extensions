@@ -1,6 +1,6 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerNameImport\Service;
+namespace Phpactor\Extension\LanguageServerCodeTransform\Model\ImportName;
 
 use Phpactor\CodeTransform\Domain\Exception\TransformException;
 use Phpactor\CodeTransform\Domain\Refactor\ImportClass\AliasAlreadyUsedException;
@@ -9,13 +9,12 @@ use Phpactor\CodeTransform\Domain\Refactor\ImportClass\NameImport as ImportClass
 use Phpactor\CodeTransform\Domain\Refactor\ImportName as RefactorImportName;
 use Phpactor\CodeTransform\Domain\SourceCode;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
-use Phpactor\Extension\LanguageServerNameImport\Model\NameImportResult;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\Name\FullyQualifiedName;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocumentUri;
 
-class NameImport
+class ImportName
 {
     /**
      * @var RefactorImportName
@@ -39,7 +38,7 @@ class NameImport
         string $type,
         string $fqn,
         ?string $alias = null
-    ): NameImportResult {
+    ): ImportNameResult {
         $document = $this->workspace->get($uri);
         $sourceCode = SourceCode::fromStringAndPath(
             $document->text,
@@ -51,14 +50,14 @@ class NameImport
             ImportClassNameImport::forClass($fqn, $alias);
 
         try {
-            $textEdits = $this->importName->importName(
+            $textEdits = $this->importName->importNameOnly(
                 $sourceCode,
                 ByteOffset::fromInt($offset),
                 $nameImport
             );
         } catch (NameAlreadyImportedException $error) {
             if ($error->existingName() === $fqn) {
-                return NameImportResult::createEmptyResult();
+                return ImportNameResult::createEmptyResult();
             }
 
             $name = FullyQualifiedName::fromString($fqn);
@@ -72,10 +71,10 @@ class NameImport
             $prefix = 'Aliased';
             return $this->import($uri, $offset, $type, $fqn, $prefix . $error->name());
         } catch (TransformException $error) {
-            return NameImportResult::createErrorResult($error);
+            return ImportNameResult::createErrorResult($error);
         }
 
         $lspTextEdits = TextEditConverter::toLspTextEdits($textEdits, $document->text);
-        return NameImportResult::createResult($lspTextEdits, $nameImport);
+        return ImportNameResult::createResult($nameImport, $lspTextEdits);
     }
 }
