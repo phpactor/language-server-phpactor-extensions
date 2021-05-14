@@ -42,7 +42,7 @@ class ExtractMethodCommand implements Command
         $this->workspace = $workspace;
     }
     /**
-     * @return Promise<ApplyWorkspaceEditResponse>
+     * @return Promise<ApplyWorkspaceEditResponse|null>
      */
     public function __invoke(string $uri, int $startOffset, int $endOffset): Promise
     {
