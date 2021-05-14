@@ -19,7 +19,7 @@ use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\CreateClassCommand
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\GenerateMethodCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportNameCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\TransformCommand;
-use Phpactor\Extension\LanguageServerCodeTransform\Model\ImportName\ImportName;
+use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImporter\NameImporter;
 use Phpactor\Extension\WorseReflection\WorseReflectionExtension;
 use Phpactor\Indexer\Model\SearchClient;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
@@ -57,7 +57,7 @@ class LanguageServerCodeTransformExtension implements Extension
     {
         $container->register(ImportNameCommand::class, function (Container $container) {
             return new ImportNameCommand(
-                $container->get(ImportName::class),
+                $container->get(NameImporter::class),
                 $container->get(ClientApi::class)
             );
         }, [
@@ -189,8 +189,8 @@ class LanguageServerCodeTransformExtension implements Extension
 
     private function registerModels(ContainerBuilder $container): void
     {
-        $container->register(ImportName::class, function (Container $container): ImportName {
-            return new ImportName(
+        $container->register(NameImporter::class, function (Container $container): NameImporter {
+            return new NameImporter(
                 $container->get(\Phpactor\CodeTransform\Domain\Refactor\ImportName::class),
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE)
             );

@@ -9,8 +9,8 @@ use Amp\Promise;
 use Phpactor\Completion\Core\Suggestion;
 use Phpactor\Completion\Core\TypedCompletorRegistry;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
-use Phpactor\Extension\LanguageServerCodeTransform\Model\ImportName\ImportName;
-use Phpactor\Extension\LanguageServerCodeTransform\Model\ImportName\ImportNameResult;
+use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImporter\NameImporterResult;
+use Phpactor\Extension\LanguageServerCompletion\Model\CompletionNameImporter;
 use Phpactor\Extension\LanguageServerCompletion\Util\PhpactorToLspCompletionType;
 use Phpactor\Extension\LanguageServerCompletion\Util\SuggestionNameFormatter;
 use Phpactor\LanguageServer\Core\Handler\CanRegisterCapabilities;
@@ -56,22 +56,22 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
     private $supportSnippets;
 
     /**
-     * @var ImportName
+     * @var CompletionNameImporter
      */
-    private $importName;
+    private $nameImporter;
 
     public function __construct(
         Workspace $workspace,
         TypedCompletorRegistry $registry,
         SuggestionNameFormatter $suggestionNameFormatter,
-        ImportName $importName,
+        CompletionNameImporter $nameImporter,
         bool $supportSnippets,
         bool $provideTextEdit = false
     ) {
         $this->registry = $registry;
         $this->provideTextEdit = $provideTextEdit;
         $this->workspace = $workspace;
-        $this->importName = $importName;
+        $this->nameImporter = $nameImporter;
         $this->suggestionNameFormatter = $suggestionNameFormatter;
         $this->supportSnippets = $supportSnippets;
     }
@@ -112,12 +112,11 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
                     ;
                 }
 
-                $importNameResult = $this->importClassOrFunctionName($suggestion, $params);
+                $nameImportResult = $this->importClassOrFunctionName($suggestion, $params);
 
-                if ($importNameResult->isSuccessAndHasAliasedNameImport()) {
-                    // todo is this the right place?
-                    $importName = $importNameResult->getNameImport()->alias();
-                    $insertText = str_replace($name, $importName, $insertText);
+                if ($nameImportResult->isSuccessAndHasAliasedNameImport()) {
+                    $aliasName = $nameImportResult->getNameImport()->alias();
+                    $insertText = str_replace($name, $aliasName, $insertText);
                 }
 
                 $items[] = CompletionItem::fromArray([
@@ -129,7 +128,7 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
                     'sortText' => $this->sortText($suggestion),
                     // todo convert text edit if there is an alias import
                     'textEdit' => $this->textEdit($suggestion, $textDocument),
-                    'additionalTextEdits' => $importNameResult->getTextEdits(),
+                    'additionalTextEdits' => $nameImportResult->getTextEdits(),
                     'insertTextFormat' => $insertTextFormat
                 ]);
 
@@ -178,24 +177,23 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
     private function importClassOrFunctionName(
         Suggestion $suggestion,
         CompletionParams $params
-    ): ImportNameResult {
+    ): NameImporterResult {
         $suggestionNameImport = $suggestion->nameImport();
 
         if (!$suggestionNameImport) {
-            return ImportNameResult::createEmptyResult();
+            return NameImporterResult::createEmptyResult();
         }
 
         $suggestionType = $suggestion->type();
 
         if (!in_array($suggestionType, [ 'class', 'function'])) {
-            return ImportNameResult::createEmptyResult();
+            return NameImporterResult::createEmptyResult();
         }
 
         $doc = $this->workspace->get($params->textDocument->uri);
-        // todo: avoid conversions?
         $offset = PositionConverter::positionToByteOffset($params->position, $doc->text);
 
-        return $this->importName->import(
+        return $this->nameImporter->import(
             $params->textDocument->uri,
             $offset->toInt(),
             $suggestionType,

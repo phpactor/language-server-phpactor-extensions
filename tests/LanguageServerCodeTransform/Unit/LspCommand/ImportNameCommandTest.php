@@ -5,8 +5,8 @@ namespace Phpactor\Extension\LanguageServerCodeTransform\Tests\Unit\LspCommand;
 use Amp\Promise;
 use Phpactor\CodeTransform\Domain\Exception\TransformException;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportNameCommand;
-use Phpactor\Extension\LanguageServerCodeTransform\Model\ImportName\ImportNameResult;
-use Phpactor\Extension\LanguageServerCodeTransform\Model\ImportName\ImportName;
+use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImporter\NameImporterResult;
+use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImporter\NameImporter;
 use Phpactor\LanguageServer\Core\Command\CommandDispatcher;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Core\Server\RpcClient\TestRpcClient;
@@ -45,14 +45,14 @@ class ImportNameCommandTest extends TestCase
     private $textEditProphecy;
 
     /**
-     * @var ObjectProphecy<ImportName>
+     * @var ObjectProphecy<NameImporter>
      */
     private $nameImportProphecy;
 
     protected function setUp(): void
     {
         $this->textEditProphecy = $this->prophesize(TextEdit::class);
-        $this->nameImportProphecy = $this->prophesize(ImportName::class);
+        $this->nameImportProphecy = $this->prophesize(NameImporter::class);
         $this->workspace = new Workspace();
         $this->rpcClient = TestRpcClient::create();
         $this->command = new ImportNameCommand(
@@ -73,7 +73,7 @@ class ImportNameCommandTest extends TestCase
             'class',
             'Foobar',
             null
-        )->willReturn(ImportNameResult::createResult(
+        )->willReturn(NameImporterResult::createResult(
             \Phpactor\CodeTransform\Domain\Refactor\ImportClass\NameImport::forClass('Foobar'),
             [$this->textEditProphecy->reveal()]
         ));
@@ -100,7 +100,7 @@ class ImportNameCommandTest extends TestCase
             'class',
             'Foobar',
             null
-        )->willReturn(ImportNameResult::createErrorResult(new TransformException('Sorry')));
+        )->willReturn(NameImporterResult::createErrorResult(new TransformException('Sorry')));
 
         (new CommandDispatcher([
             ImportNameCommand::NAME => $this->command

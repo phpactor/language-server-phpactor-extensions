@@ -1,6 +1,6 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerCodeTransform\Tests\Unit\Model\ImportName;
+namespace Phpactor\Extension\LanguageServerCodeTransform\Tests\Unit\Model\NameImporter;
 
 use Exception;
 use Generator;
@@ -11,7 +11,7 @@ use Phpactor\CodeTransform\Domain\Refactor\ImportClass\NameImport as ImportClass
 use Phpactor\CodeTransform\Domain\Refactor\ImportName as RefactorImportName;
 use Phpactor\CodeTransform\Domain\SourceCode;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
-use Phpactor\Extension\LanguageServerCodeTransform\Model\ImportName\ImportName;
+use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImporter\NameImporter;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\LanguageServerProtocol\TextEdit as LspTextEdit;
@@ -23,7 +23,7 @@ use Phpactor\TextDocument\TextEdits;
 use Prophecy\Prophecy\ObjectProphecy;
 use RuntimeException;
 
-class ImportNameTest extends TestCase
+class NameImporterTest extends TestCase
 {
     const EXAMPLE_CONTENT = 'hello this is some text';
     const EXAMPLE_PATH = '/foobar.php';
@@ -66,7 +66,7 @@ class ImportNameTest extends TestCase
     private $byteOffset;
 
     /**
-     * @var ImportName
+     * @var NameImporter
      */
     private $subject;
 
@@ -90,7 +90,7 @@ class ImportNameTest extends TestCase
             TextDocumentUri::fromString(self::EXAMPLE_PATH_URI)->path()
         );
 
-        $this->subject = new ImportName(
+        $this->subject = new NameImporter(
             $this->importNameProphecy->reveal(),
             $this->workspace
         );

@@ -4,7 +4,7 @@ namespace Phpactor\Extension\LanguageServerCodeTransform\LspCommand;
 
 use Amp\Promise;
 use Amp\Success;
-use Phpactor\Extension\LanguageServerCodeTransform\Model\ImportName\ImportName;
+use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImporter\NameImporter;
 use Phpactor\LanguageServer\Core\Command\Command;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServerProtocol\WorkspaceEdit;
@@ -14,7 +14,7 @@ class ImportNameCommand implements Command
     public const NAME = 'name_import';
 
     /**
-     * @var ImportName
+     * @var NameImporter
      */
     private $importName;
 
@@ -23,7 +23,7 @@ class ImportNameCommand implements Command
      */
     private $client;
 
-    public function __construct(ImportName $importName, ClientApi $client)
+    public function __construct(NameImporter $importName, ClientApi $client)
     {
         $this->importName = $importName;
         $this->client = $client;

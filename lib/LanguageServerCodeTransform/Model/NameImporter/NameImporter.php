@@ -1,6 +1,6 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerCodeTransform\Model\ImportName;
+namespace Phpactor\Extension\LanguageServerCodeTransform\Model\NameImporter;
 
 use Phpactor\CodeTransform\Domain\Exception\TransformException;
 use Phpactor\CodeTransform\Domain\Refactor\ImportClass\AliasAlreadyUsedException;
@@ -14,7 +14,7 @@ use Phpactor\Name\FullyQualifiedName;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocumentUri;
 
-class ImportName
+class NameImporter
 {
     /**
      * @var RefactorImportName
@@ -38,7 +38,7 @@ class ImportName
         string $type,
         string $fqn,
         ?string $alias = null
-    ): ImportNameResult {
+    ): NameImporterResult {
         $document = $this->workspace->get($uri);
         $sourceCode = SourceCode::fromStringAndPath(
             $document->text,
@@ -57,7 +57,7 @@ class ImportName
             );
         } catch (NameAlreadyImportedException $error) {
             if ($error->existingName() === $fqn) {
-                return ImportNameResult::createEmptyResult();
+                return NameImporterResult::createEmptyResult();
             }
 
             $name = FullyQualifiedName::fromString($fqn);
@@ -71,10 +71,10 @@ class ImportName
             $prefix = 'Aliased';
             return $this->import($uri, $offset, $type, $fqn, $prefix . $error->name());
         } catch (TransformException $error) {
-            return ImportNameResult::createErrorResult($error);
+            return NameImporterResult::createErrorResult($error);
         }
 
         $lspTextEdits = TextEditConverter::toLspTextEdits($textEdits, $document->text);
-        return ImportNameResult::createResult($nameImport, $lspTextEdits);
+        return NameImporterResult::createResult($nameImport, $lspTextEdits);
     }
 }

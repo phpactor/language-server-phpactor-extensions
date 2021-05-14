@@ -1,21 +1,21 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerCodeTransform\Tests\Unit\Model\ImportName;
+namespace Phpactor\Extension\LanguageServerCodeTransform\Tests\Unit\Model\NameImporter;
 
 use Exception;
 use Generator;
 use Phpactor\CodeTransform\Domain\Refactor\ImportClass\NameImport;
-use Phpactor\Extension\LanguageServerCodeTransform\Model\ImportName\ImportNameResult;
+use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImporter\NameImporterResult;
 use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\Range;
 use Phpactor\LanguageServerProtocol\TextEdit;
 use Phpactor\TestUtils\PHPUnit\TestCase;
 
-class ImportNameResultTest extends TestCase
+class NameImporterResultTest extends TestCase
 {
     public function testCreateEmptyResult(): void
     {
-        $result = ImportNameResult::createEmptyResult();
+        $result = NameImporterResult::createEmptyResult();
 
         self::assertTrue($result->isSuccess());
         self::assertNull($result->getNameImport());
@@ -27,7 +27,7 @@ class ImportNameResultTest extends TestCase
     public function testCreateErrorResult(): void
     {
         $error = new Exception('test');
-        $result = ImportNameResult::createErrorResult($error);
+        $result = NameImporterResult::createErrorResult($error);
 
         self::assertFalse($result->isSuccess());
         self::assertNull($result->getNameImport());
@@ -69,7 +69,7 @@ class ImportNameResultTest extends TestCase
         NameImport $nameImport,
         bool $expectedIsSuccessAndHasAliasedNameImport
     ): void {
-        $result = ImportNameResult::createResult($nameImport, $textEdits);
+        $result = NameImporterResult::createResult($nameImport, $textEdits);
 
         self::assertTrue($result->isSuccess());
         self::assertSame($nameImport, $result->getNameImport());

@@ -6,8 +6,10 @@ use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
 use Phpactor\Extension\Completion\CompletionExtension;
-use Phpactor\Extension\LanguageServerCodeTransform\Model\ImportName\ImportName;
+use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImporter\NameImporter;
+use Phpactor\Extension\LanguageServerCompletion\Adapter\LanguageServerCodeTransform\CodeTransformCompletionNameImporter;
 use Phpactor\Extension\LanguageServerCompletion\Handler\SignatureHelpHandler;
+use Phpactor\Extension\LanguageServerCompletion\Model\CompletionNameImporter;
 use Phpactor\Extension\LanguageServerCompletion\Util\SuggestionNameFormatter;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\LanguageServerCompletion\Handler\CompletionHandler;
@@ -37,6 +39,16 @@ class LanguageServerCompletionExtension implements Extension
     public function load(ContainerBuilder $container): void
     {
         $this->registerHandlers($container);
+        $this->registerAdapters($container);
+    }
+
+    private function registerAdapters(ContainerBuilder $container): void
+    {
+        $container->register(CompletionNameImporter::class, function (Container $container) {
+            return new CodeTransformCompletionNameImporter(
+                $container->get(NameImporter::class),
+            );
+        });
     }
 
     private function registerHandlers(ContainerBuilder $container): void
@@ -46,7 +58,7 @@ class LanguageServerCompletionExtension implements Extension
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
                 $container->get(CompletionExtension::SERVICE_REGISTRY),
                 $container->get(SuggestionNameFormatter::class),
-                $container->get(ImportName::class),
+                $container->get(CompletionNameImporter::class),
                 $this->clientCapabilities($container)->textDocument->completion->completionItem['snippetSupport'] ?? false
             );
         }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [

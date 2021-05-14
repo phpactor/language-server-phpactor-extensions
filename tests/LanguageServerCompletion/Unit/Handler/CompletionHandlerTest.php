@@ -10,9 +10,9 @@ use Phpactor\Completion\Core\Completor;
 use Phpactor\Completion\Core\Range as PhpactorRange;
 use Phpactor\Completion\Core\Suggestion;
 use Phpactor\Completion\Core\TypedCompletorRegistry;
-use Phpactor\Extension\LanguageServerCodeTransform\Model\ImportName\ImportName;
-use Phpactor\Extension\LanguageServerCodeTransform\Model\ImportName\ImportNameResult;
+use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImporter\NameImporterResult;
 use Phpactor\Extension\LanguageServerCompletion\Handler\CompletionHandler;
+use Phpactor\Extension\LanguageServerCompletion\Model\CompletionNameImporter;
 use Phpactor\Extension\LanguageServerCompletion\Util\SuggestionNameFormatter;
 use Phpactor\LanguageServer\LanguageServerTesterBuilder;
 use Phpactor\LanguageServer\Test\LanguageServerTester;
@@ -326,9 +326,9 @@ class CompletionHandlerTest extends TestCase
     /**
      * @param array<Suggestion> $suggestions
      * @param array $textEditsFor
-     * @return ImportName
+     * @return CompletionNameImporter
      */
-    private function createImportName(array $suggestions, array $textEditsFor): ImportName
+    private function createImportName(array $suggestions, array $textEditsFor): CompletionNameImporter
     {
         $results = [];
 
@@ -342,10 +342,10 @@ class CompletionHandlerTest extends TestCase
                 $nameImport = NameImport::forClass($suggestion->name());
             }
 
-            $results[] = ImportNameResult::createResult($nameImport, $textEdits);
+            $results[] = NameImporterResult::createResult($nameImport, $textEdits);
         }
 
-        $importNameMock = $this->getMockBuilder(ImportName::class)
+        $importNameMock = $this->getMockBuilder(CompletionNameImporter::class)
             ->disableOriginalConstructor()
             ->getMock();
 

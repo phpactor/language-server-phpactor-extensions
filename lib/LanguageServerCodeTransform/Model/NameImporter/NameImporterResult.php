@@ -1,12 +1,12 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerCodeTransform\Model\ImportName;
+namespace Phpactor\Extension\LanguageServerCodeTransform\Model\NameImporter;
 
 use Phpactor\CodeTransform\Domain\Refactor\ImportClass\NameImport;
 use Phpactor\LanguageServerProtocol\TextEdit as LspTextEdit;
 use Throwable;
 
-class ImportNameResult
+class NameImporterResult
 {
     /**
      * @var bool
@@ -75,25 +75,25 @@ class ImportNameResult
         return $this->error;
     }
 
-    public static function createEmptyResult(): ImportNameResult
+    public static function createEmptyResult(): NameImporterResult
     {
-        return new ImportNameResult(true, null, null, null);
+        return new NameImporterResult(true, null, null, null);
     }
 
     /**
      * @param NameImport $nameImport
      * @param array<LspTextEdit>|null $textEdits
-     * @return ImportNameResult
+     * @return NameImporterResult
      */
     public static function createResult(
         NameImport $nameImport,
         ?array $textEdits
-    ): ImportNameResult {
-        return new ImportNameResult(true, $nameImport, $textEdits, null);
+    ): NameImporterResult {
+        return new NameImporterResult(true, $nameImport, $textEdits, null);
     }
 
-    public static function createErrorResult(Throwable $error): ImportNameResult
+    public static function createErrorResult(Throwable $error): NameImporterResult
     {
-        return new ImportNameResult(false, null, null, $error);
+        return new NameImporterResult(false, null, null, $error);
     }
 }
