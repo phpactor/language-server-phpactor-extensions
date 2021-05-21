@@ -54,6 +54,30 @@ class ClassRenamerTest extends ReferenceRenamerIntegrationTestCase
             '<?php class Class2 { }',
         ];
 
+        yield 'interface' => [
+            '<?php <r>interface Inter<>face1 { }',
+            'Interface2',
+            '<?php interface Interface2 { }',
+        ];
+
+        yield 'interface: updates implements' => [
+            '<?php <r>interface Inter<>face1 { } class Class1 implements Interface1 { }',
+            'Interface2',
+            '<?php interface Interface2 { } class Class1 implements Interface2 { }',
+        ];
+
+        yield 'trait' => [
+            '<?php <r>trait Tra<>it1 { }',
+            'Trait2',
+            '<?php trait Trait2 { }',
+        ];
+
+        yield 'trait: updates uses' => [
+            '<?php <r>trait Tra<>it1 { } class Class1 { use Trait1; }',
+            'Trait2',
+            '<?php trait Trait2 { } class Class1 { use Trait2; }',
+        ];
+
         yield 'namespaced class' => [
             '<?php namespace Foo; <r>class Cl<>ass1 { }',
             'Class2',
