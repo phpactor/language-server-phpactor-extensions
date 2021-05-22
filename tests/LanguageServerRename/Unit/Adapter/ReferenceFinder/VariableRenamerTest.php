@@ -67,6 +67,14 @@ class VariableRenamerTest extends TestCase
             '<?php class Class1 { public function method1(){ [ ${{va<>r1}} ] = someFunc(); } }'
         ];
 
+        yield 'Rename variable in anonymous function use statement' => [
+            '<?php class Class1 { public function method1(string $var1){ $f = function() use (${{v<>ar1}}) {} } }'
+        ];
+
+        yield 'Rename variable in catch statatement' => [
+            '<?php class Class1 { public function method1(){ try { } catch(Exception ${{e<>xcp}}) {} } }'
+        ];
+
         yield 'NULL: Rename static property (definition)' => [
             '<?php class Class1 { public static $st<>aticProp; } }'
         ];
