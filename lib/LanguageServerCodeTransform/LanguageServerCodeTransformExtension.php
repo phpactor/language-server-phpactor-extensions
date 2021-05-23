@@ -4,6 +4,7 @@ namespace Phpactor\Extension\LanguageServerCodeTransform;
 
 use Phpactor\CodeTransform\Domain\Helper\MissingMethodFinder;
 use Phpactor\CodeTransform\Domain\Helper\UnresolvableClassNameFinder;
+use Phpactor\CodeTransform\Domain\Refactor\ExtractExpression;
 use Phpactor\CodeTransform\Domain\Refactor\ExtractMethod;
 use Phpactor\CodeTransform\Domain\Refactor\GenerateMethod;
 use Phpactor\CodeTransform\Domain\Refactor\ImportName;
@@ -14,11 +15,13 @@ use Phpactor\Extension\ClassToFile\ClassToFileExtension;
 use Phpactor\Extension\CodeTransform\CodeTransformExtension;
 use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
 use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\CreateClassProvider;
+use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\ExtractExpressionProvider;
 use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\ExtractMethodProvider;
 use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\GenerateMethodProvider;
 use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\ImportNameProvider;
 use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\TransformerCodeActionPovider;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\CreateClassCommand;
+use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ExtractExpressionCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ExtractMethodCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\GenerateMethodCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportAllUnresolvedNamesCommand;
@@ -139,6 +142,18 @@ class LanguageServerCodeTransformExtension implements Extension
                 'name' => ImportAllUnresolvedNamesCommand::NAME
             ],
         ]);
+        
+        $container->register(ExtractExpressionCommand::class, function (Container $container) {
+            return new ExtractExpressionCommand(
+                $container->get(ClientApi::class),
+                $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
+                $container->get(ExtractExpression::class)
+            );
+        }, [
+            LanguageServerExtension::TAG_COMMAND => [
+                'name' => ExtractExpressionCommand::NAME
+            ],
+        ]);
     }
 
     private function registerCodeActions(ContainerBuilder $container): void
@@ -230,6 +245,14 @@ class LanguageServerCodeTransformExtension implements Extension
         $container->register(ExtractMethodProvider::class, function (Container $container) {
             return new ExtractMethodProvider(
                 $container->get(ExtractMethod::class)
+            );
+        }, [
+            LanguageServerExtension::TAG_CODE_ACTION_PROVIDER => []
+        ]);
+
+        $container->register(ExtractExpressionProvider::class, function (Container $container) {
+            return new ExtractExpressionProvider(
+                $container->get(ExtractExpression::class)
             );
         }, [
             LanguageServerExtension::TAG_CODE_ACTION_PROVIDER => []
