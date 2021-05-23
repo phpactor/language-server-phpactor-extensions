@@ -3,15 +3,11 @@
 namespace Phpactor\Extension\LanguageServerCodeTransform\CodeAction;
 
 use Amp\Promise;
-use Phpactor\CodeTransform\Domain\Helper\UnresolvableClassNameFinder;
 use Phpactor\CodeTransform\Domain\NameWithByteOffset;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
+use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportAllUnresolvedNamesCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportNameCommand;
-use Phpactor\Indexer\Model\Query\Criteria;
-use Phpactor\Indexer\Model\Record;
-use Phpactor\Indexer\Model\Record\ConstantRecord;
-use Phpactor\Indexer\Model\Record\HasFullyQualifiedName;
-use Phpactor\Indexer\Model\SearchClient;
+use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\CandidateFinder;
 use Phpactor\LanguageServerProtocol\CodeAction;
 use Phpactor\LanguageServerProtocol\Command;
 use Phpactor\LanguageServerProtocol\Diagnostic;
@@ -20,69 +16,33 @@ use Phpactor\LanguageServerProtocol\Range;
 use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\LanguageServer\Core\CodeAction\CodeActionProvider;
 use Phpactor\LanguageServer\Core\Diagnostics\DiagnosticsProvider;
-use Phpactor\TextDocument\TextDocumentBuilder;
-use Phpactor\WorseReflection\Core\Exception\NotFound;
-use Phpactor\WorseReflection\Core\Reflector\FunctionReflector;
 use function Amp\call;
 use function Amp\delay;
 
 class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
 {
     /**
-     * @var UnresolvableClassNameFinder
+     * @var CandidateFinder
      */
     private $finder;
 
-    /**
-     * @var SearchClient
-     */
-    private $client;
 
-    /**
-     * @var bool
-     */
-    private $importGlobals;
-
-    /**
-     * @var FunctionReflector
-     */
-    private $functionReflector;
-
-    public function __construct(UnresolvableClassNameFinder $finder, FunctionReflector $functionReflector, SearchClient $client, bool $importGlobals = false)
+    public function __construct(CandidateFinder $finder)
     {
         $this->finder = $finder;
-        $this->client = $client;
-        $this->importGlobals = $importGlobals;
-        $this->functionReflector = $functionReflector;
     }
 
     public function provideActionsFor(TextDocumentItem $item, Range $range): Promise
     {
         return call(function () use ($item) {
-            $unresolvedNames = $this->finder->find(
-                TextDocumentBuilder::create($item->text)->uri($item->uri)->language('php')->build()
-            );
-
             $actions = [];
-            foreach ($unresolvedNames as $unresolvedName) {
-                if ($this->isUnresolvedGlobalFunction($unresolvedName)) {
-                    if (false === $this->importGlobals) {
-                        continue;
-                    }
-                    $actions[] = $this->codeActionForFqn($unresolvedName, $unresolvedName->name()->head()->__toString(), $item);
-                    continue;
-                }
-                assert($unresolvedName instanceof NameWithByteOffset);
+            foreach ($this->finder->importCandidates($item) as $candidate) {
+                $actions[] = $this->codeActionForFqn($candidate->unresolvedName(), $candidate->candidateFqn(), $item);
+                yield delay(1);
+            }
 
-                $candidates = $this->findCandidates($unresolvedName);
-
-                foreach ($candidates as $candidate) {
-                    assert($candidate instanceof HasFullyQualifiedName);
-
-                    $fqn = $candidate->fqn()->__toString();
-                    $actions[] = $this->codeActionForFqn($unresolvedName, $fqn, $item);
-                    yield delay(1);
-                }
+            if (count($actions) > 1) {
+                $actions[] = $this->addImportAllAction($item);
             }
 
             return $actions;
@@ -106,14 +66,7 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
     {
         return call(function () use ($textDocument) {
             $diagnostics = [];
-            $unresolvedNames = $this->finder->find(
-                TextDocumentBuilder::create($textDocument->text)->uri($textDocument->uri)->language('php')->build()
-            );
-
-            foreach ($unresolvedNames as $unresolvedName) {
-                if (false === $this->importGlobals && $this->isUnresolvedGlobalFunction($unresolvedName)) {
-                    continue;
-                }
+            foreach ($this->finder->unresolved($textDocument) as $unresolvedName) {
                 $diagnostics = array_merge(
                     $diagnostics,
                     $this->diagnosticsFromUnresolvedName($unresolvedName, $textDocument)
@@ -134,7 +87,7 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
             )
         );
 
-        $candidates = $this->findCandidates($unresolvedName);
+        $candidates = iterator_to_array($this->finder->importCandidates($item));
 
         if (count($candidates) === 0) {
             return [
@@ -152,15 +105,6 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
             ];
         }
 
-        // Remove constants for now
-        $candidates = array_filter($candidates, function (Record $record) {
-            return !$record instanceof ConstantRecord;
-        });
-
-        if (count($candidates) === 0) {
-            return [];
-        }
-
         return [
             new Diagnostic(
                 $range,
@@ -176,40 +120,6 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
         ];
     }
 
-    private function findCandidates(NameWithByteOffset $unresolvedName): array
-    {
-        $candidates = [];
-        foreach ($this->client->search(Criteria::and(
-            Criteria::or(
-                Criteria::isConstant(),
-                Criteria::isClass(),
-                Criteria::isFunction()
-            ),
-            Criteria::exactShortName($unresolvedName->name()->head()->__toString())
-        )) as $candidate) {
-            $candidates[] = $candidate;
-        }
-
-        return $candidates;
-    }
-
-    private function isUnresolvedGlobalFunction(NameWithByteOffset $unresolvedName): bool
-    {
-        if ($unresolvedName->type() !== NameWithByteOffset::TYPE_FUNCTION) {
-            return false;
-        }
-
-        try {
-            $s = $this->functionReflector->sourceCodeForFunction(
-                $unresolvedName->name()->head()->__toString()
-            );
-            return true;
-        } catch (NotFound $notFound) {
-        }
-
-        return false;
-    }
-
     private function codeActionForFqn(NameWithByteOffset $unresolvedName, string $fqn, TextDocumentItem $item): CodeAction
     {
         return CodeAction::fromArray([
@@ -219,7 +129,7 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
                 $fqn
             ),
             'kind' => 'quickfix.import_class',
-            'isPreferred' => true,
+            'isPreferred' => false,
             'diagnostics' => $this->diagnosticsFromUnresolvedName($unresolvedName, $item),
             'command' => new Command(
                 'Import name',
@@ -229,6 +139,25 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
                     $unresolvedName->byteOffset()->toInt(),
                     $unresolvedName->type(),
                     $fqn
+                ]
+            )
+        ]);
+    }
+
+    private function addImportAllAction(TextDocumentItem $item): CodeAction
+    {
+        return CodeAction::fromArray([
+            'title' => sprintf(
+                'Import all unresolved names',
+            ),
+            'kind' => 'quickfix.import_all_unresolved_names',
+            'isPreferred' => true,
+            'diagnostics' => [],
+            'command' => new Command(
+                'Import all unresolved names',
+                ImportAllUnresolvedNamesCommand::NAME,
+                [
+                    $item->uri,
                 ]
             )
         ]);

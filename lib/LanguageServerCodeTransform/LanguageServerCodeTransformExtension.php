@@ -21,8 +21,11 @@ use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\TransformerCodeAct
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\CreateClassCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ExtractMethodCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\GenerateMethodCommand;
+use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportAllUnresolvedNamesCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportNameCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\TransformCommand;
+use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\CandidateFinder;
+use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\NameImporter;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\WorseReflection\WorseReflectionExtension;
 use Phpactor\Indexer\Model\SearchClient;
@@ -58,9 +61,12 @@ class LanguageServerCodeTransformExtension implements Extension
 
     private function registerCommands(ContainerBuilder $container): void
     {
+        $container->register(NameImporter::class, function (Container $container) {
+            return new NameImporter($container->get(ImportName::class));
+        });
         $container->register(ImportNameCommand::class, function (Container $container) {
             return new ImportNameCommand(
-                $container->get(ImportName::class),
+                $container->get(NameImporter::class),
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
                 $container->get(TextEditConverter::class),
                 $container->get(ClientApi::class)
@@ -120,16 +126,34 @@ class LanguageServerCodeTransformExtension implements Extension
                 'name' => ExtractMethodCommand::NAME
             ],
         ]);
+
+        $container->register(ImportAllUnresolvedNamesCommand::class, function (Container $container) {
+            return new ImportAllUnresolvedNamesCommand(
+                $container->get(CandidateFinder::class),
+                $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
+                $container->get(ImportNameCommand::class),
+                $container->get(ClientApi::class)
+            );
+        }, [
+            LanguageServerExtension::TAG_COMMAND => [
+                'name' => ImportAllUnresolvedNamesCommand::NAME
+            ],
+        ]);
     }
 
     private function registerCodeActions(ContainerBuilder $container): void
     {
-        $container->register(ImportNameProvider::class, function (Container $container) {
-            return new ImportNameProvider(
+        $container->register(CandidateFinder::class, function (Container $container) {
+            return new CandidateFinder(
                 $container->get(UnresolvableClassNameFinder::class),
                 $container->get(WorseReflectionExtension::SERVICE_REFLECTOR),
                 $container->get(SearchClient::class),
                 $container->getParameter(self::PARAM_IMPORT_GLOBALS)
+            );
+        });
+        $container->register(ImportNameProvider::class, function (Container $container) {
+            return new ImportNameProvider(
+                $container->get(CandidateFinder::class)
             );
         }, [
             LanguageServerExtension::TAG_CODE_ACTION_PROVIDER => [],
