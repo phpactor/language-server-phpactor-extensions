@@ -7,6 +7,8 @@ use Phpactor\CodeTransform\Domain\NameWithByteOffset;
 use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\CandidateFinder;
 use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\NameCandidate;
 use Phpactor\Indexer\Model\SearchClient;
+use Phpactor\LanguageServerProtocol\MessageActionItem;
+use Phpactor\LanguageServerProtocol\ShowMessageRequestParams;
 use Phpactor\LanguageServer\Core\Command\CommandDispatcher;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
@@ -59,7 +61,7 @@ class ImportAllUnresolvedNamesCommand
             foreach ($this->candidateFinder->unresolved($item) as $unresolvedName) {
                 assert($unresolvedName instanceof NameWithByteOffset);
                 $candidates = iterator_to_array($this->candidateFinder->candidatesForUnresolvedName($unresolvedName));
-                $candidate = $this->resolveCandidate($candidates);
+                $candidate = yield $this->resolveCandidate($candidates);
                 if (null === $candidate) {
                     $this->client->window()->showMessage()->warning(sprintf(
                         'Class "%s" has no candidates',
@@ -77,12 +79,36 @@ class ImportAllUnresolvedNamesCommand
         });
     }
 
-    private function resolveCandidate(array $candidates): ?NameCandidate
+    /**
+     * @return Promise<?NameCandidate>
+     */
+    private function resolveCandidate(NameWithByteOffset $unresolved, array $candidates): Promise
     {
-        foreach ($candidates as $candidate) {
-            return $candidate;
-        }
+        return call(function () {
+            foreach ($candidates as $candidate) {
+                if (count($candidates) === 1) {
+                    return $candidate;
+                }
+                break;
+            }
 
-        return null;
+            if (count($candidates) === 0) {
+                return null;
+            }
+
+            $choice = yield $this->client->window()->showMessageRequest()->info(sprintf(
+                'Ambiguous class "%s":', $unresolved->name()->__toString()
+            ), array_map(function (NameCandidate $candidate) {
+                return $candidate->candidateFqn();
+            }, $candidates));
+
+            foreach ($candidates as $candidate) {
+                if ($candidate->candidateFqn() === $choice) {
+                    return $candidate;
+                }
+            }
+
+            return null;
+        });
     }
 }
