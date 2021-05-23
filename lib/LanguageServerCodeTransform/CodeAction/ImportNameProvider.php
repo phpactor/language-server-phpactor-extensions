@@ -87,7 +87,7 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
             )
         );
 
-        $candidates = iterator_to_array($this->finder->importCandidates($item));
+        $candidates = iterator_to_array($this->finder->candidatesForUnresolvedName($unresolvedName));
 
         if (count($candidates) === 0) {
             return [
