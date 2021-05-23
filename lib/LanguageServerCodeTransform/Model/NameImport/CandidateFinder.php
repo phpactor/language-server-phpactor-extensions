@@ -16,7 +16,7 @@ use Phpactor\WorseReflection\Core\Reflector\FunctionReflector;
 use Phpactor\WorseReflection\Core\Exception\NotFound;
 use function Amp\call;
 
-final class CandidateFinder
+class CandidateFinder
 {
     /**
      * @var UnresolvableClassNameFinder

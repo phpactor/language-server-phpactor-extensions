@@ -9,6 +9,7 @@ use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\NameCandidat
 use Phpactor\Indexer\Model\SearchClient;
 use Phpactor\LanguageServerProtocol\MessageActionItem;
 use Phpactor\LanguageServerProtocol\ShowMessageRequestParams;
+use Phpactor\LanguageServer\Core\Command\Command;
 use Phpactor\LanguageServer\Core\Command\CommandDispatcher;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
@@ -16,7 +17,7 @@ use Phpactor\WorseReflection\Core\Reflector\FunctionReflector;
 use Phpactor\CodeTransform\Domain\Helper\UnresolvableClassNameFinder;
 use function Amp\call;
 
-class ImportAllUnresolvedNamesCommand
+class ImportAllUnresolvedNamesCommand implements Command
 {
     public const NAME = 'import_all_unresolved_names';
 
@@ -56,17 +57,18 @@ class ImportAllUnresolvedNamesCommand
         string $uri
     ): Promise
     {
-        return call(function () {
+        return call(function () use ($uri) {
             $item = $this->workspace->get($uri);
             foreach ($this->candidateFinder->unresolved($item) as $unresolvedName) {
                 assert($unresolvedName instanceof NameWithByteOffset);
                 $candidates = iterator_to_array($this->candidateFinder->candidatesForUnresolvedName($unresolvedName));
-                $candidate = yield $this->resolveCandidate($candidates);
+                $candidate = yield $this->resolveCandidate($unresolvedName, $candidates);
                 if (null === $candidate) {
                     $this->client->window()->showMessage()->warning(sprintf(
                         'Class "%s" has no candidates',
                         $unresolvedName->name()->__toString()
                     ));
+                    continue;
                 }
 
                 $this->dispatcher->dispatch(ImportNameCommand::NAME, [
@@ -84,7 +86,7 @@ class ImportAllUnresolvedNamesCommand
      */
     private function resolveCandidate(NameWithByteOffset $unresolved, array $candidates): Promise
     {
-        return call(function () {
+        return call(function () use ($unresolved, $candidates) {
             foreach ($candidates as $candidate) {
                 if (count($candidates) === 1) {
                     return $candidate;
@@ -98,12 +100,12 @@ class ImportAllUnresolvedNamesCommand
 
             $choice = yield $this->client->window()->showMessageRequest()->info(sprintf(
                 'Ambiguous class "%s":', $unresolved->name()->__toString()
-            ), array_map(function (NameCandidate $candidate) {
-                return $candidate->candidateFqn();
+            ), ...array_map(function (NameCandidate $candidate) {
+                return new MessageActionItem($candidate->candidateFqn());
             }, $candidates));
 
             foreach ($candidates as $candidate) {
-                if ($candidate->candidateFqn() === $choice) {
+                if ($candidate->candidateFqn() === $choice->title) {
                     return $candidate;
                 }
             }
