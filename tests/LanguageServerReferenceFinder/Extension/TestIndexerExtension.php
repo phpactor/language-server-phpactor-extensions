@@ -16,7 +16,10 @@ class TestIndexerExtension implements Extension
     public function load(ContainerBuilder $container): void
     {
         $container->register(Indexer::class, function () {
-            return IndexAgentBuilder::create(getcwd(), getcwd())->buildTestAgent()->indexer();
+            return IndexAgentBuilder::create(
+                __DIR__ . '/../Workspace',
+                __DIR__ . '/../Workspace',
+            )->buildTestAgent()->indexer();
         });
     }
 
