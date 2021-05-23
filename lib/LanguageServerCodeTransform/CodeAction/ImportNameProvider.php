@@ -3,17 +3,11 @@
 namespace Phpactor\Extension\LanguageServerCodeTransform\CodeAction;
 
 use Amp\Promise;
-use Phpactor\CodeTransform\Domain\Helper\UnresolvableClassNameFinder;
 use Phpactor\CodeTransform\Domain\NameWithByteOffset;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportAllUnresolvedNamesCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportNameCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\CandidateFinder;
-use Phpactor\Indexer\Model\Query\Criteria;
-use Phpactor\Indexer\Model\Record;
-use Phpactor\Indexer\Model\Record\ConstantRecord;
-use Phpactor\Indexer\Model\Record\HasFullyQualifiedName;
-use Phpactor\Indexer\Model\SearchClient;
 use Phpactor\LanguageServerProtocol\CodeAction;
 use Phpactor\LanguageServerProtocol\Command;
 use Phpactor\LanguageServerProtocol\Diagnostic;
@@ -22,9 +16,6 @@ use Phpactor\LanguageServerProtocol\Range;
 use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\LanguageServer\Core\CodeAction\CodeActionProvider;
 use Phpactor\LanguageServer\Core\Diagnostics\DiagnosticsProvider;
-use Phpactor\TextDocument\TextDocumentBuilder;
-use Phpactor\WorseReflection\Core\Exception\NotFound;
-use Phpactor\WorseReflection\Core\Reflector\FunctionReflector;
 use function Amp\call;
 use function Amp\delay;
 
@@ -112,10 +103,6 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
                     'phpactor'
                 )
             ];
-        }
-
-        if (count($candidates) === 0) {
-            return [];
         }
 
         return [

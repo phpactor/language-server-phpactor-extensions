@@ -14,7 +14,6 @@ use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\TextDocument\TextDocumentBuilder;
 use Phpactor\WorseReflection\Core\Reflector\FunctionReflector;
 use Phpactor\WorseReflection\Core\Exception\NotFound;
-use function Amp\call;
 
 class CandidateFinder
 {
@@ -66,8 +65,7 @@ class CandidateFinder
      */
     public function importCandidates(
         TextDocumentItem $item
-    ): Generator
-    {
+    ): Generator {
         $actions = [];
         foreach ($this->unresolved($item) as $unresolvedName) {
             yield from $this->candidatesForUnresolvedName($unresolvedName);

@@ -170,7 +170,7 @@ class ImportNameProviderTest extends IntegrationTestCase
                 $bar = [];
                 explode(array_keys($bar));
                 EOT
-        , 2, 2, true
+        , 3, 2, true
         ];
 
         yield 'constant' => [

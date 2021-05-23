@@ -2,7 +2,6 @@
 
 namespace Phpactor\Extension\LanguageServerCodeTransform\Tests\Unit\LspCommand;
 
-use Amp\Promise;
 use Amp\Success;
 use PHPUnit\Framework\TestCase;
 use Phpactor\CodeTransform\Domain\NameWithByteOffset;
@@ -14,9 +13,7 @@ use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\NameCandidat
 use Phpactor\LanguageServerProtocol\MessageActionItem;
 use Phpactor\LanguageServer\Core\Command\CommandDispatcher;
 use Phpactor\LanguageServer\LanguageServerTesterBuilder;
-use Phpactor\LanguageServer\Test\LanguageServerTester;
 use Phpactor\Name\FullyQualifiedName;
-use Phpactor\Name\Name;
 use Phpactor\TextDocument\ByteOffset;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
@@ -24,9 +21,9 @@ use function Amp\Promise\wait;
 
 class ImportAllUnresolvedNamesCommandTest extends TestCase
 {
+    use ProphecyTrait;
     const EXAMPLE_URI = 'file:///foobar';
     const EXAMPLE_CANDIDATE = 'Foobar';
-    use ProphecyTrait;
 
     /**
      * @var CandidateFinder
@@ -137,7 +134,6 @@ class ImportAllUnresolvedNamesCommandTest extends TestCase
             )
         );
         return $builder;
-
     }
 
     private function createUnresolvedName(): NameWithByteOffset

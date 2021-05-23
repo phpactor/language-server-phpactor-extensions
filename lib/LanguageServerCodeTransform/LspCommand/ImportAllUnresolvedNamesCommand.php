@@ -6,15 +6,10 @@ use Amp\Promise;
 use Phpactor\CodeTransform\Domain\NameWithByteOffset;
 use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\CandidateFinder;
 use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\NameCandidate;
-use Phpactor\Indexer\Model\SearchClient;
 use Phpactor\LanguageServerProtocol\MessageActionItem;
-use Phpactor\LanguageServerProtocol\ShowMessageRequestParams;
 use Phpactor\LanguageServer\Core\Command\Command;
-use Phpactor\LanguageServer\Core\Command\CommandDispatcher;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
-use Phpactor\WorseReflection\Core\Reflector\FunctionReflector;
-use Phpactor\CodeTransform\Domain\Helper\UnresolvableClassNameFinder;
 use function Amp\call;
 
 class ImportAllUnresolvedNamesCommand implements Command
@@ -53,10 +48,12 @@ class ImportAllUnresolvedNamesCommand implements Command
         $this->importName = $importName;
     }
 
+    /**
+     * @return Promise<void>
+     */
     public function __invoke(
         string $uri
-    ): Promise
-    {
+    ): Promise {
         return call(function () use ($uri) {
             $item = $this->workspace->get($uri);
             foreach ($this->candidateFinder->unresolved($item) as $unresolvedName) {
@@ -99,7 +96,8 @@ class ImportAllUnresolvedNamesCommand implements Command
             }
 
             $choice = yield $this->client->window()->showMessageRequest()->info(sprintf(
-                'Ambiguous class "%s":', $unresolved->name()->__toString()
+                'Ambiguous class "%s":',
+                $unresolved->name()->__toString()
             ), ...array_map(function (NameCandidate $candidate) {
                 return new MessageActionItem($candidate->candidateFqn());
             }, $candidates));
