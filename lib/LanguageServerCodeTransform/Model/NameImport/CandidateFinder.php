@@ -76,6 +76,32 @@ final class CandidateFinder
         return $actions;
     }
 
+    public function candidatesForUnresolvedName(NameWithByteOffset $unresolvedName): Generator
+    {
+        if ($this->isUnresolvedGlobalFunction($unresolvedName)) {
+            if (false === $this->importGlobals) {
+                return;
+            }
+            yield new NameCandidate($unresolvedName, $unresolvedName->name()->head()->__toString());
+            return;
+        }
+        assert($unresolvedName instanceof NameWithByteOffset);
+        
+        $candidates = $this->findCandidates($unresolvedName);
+        
+        foreach ($candidates as $candidate) {
+            assert($candidate instanceof HasFullyQualifiedName);
+        
+            // skip constants for now
+            if ($candidate instanceof ConstantRecord) {
+                continue;
+            }
+        
+            $fqn = $candidate->fqn()->__toString();
+            yield new NameCandidate($unresolvedName, $candidate->fqn());
+        }
+    }
+
     private function isUnresolvedGlobalFunction(NameWithByteOffset $unresolvedName): bool
     {
         if ($unresolvedName->type() !== NameWithByteOffset::TYPE_FUNCTION) {
@@ -108,31 +134,5 @@ final class CandidateFinder
         }
 
         return $candidates;
-    }
-
-    private function candidatesForUnresolvedName($unresolvedName): Generator
-    {
-        if ($this->isUnresolvedGlobalFunction($unresolvedName)) {
-            if (false === $this->importGlobals) {
-                return;
-            }
-            yield new NameCandidate($unresolvedName, $unresolvedName->name()->head()->__toString());
-            return;
-        }
-        assert($unresolvedName instanceof NameWithByteOffset);
-        
-        $candidates = $this->findCandidates($unresolvedName);
-        
-        foreach ($candidates as $candidate) {
-            assert($candidate instanceof HasFullyQualifiedName);
-        
-            // skip constants for now
-            if ($candidate instanceof ConstantRecord) {
-                continue;
-            }
-        
-            $fqn = $candidate->fqn()->__toString();
-            yield new NameCandidate($unresolvedName, $candidate->fqn());
-        }
     }
 }
