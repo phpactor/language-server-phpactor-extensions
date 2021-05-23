@@ -23,7 +23,8 @@ use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ExtractMethodComma
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\GenerateMethodCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportNameCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\TransformCommand;
-use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImporter;
+use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\CandidateFinder;
+use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\NameImporter;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\WorseReflection\WorseReflectionExtension;
 use Phpactor\Indexer\Model\SearchClient;
@@ -128,12 +129,17 @@ class LanguageServerCodeTransformExtension implements Extension
 
     private function registerCodeActions(ContainerBuilder $container): void
     {
-        $container->register(ImportNameProvider::class, function (Container $container) {
-            return new ImportNameProvider(
+        $container->register(CandidateFinder::class, function (Container $container) {
+            return new CandidateFinder(
                 $container->get(UnresolvableClassNameFinder::class),
                 $container->get(WorseReflectionExtension::SERVICE_REFLECTOR),
                 $container->get(SearchClient::class),
                 $container->getParameter(self::PARAM_IMPORT_GLOBALS)
+            );
+        });
+        $container->register(ImportNameProvider::class, function (Container $container) {
+            return new ImportNameProvider(
+                $container->get(CandidateFinder::class)
             );
         }, [
             LanguageServerExtension::TAG_CODE_ACTION_PROVIDER => [],

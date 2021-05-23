@@ -1,6 +1,6 @@
 <?php
 
-namespace Phpactor\Extension\LanguageServerCodeTransform\Model;
+namespace Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport;
 
 use Amp\Promise;
 use Amp\Success;
