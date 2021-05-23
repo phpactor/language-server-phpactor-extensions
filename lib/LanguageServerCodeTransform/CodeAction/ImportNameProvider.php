@@ -148,13 +148,13 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
     {
         return CodeAction::fromArray([
             'title' => sprintf(
-                'Import all unresolved classes',
+                'Import all unresolved names',
             ),
-            'kind' => 'quickfix.import_all_unresolved_classes',
+            'kind' => 'quickfix.import_all_unresolved_names',
             'isPreferred' => true,
             'diagnostics' => [],
             'command' => new Command(
-                'Import all unresolved classes',
+                'Import all unresolved names',
                 ImportAllUnresolvedNamesCommand::NAME,
                 [
                     $item->uri,
