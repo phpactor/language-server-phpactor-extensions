@@ -44,7 +44,7 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
     {
         return call(function () use ($item) {
             $actions = [];
-            foreach ($this->finder->find($item) as $candidate) {
+            foreach ($this->finder->importCandidates($item) as $candidate) {
                 $actions[] = $this->codeActionForFqn($candidate->unresolvedName(), $candidate->candidateFqn(), $item);
                 yield delay(1);
             }
@@ -91,7 +91,7 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
             )
         );
 
-        $candidates = iterator_to_array($this->finder->find($item));
+        $candidates = iterator_to_array($this->finder->importCandidates($item));
 
         if (count($candidates) === 0) {
             return [

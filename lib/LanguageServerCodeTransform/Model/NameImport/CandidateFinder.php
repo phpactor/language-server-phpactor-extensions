@@ -64,34 +64,13 @@ final class CandidateFinder
     /**
      * @return Generator<NameCandidate>
      */
-    public function find(
+    public function importCandidates(
         TextDocumentItem $item
     ): Generator
     {
         $actions = [];
         foreach ($this->unresolved($item) as $unresolvedName) {
-            if ($this->isUnresolvedGlobalFunction($unresolvedName)) {
-                if (false === $this->importGlobals) {
-                    continue;
-                }
-                yield new NameCandidate($unresolvedName, $unresolvedName->name()->head()->__toString());
-                continue;
-            }
-            assert($unresolvedName instanceof NameWithByteOffset);
-
-            $candidates = $this->findCandidates($unresolvedName);
-
-            foreach ($candidates as $candidate) {
-                assert($candidate instanceof HasFullyQualifiedName);
-
-                // skip constants for now
-                if ($candidate instanceof ConstantRecord) {
-                    continue;
-                }
-
-                $fqn = $candidate->fqn()->__toString();
-                yield new NameCandidate($unresolvedName, $candidate->fqn());
-            }
+            yield from $this->candidatesForUnresolvedName($unresolvedName);
         }
 
         return $actions;
@@ -129,5 +108,31 @@ final class CandidateFinder
         }
 
         return $candidates;
+    }
+
+    private function candidatesForUnresolvedName($unresolvedName): Generator
+    {
+        if ($this->isUnresolvedGlobalFunction($unresolvedName)) {
+            if (false === $this->importGlobals) {
+                return;
+            }
+            yield new NameCandidate($unresolvedName, $unresolvedName->name()->head()->__toString());
+            return;
+        }
+        assert($unresolvedName instanceof NameWithByteOffset);
+        
+        $candidates = $this->findCandidates($unresolvedName);
+        
+        foreach ($candidates as $candidate) {
+            assert($candidate instanceof HasFullyQualifiedName);
+        
+            // skip constants for now
+            if ($candidate instanceof ConstantRecord) {
+                continue;
+            }
+        
+            $fqn = $candidate->fqn()->__toString();
+            yield new NameCandidate($unresolvedName, $candidate->fqn());
+        }
     }
 }
