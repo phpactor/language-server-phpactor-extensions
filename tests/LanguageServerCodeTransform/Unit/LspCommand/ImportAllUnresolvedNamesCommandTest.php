@@ -36,12 +36,12 @@ class ImportAllUnresolvedNamesCommandTest extends TestCase
     /**
      * @var CommandDispatcher
      */
-    private $commandDispatcher;
+    private $importName;
 
     public function setUp(): void
     {
         $this->candidateFinder = $this->prophesize(CandidateFinder::class);
-        $this->commandDispatcher = $this->prophesize(CommandDispatcher::class);
+        $this->importName = $this->prophesize(ImportNameCommand::class);
     }
 
     public function testNoUnresolvedNamesDoesNothing(): void
@@ -91,7 +91,7 @@ class ImportAllUnresolvedNamesCommandTest extends TestCase
         $this->candidateFinder->candidatesForUnresolvedName($unresolvedName)->willYield([
             new NameCandidate($unresolvedName, self::EXAMPLE_CANDIDATE)
         ]);
-        $this->commandDispatcher->dispatch(ImportNameCommand::NAME, Argument::any())->willReturn(new Success(true))->shouldBeCalled();
+        $this->importName->__invoke(Argument::cetera())->willReturn(new Success(true))->shouldBeCalled();
 
         wait($server->workspace()->executeCommand(ImportAllUnresolvedNamesCommand::NAME, [
             self::EXAMPLE_URI
@@ -112,7 +112,7 @@ class ImportAllUnresolvedNamesCommandTest extends TestCase
             new NameCandidate($unresolvedName, self::EXAMPLE_CANDIDATE),
             new NameCandidate($unresolvedName, 'Barfoo')
         ]);
-        $this->commandDispatcher->dispatch(ImportNameCommand::NAME, Argument::any())->willReturn(new Success(true))->shouldBeCalled();
+        $this->importName->__invoke(Argument::cetera())->willReturn(new Success(true))->shouldBeCalled();
 
         $promise = $server->workspace()->executeCommand(ImportAllUnresolvedNamesCommand::NAME, [
             self::EXAMPLE_URI
@@ -132,7 +132,7 @@ class ImportAllUnresolvedNamesCommandTest extends TestCase
             new ImportAllUnresolvedNamesCommand(
                 $this->candidateFinder->reveal(),
                 $builder->workspace(),
-                $this->commandDispatcher->reveal(),
+                $this->importName->reveal(),
                 $builder->clientApi()
             )
         );
