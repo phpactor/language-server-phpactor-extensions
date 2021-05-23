@@ -1,7 +1,9 @@
 <?php
 
-namespace Phpactor\Extension;
+use PhpBench\Tests\Unit\Benchmark\Metadata\classes\Test;
+use Phpactor\ClassMover\FoundReferences;
+use http\Client\Request;
 
-class test2
-{
-}
+new Request;
+new Test;
+new FoundReferences;

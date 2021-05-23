@@ -32,25 +32,25 @@ class ImportAllUnresolvedNamesCommand implements Command
     private $workspace;
 
     /**
-     * @var CommandDispatcher
-     */
-    private $dispatcher;
-
-    /**
      * @var ClientApi
      */
     private $client;
 
+    /**
+     * @var ImportNameCommand
+     */
+    private $importName;
+
     public function __construct(
         CandidateFinder $candidateFinder,
         Workspace $workspace,
-        CommandDispatcher $dispatcher,
+        ImportNameCommand $importName,
         ClientApi $client
     ) {
         $this->candidateFinder = $candidateFinder;
         $this->workspace = $workspace;
-        $this->dispatcher = $dispatcher;
         $this->client = $client;
+        $this->importName = $importName;
     }
 
     public function __invoke(
@@ -71,12 +71,12 @@ class ImportAllUnresolvedNamesCommand implements Command
                     continue;
                 }
 
-                $this->dispatcher->dispatch(ImportNameCommand::NAME, [
+                yield $this->importName->__invoke(
                     $uri,
-                    $unresolvedName->byteOffset(),
+                    $unresolvedName->byteOffset()->toInt(),
                     $unresolvedName->type(),
                     $candidate->candidateFqn()
-                ]);
+                );
             }
         });
     }

@@ -21,6 +21,7 @@ use Phpactor\Extension\LanguageServerCodeTransform\CodeAction\TransformerCodeAct
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\CreateClassCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ExtractMethodCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\GenerateMethodCommand;
+use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportAllUnresolvedNamesCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportNameCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\TransformCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\CandidateFinder;
@@ -28,6 +29,7 @@ use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\NameImporter
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\WorseReflection\WorseReflectionExtension;
 use Phpactor\Indexer\Model\SearchClient;
+use Phpactor\LanguageServer\Core\Command\CommandDispatcher;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\MapResolver\Resolver;
 use Phpactor\TextDocument\TextDocumentLocator;
@@ -123,6 +125,19 @@ class LanguageServerCodeTransformExtension implements Extension
         }, [
             LanguageServerExtension::TAG_COMMAND => [
                 'name' => ExtractMethodCommand::NAME
+            ],
+        ]);
+
+        $container->register(ImportAllUnresolvedNamesCommand::class, function (Container $container) {
+            return new ImportAllUnresolvedNamesCommand(
+                $container->get(CandidateFinder::class),
+                $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
+                $container->get(ImportNameCommand::class),
+                $container->get(ClientApi::class)
+            );
+        }, [
+            LanguageServerExtension::TAG_COMMAND => [
+                'name' => ImportAllUnresolvedNamesCommand::NAME
             ],
         ]);
     }

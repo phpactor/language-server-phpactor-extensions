@@ -6,6 +6,7 @@ use Amp\Promise;
 use Phpactor\CodeTransform\Domain\Helper\UnresolvableClassNameFinder;
 use Phpactor\CodeTransform\Domain\NameWithByteOffset;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
+use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportAllUnresolvedNamesCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportNameCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\CandidateFinder;
 use Phpactor\Indexer\Model\Query\Criteria;
@@ -47,6 +48,10 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
             foreach ($this->finder->importCandidates($item) as $candidate) {
                 $actions[] = $this->codeActionForFqn($candidate->unresolvedName(), $candidate->candidateFqn(), $item);
                 yield delay(1);
+            }
+
+            if (count($actions) > 1) {
+                $actions[] = $this->addImportAllAction($item);
             }
 
             return $actions;
@@ -137,7 +142,7 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
                 $fqn
             ),
             'kind' => 'quickfix.import_class',
-            'isPreferred' => true,
+            'isPreferred' => false,
             'diagnostics' => $this->diagnosticsFromUnresolvedName($unresolvedName, $item),
             'command' => new Command(
                 'Import name',
@@ -147,6 +152,25 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
                     $unresolvedName->byteOffset()->toInt(),
                     $unresolvedName->type(),
                     $fqn
+                ]
+            )
+        ]);
+    }
+
+    private function addImportAllAction(TextDocumentItem $item): CodeAction
+    {
+        return CodeAction::fromArray([
+            'title' => sprintf(
+                'Import all unresolved classes',
+            ),
+            'kind' => 'quickfix.import_all_unresolved_classes',
+            'isPreferred' => true,
+            'diagnostics' => [],
+            'command' => new Command(
+                'Import all unresolved classes',
+                ImportAllUnresolvedNamesCommand::NAME,
+                [
+                    $item->uri,
                 ]
             )
         ]);
