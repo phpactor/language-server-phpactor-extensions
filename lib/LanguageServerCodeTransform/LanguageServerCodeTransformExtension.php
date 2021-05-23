@@ -23,6 +23,7 @@ use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ExtractMethodComma
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\GenerateMethodCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportNameCommand;
 use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\TransformCommand;
+use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImporter;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\WorseReflection\WorseReflectionExtension;
 use Phpactor\Indexer\Model\SearchClient;
@@ -58,9 +59,12 @@ class LanguageServerCodeTransformExtension implements Extension
 
     private function registerCommands(ContainerBuilder $container): void
     {
+        $container->register(NameImporter::class, function (Container $container) {
+            return new NameImporter($container->get(ImportName::class));
+        });
         $container->register(ImportNameCommand::class, function (Container $container) {
             return new ImportNameCommand(
-                $container->get(ImportName::class),
+                $container->get(NameImporter::class),
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
                 $container->get(TextEditConverter::class),
                 $container->get(ClientApi::class)

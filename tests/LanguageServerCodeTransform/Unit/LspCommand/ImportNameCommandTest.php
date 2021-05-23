@@ -4,6 +4,7 @@ namespace Phpactor\Extension\LanguageServerCodeTransform\Tests\Unit\LspCommand;
 
 use Amp\Promise;
 use Phpactor\Extension\LanguageServerBridge\TextDocument\WorkspaceTextDocumentLocator;
+use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImporter;
 use Phpactor\LanguageServerProtocol\ApplyWorkspaceEditResponse;
 use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\CodeTransform\Domain\Exception\TransformException;
@@ -63,7 +64,7 @@ class ImportNameCommandTest extends TestCase
         $this->rpcClient = TestRpcClient::create();
         $this->converter = new TextEditConverter(new LocationConverter(new WorkspaceTextDocumentLocator($this->workspace)));
         $this->command = new ImportNameCommand(
-            $this->importName->reveal(),
+            new NameImporter($this->importName->reveal()),
             $this->workspace,
             $this->converter,
             new ClientApi($this->rpcClient)

@@ -4,6 +4,7 @@ namespace Phpactor\Extension\LanguageServerCodeTransform\LspCommand;
 
 use Amp\Promise;
 use Amp\Success;
+use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImporter;
 use Phpactor\LanguageServerProtocol\WorkspaceEdit;
 use Phpactor\CodeTransform\Domain\Exception\TransformException;
 use Phpactor\CodeTransform\Domain\Refactor\ImportClass\AliasAlreadyUsedException;
@@ -43,16 +44,21 @@ class ImportNameCommand implements Command
      */
     private $client;
 
+    /**
+     * @var NameImporter
+     */
+    private $nameImporter;
+
     public function __construct(
-        ImportName $importName,
+        NameImporter $nameImporter,
         Workspace $workspace,
         TextEditConverter $textEditConverter,
         ClientApi $client
     ) {
-        $this->importName = $importName;
         $this->workspace = $workspace;
         $this->textEditConverter = $textEditConverter;
         $this->client = $client;
+        $this->nameImporter = $nameImporter;
     }
 
     public function __invoke(
@@ -63,38 +69,15 @@ class ImportNameCommand implements Command
         ?string $alias = null
     ): Promise {
         $document = $this->workspace->get($uri);
-        $sourceCode = SourceCode::fromStringAndPath(
-            $document->text,
-            TextDocumentUri::fromString($document->uri)->path()
-        );
-
-        $nameImport = $type === 'function' ?
-            NameImport::forFunction($fqn, $alias) :
-            NameImport::forClass($fqn, $alias);
 
         try {
-            $textEdits = $this->importName->importName(
-                $sourceCode,
-                ByteOffset::fromInt($offset),
-                $nameImport
-            );
-        } catch (NameAlreadyImportedException $error) {
-            if ($error->existingName() === $fqn) {
-                return new Success(null);
-            }
-
-            $name = FullyQualifiedName::fromString($fqn);
-            $prefix = 'Aliased';
-            if (isset($name->toArray()[0])) {
-                $prefix = $name->toArray()[0];
-            }
-
-            return $this->__invoke($uri, $offset, $type, $fqn, $prefix . $error->name());
-        } catch (AliasAlreadyUsedException $error) {
-            $prefix = 'Aliased';
-            return $this->__invoke($uri, $offset, $type, $fqn, $prefix . $error->name());
+            $textEdits = $this->nameImporter->__invoke($document, $offset, $type, $fqn, $alias);
         } catch (TransformException $error) {
             $this->client->window()->showMessage()->warning($error->getMessage());
+            return new Success(null);
+        }
+
+        if (null === $textEdits) {
             return new Success(null);
         }
 
