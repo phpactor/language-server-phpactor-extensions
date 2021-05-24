@@ -39,7 +39,7 @@
         "dms/phpunit-arraysubset-asserts": "dev-master",
         "ergebnis/composer-normalize": "^2.0",
         "friendsofphp/php-cs-fixer": "^2.17",
-        "jangregor/phpstan-prophecy": "^0.8.1",
+        "jangregor/phpstan-prophecy": "^0.8.0",
         "phpactor/test-utils": "^1.1.3",
         "phpbench/phpbench": "dev-master",
         "phpspec/prophecy-phpunit": "^2.0",
