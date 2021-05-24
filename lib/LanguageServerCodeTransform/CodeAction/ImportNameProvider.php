@@ -71,18 +71,27 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
     {
         return call(function () use ($textDocument) {
             $diagnostics = [];
+            $hasCandidatesHash = [];
             foreach ($this->finder->unresolved($textDocument) as $unresolvedName) {
-                $diagnostics = array_merge(
-                    $diagnostics,
-                    $this->diagnosticsFromUnresolvedName($unresolvedName, $textDocument)
+                assert($unresolvedName instanceof NameWithByteOffset);
+                $nameString = (string)$unresolvedName->name();
+                [
+                    $hasCandidates,
+                    $diagnostic
+                ] = $this->diagnosticsFromUnresolvedName(
+                    $unresolvedName,
+                    $textDocument,
+                    isset($hasCandidatesHash[$nameString]) ? $hasCandidatesHash[$nameString] : null
                 );
+                $hasCandidatesHash[$nameString] = $hasCandidates;
+                $diagnostics[] = $diagnostic;
             }
 
             return $diagnostics;
         });
     }
 
-    private function diagnosticsFromUnresolvedName(NameWithByteOffset $unresolvedName, TextDocumentItem $item): array
+    private function diagnosticsFromUnresolvedName(NameWithByteOffset $unresolvedName, TextDocumentItem $item, ?bool $hasCandidates = null): array
     {
         $range = new Range(
             PositionConverter::byteOffsetToPosition($unresolvedName->byteOffset(), $item->text),
@@ -92,13 +101,13 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
             )
         );
 
-        $candidates = iterator_to_array($this->finder->candidatesForUnresolvedName($unresolvedName));
+        if ($hasCandidates === null) {
+            $hasCandidates = $this->finder->candidatesForUnresolvedName($unresolvedName)->current() !== null;
+        }
 
-        if (count($candidates) === 0) {
-            if ($this->reportNonExistingClasses === false) {
-                return [];
-            }
+        if ($hasCandidates) {
             return [
+                true,
                 new Diagnostic(
                     $range,
                     sprintf(
@@ -114,6 +123,7 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
         }
 
         return [
+            false,
             new Diagnostic(
                 $range,
                 sprintf(
@@ -138,7 +148,7 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
             ),
             'kind' => 'quickfix.import_class',
             'isPreferred' => false,
-            'diagnostics' => $this->diagnosticsFromUnresolvedName($unresolvedName, $item),
+            'diagnostics' => $this->diagnosticsFromUnresolvedName($unresolvedName, $item, true),
             'command' => new Command(
                 'Import name',
                 ImportNameCommand::NAME,
