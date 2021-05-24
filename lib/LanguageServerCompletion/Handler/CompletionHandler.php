@@ -115,8 +115,7 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
                 $nameImportResult = $this->importClassOrFunctionName($suggestion, $params);
 
                 if ($nameImportResult->isSuccessAndHasAliasedNameImport()) {
-                    $aliasName = $nameImportResult->getNameImport()->alias();
-                    $insertText = str_replace($name, $aliasName, $insertText);
+                    $insertText = $nameImportResult->getNameImport()->alias();
                 }
 
                 $items[] = CompletionItem::fromArray([
@@ -126,8 +125,7 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
                     'documentation' => $suggestion->documentation(),
                     'insertText' => $insertText,
                     'sortText' => $this->sortText($suggestion),
-                    // todo convert text edit if there is an alias import
-                    'textEdit' => $this->textEdit($suggestion, $textDocument),
+                    'textEdit' => $this->textEdit($suggestion, $insertText, $textDocument),
                     'additionalTextEdits' => $nameImportResult->getTextEdits(),
                     'insertTextFormat' => $insertTextFormat
                 ]);
@@ -153,7 +151,7 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
         $capabilities->signatureHelpProvider = new SignatureHelpOptions(['(', ',']);
     }
 
-    private function textEdit(Suggestion $suggestion, TextDocumentItem $textDocument): ?TextEdit
+    private function textEdit(Suggestion $suggestion, string $insertText, TextDocumentItem $textDocument): ?TextEdit
     {
         if (false === $this->provideTextEdit) {
             return null;
@@ -170,7 +168,7 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
                 PositionConverter::byteOffsetToPosition($range->start(), $textDocument->text),
                 PositionConverter::byteOffsetToPosition($range->end(), $textDocument->text),
             ),
-            $suggestion->name()
+            $insertText
         );
     }
 

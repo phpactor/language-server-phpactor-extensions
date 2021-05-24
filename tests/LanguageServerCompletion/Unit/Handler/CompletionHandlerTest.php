@@ -117,7 +117,8 @@ class CompletionHandlerTest extends TestCase
                     'hello',
                     [
                         'type'        => 'class',
-                        'name_import' => '\Foo\Bar'
+                        'name_import' => '\Foo\Bar',
+                        'range'       => PhpactorRange::fromStartAndEnd(0, 0),
                     ]
                 ),
             ],
@@ -142,6 +143,18 @@ class CompletionHandlerTest extends TestCase
                     [
                         'kind' => 7,
                         'detail' => '↓ ',
+                        'insertText' => 'hello',
+                        'textEdit'   => TextEdit::fromArray(
+                            [
+                                'newText' => 'hello',
+                                'range'   => Range::fromArray(
+                                    [
+                                        'start' => Position::fromArray(['line' => 0, 'character' => 0]),
+                                        'end'   => Position::fromArray(['line' => 0, 'character' => 0]),
+                                    ]
+                                )
+                            ]
+                        ),
                         'additionalTextEdits' => [
                             TextEdit::fromArray([
                                 'newText' => 'world',
@@ -151,6 +164,66 @@ class CompletionHandlerTest extends TestCase
                                 ])
                             ])
                         ]
+                    ]
+                )
+            ],
+            $response->result->items
+        );
+        $this->assertFalse($response->result->isIncomplete);
+    }
+
+    public function testSuggestionWithImportAlias(): void
+    {
+        $importTextEdit = new TextEdit(new Range(new Position(0, 0), new Position(0, 0)), 'FooBar');
+
+        $tester = $this->create(
+            [
+                Suggestion::createWithOptions(
+                    'hello',
+                    [
+                        'type'        => 'class',
+                        'name_import' => '\Foo\Bar',
+                        'range'       => PhpactorRange::fromStartAndEnd(0, 0),
+                    ]
+                ),
+            ],
+            true,
+            false,
+            [
+                [$importTextEdit]
+            ],
+            [
+                'FooBar'
+            ]
+        );
+        $response = $tester->requestAndWait(
+            'textDocument/completion',
+            [
+                'textDocument' => ProtocolFactory::textDocumentIdentifier(self::EXAMPLE_URI),
+                'position'     => ProtocolFactory::position(0, 0)
+            ]
+        );
+        $this->assertEquals(
+            [
+                self::completionItem(
+                    'hello',
+                    null,
+                    [
+                        'kind'       => 7,
+                        'detail'     => '↓ ',
+                        'insertText' => 'FooBar',
+                        'textEdit'   => TextEdit::fromArray(
+                            [
+                                'newText' => 'FooBar',
+                                'range'   => Range::fromArray(
+                                    [
+                                        'start' => Position::fromArray(['line' => 0, 'character' => 0]),
+                                        'end'   => Position::fromArray(['line' => 0, 'character' => 0]),
+                                    ]
+                                )
+                            ]
+                        ),
+                        'additionalTextEdits' => [$importTextEdit]
                     ]
                 )
             ],
@@ -246,7 +319,7 @@ class CompletionHandlerTest extends TestCase
         $this->assertFalse($response->result->isIncomplete);
     }
 
-    public function testHandleSuggestionsWithProiority(): void
+    public function testHandleSuggestionsWithPriority(): void
     {
         $tester = $this->create([
             Suggestion::createWithOptions('hello', [
@@ -303,7 +376,8 @@ class CompletionHandlerTest extends TestCase
         array $suggestions,
         bool $supportSnippets = true,
         bool $isIncomplete = false,
-        array $textEditsFor = []
+        array $importNameTextEdits = [],
+        array $aliases = []
     ): LanguageServerTester {
         $completor = $this->createCompletor($suggestions, $isIncomplete);
         $registry = new TypedCompletorRegistry([
@@ -314,7 +388,7 @@ class CompletionHandlerTest extends TestCase
             $builder->workspace(),
             $registry,
             new SuggestionNameFormatter(true),
-            $this->createImportName($suggestions, $textEditsFor),
+            $this->createImportName($suggestions, $aliases, $importNameTextEdits),
             $supportSnippets,
             true
         ))->build();
@@ -325,21 +399,26 @@ class CompletionHandlerTest extends TestCase
 
     /**
      * @param array<Suggestion> $suggestions
-     * @param array $textEditsFor
+     * @param array<string|null> $aliases
+     * @param array $importNameTextEdits
      * @return CompletionNameImporter
      */
-    private function createImportName(array $suggestions, array $textEditsFor): CompletionNameImporter
-    {
+    private function createImportName(
+        array $suggestions,
+        array $aliases,
+        array $importNameTextEdits
+    ): CompletionNameImporter {
         $results = [];
 
         foreach ($suggestions as $i => $suggestion) {
             /** @var Suggestion $suggestion */
-            $textEdits = $textEditsFor[$i] ?? null;
+            $textEdits = $importNameTextEdits[$i] ?? null;
+            $alias = $aliases[$i] ?? null;
 
             if ($suggestion->type() === 'function') {
-                $nameImport = NameImport::forFunction($suggestion->name());
+                $nameImport = NameImport::forFunction($suggestion->name(), $alias);
             } else {
-                $nameImport = NameImport::forClass($suggestion->name());
+                $nameImport = NameImport::forClass($suggestion->name(), $alias);
             }
 
             $results[] = NameImporterResult::createResult($nameImport, $textEdits);
