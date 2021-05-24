@@ -16,23 +16,23 @@ use Phpactor\LanguageServer\Core\Workspace\Workspace;
 
 class ExtractExpressionCommand implements Command
 {
-	public const NAME  = 'extract_expression';
+    public const NAME  = 'extract_expression';
     public const DEFAULT_VARIABLE_NAME  = 'newVariable';
-	
+    
     /**
      * @var ClientApi
      */
-	private $clientApi;
-	/**
-	 * @var Workspace
-	 */
-	private $workspace;
-	/**
-	 * @var ExtractExpression
-	 */
-	private $extractExpression;
+    private $clientApi;
+    /**
+     * @var Workspace
+     */
+    private $workspace;
+    /**
+     * @var ExtractExpression
+     */
+    private $extractExpression;
 
-	public function __construct(
+    public function __construct(
         ClientApi $clientApi,
         Workspace $workspace,
         ExtractExpression $extractExpression
@@ -40,13 +40,13 @@ class ExtractExpressionCommand implements Command
         $this->clientApi = $clientApi;
         $this->workspace = $workspace;
         $this->extractExpression = $extractExpression;
-	}
-	/**
+    }
+    /**
      * @return Promise<?ApplyWorkspaceEditResponse>
      */
     public function __invoke(string $uri, int $startOffset, int $endOffset): Promise
-	{
-		$textDocument = $this->workspace->get($uri);
+    {
+        $textDocument = $this->workspace->get($uri);
         
         try {
             $textEdits = $this->extractExpression->extractExpression(
@@ -63,5 +63,5 @@ class ExtractExpressionCommand implements Command
         return $this->clientApi->workspace()->applyEdit(new WorkspaceEdit([
             $uri => TextEditConverter::toLspTextEdits($textEdits, $textDocument->text)
         ]), 'Extract expression');
-	}
+    }
 }

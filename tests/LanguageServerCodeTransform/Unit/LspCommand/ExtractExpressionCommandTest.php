@@ -13,8 +13,6 @@ use Phpactor\LanguageServerProtocol\ApplyWorkspaceEditResponse;
 use Phpactor\LanguageServerProtocol\MessageType;
 use Phpactor\LanguageServerProtocol\WorkspaceEdit;
 use Phpactor\LanguageServer\LanguageServerTesterBuilder;
-use Phpactor\TextDocument\TextDocumentEdits;
-use Phpactor\TextDocument\TextDocumentUri;
 use Phpactor\TextDocument\TextEdit;
 use Phpactor\TextDocument\TextEdits;
 use Prophecy\Argument;
@@ -23,13 +21,13 @@ use Prophecy\Prophecy\ObjectProphecy;
 
 class ExtractExpressionCommandTest extends TestCase
 {
-	use ProphecyTrait;
+    use ProphecyTrait;
 
-	const EXAMPLE_SOURCE = '<?php ';
+    const EXAMPLE_SOURCE = '<?php ';
     const EXAMPLE_URI = 'file:///file.php';
     const EXAMPLE_OFFSET = 5;
 
-	public function testSuccessfulCall(): void
+    public function testSuccessfulCall(): void
     {
         $textEdits = new TextEdits(TextEdit::create(self::EXAMPLE_OFFSET, 1, 'test'));
 
@@ -82,8 +80,8 @@ class ExtractExpressionCommandTest extends TestCase
             TransformException::class => [ new TransformException('Error message!') ],
         ];
     }
-	/**
-	 * @param ObjectProphecy<ExtractExpression> $extractExpression
+    /**
+     * @param ObjectProphecy<ExtractExpression> $extractExpression
      * @return array
      */
     private function createTester(ObjectProphecy $extractExpression): array
