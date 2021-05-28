@@ -26,10 +26,15 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
      */
     private $finder;
 
+    /**
+     * @var bool
+     */
+    private $reportNonExistingClasses;
 
-    public function __construct(CandidateFinder $finder)
+    public function __construct(CandidateFinder $finder, bool $reportNonExistingClasses = true)
     {
         $this->finder = $finder;
+        $this->reportNonExistingClasses = $reportNonExistingClasses;
     }
 
     public function provideActionsFor(TextDocumentItem $item, Range $range): Promise
@@ -90,6 +95,9 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
         $candidates = iterator_to_array($this->finder->candidatesForUnresolvedName($unresolvedName));
 
         if (count($candidates) === 0) {
+            if ($this->reportNonExistingClasses === false) {
+                return [];
+            }
             return [
                 new Diagnostic(
                     $range,

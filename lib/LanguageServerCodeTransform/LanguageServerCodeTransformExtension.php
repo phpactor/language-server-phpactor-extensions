@@ -35,6 +35,7 @@ use Phpactor\TextDocument\TextDocumentLocator;
 class LanguageServerCodeTransformExtension implements Extension
 {
     public const PARAM_IMPORT_GLOBALS = 'language_server_code_transform.import_globals';
+    public const PARAM_REPORT_NON_EXISTING_NAMES = 'language_server_code_transform.import_name.report_non_existing_names';
 
     /**
      * {@inheritDoc}
@@ -52,9 +53,11 @@ class LanguageServerCodeTransformExtension implements Extension
     {
         $schema->setDefaults([
             self::PARAM_IMPORT_GLOBALS => false,
+            self::PARAM_REPORT_NON_EXISTING_NAMES => false,
         ]);
         $schema->setDescriptions([
-            self::PARAM_IMPORT_GLOBALS => 'Show hints for non-imported global classes and functions'
+            self::PARAM_IMPORT_GLOBALS => 'Show hints for non-imported global classes and functions',
+            self::PARAM_REPORT_NON_EXISTING_NAMES => 'Show an error if a diagnostic name cannot be resolved - can produce false positives',
         ]);
     }
 
