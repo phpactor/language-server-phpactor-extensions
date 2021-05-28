@@ -6,9 +6,6 @@ use Amp\Promise;
 use Amp\Success;
 use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\NameImporter;
 use Phpactor\LanguageServerProtocol\WorkspaceEdit;
-use Phpactor\CodeTransform\Domain\Exception\TransformException;
-use Phpactor\CodeTransform\Domain\Refactor\ImportName;
-use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
 use Phpactor\LanguageServer\Core\Command\Command;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
@@ -18,19 +15,9 @@ class ImportNameCommand implements Command
     public const NAME = 'name_import';
 
     /**
-     * @var ImportName
-     */
-    private $importName;
-
-    /**
      * @var Workspace
      */
     private $workspace;
-
-    /**
-     * @var TextEditConverter
-     */
-    private $textEditConverter;
 
     /**
      * @var ClientApi
@@ -45,11 +32,9 @@ class ImportNameCommand implements Command
     public function __construct(
         NameImporter $nameImporter,
         Workspace $workspace,
-        TextEditConverter $textEditConverter,
         ClientApi $client
     ) {
         $this->workspace = $workspace;
-        $this->textEditConverter = $textEditConverter;
         $this->client = $client;
         $this->nameImporter = $nameImporter;
     }
@@ -62,20 +47,21 @@ class ImportNameCommand implements Command
         ?string $alias = null
     ): Promise {
         $document = $this->workspace->get($uri);
+        $result = $this->nameImporter->__invoke($document, $offset, $type, $fqn, $alias);
 
-        try {
-            $textEdits = $this->nameImporter->__invoke($document, $offset, $type, $fqn, $alias);
-        } catch (TransformException $error) {
-            $this->client->window()->showMessage()->warning($error->getMessage());
-            return new Success(null);
+        if ($result->isSuccess()) {
+            if (!$result->hasTextEdits()) {
+                return new Success(null);
+            }
+
+            $textEdits = $result->getTextEdits();
+            return $this->client->workspace()->applyEdit(new WorkspaceEdit([
+                $uri => $textEdits
+            ]), 'Import class');
         }
 
-        if (null === $textEdits) {
-            return new Success(null);
-        }
-
-        return $this->client->workspace()->applyEdit(new WorkspaceEdit([
-            $uri => $this->textEditConverter->toLspTextEdits($textEdits, $document->text)
-        ]), 'Import class');
+        $error = $result->getError();
+        $this->client->window()->showMessage()->warning($error->getMessage());
+        return new Success(null);
     }
 }

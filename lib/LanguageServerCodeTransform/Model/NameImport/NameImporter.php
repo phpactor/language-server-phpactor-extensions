@@ -2,6 +2,8 @@
 
 namespace Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport;
 
+use Phpactor\CodeTransform\Domain\Exception\TransformException;
+use Phpactor\Extension\LanguageServerBridge\Converter\TextEditConverter;
 use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\CodeTransform\Domain\Refactor\ImportClass\AliasAlreadyUsedException;
 use Phpactor\CodeTransform\Domain\Refactor\ImportClass\NameAlreadyImportedException;
@@ -12,7 +14,6 @@ use Phpactor\LanguageServer\Core\Command\Command;
 use Phpactor\Name\FullyQualifiedName;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocumentUri;
-use Phpactor\TextDocument\TextEdits;
 
 class NameImporter implements Command
 {
@@ -34,7 +35,7 @@ class NameImporter implements Command
         string $type,
         string $fqn,
         ?string $alias = null
-    ): ?TextEdits {
+    ): NameImporterResult {
         $sourceCode = SourceCode::fromStringAndPath(
             $document->text,
             TextDocumentUri::fromString($document->uri)->path()
@@ -45,14 +46,16 @@ class NameImporter implements Command
             NameImport::forClass($fqn, $alias);
 
         try {
-            return $this->importName->importName(
+            $textEdits = $this->importName->importName(
                 $sourceCode,
                 ByteOffset::fromInt($offset),
                 $nameImport
             );
+            $lspTextEdits = TextEditConverter::toLspTextEdits($textEdits, $document->text);
+            return NameImporterResult::createResult($nameImport, $lspTextEdits);
         } catch (NameAlreadyImportedException $error) {
             if ($error->existingName() === $fqn) {
-                return null;
+                return NameImporterResult::createEmptyResult();
             }
 
             $name = FullyQualifiedName::fromString($fqn);
@@ -65,6 +68,8 @@ class NameImporter implements Command
         } catch (AliasAlreadyUsedException $error) {
             $prefix = 'Aliased';
             return $this->__invoke($document, $offset, $type, $fqn, $prefix . $error->name());
+        } catch (TransformException $error) {
+            return NameImporterResult::createErrorResult($error);
         }
     }
 }
