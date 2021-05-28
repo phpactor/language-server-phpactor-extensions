@@ -29,7 +29,8 @@ class ImportNameProviderTest extends IntegrationTestCase
         $this->workspace()->loadManifest($manifest);
 
         $tester = $this->container([
-            LanguageServerCodeTransformExtension::PARAM_IMPORT_GLOBALS => $imprtGlobals
+            LanguageServerCodeTransformExtension::PARAM_IMPORT_GLOBALS => $imprtGlobals,
+            LanguageServerCodeTransformExtension::PARAM_REPORT_NON_EXISTING_NAMES => true
         ])->get(LanguageServerBuilder::class)->tester(
             ProtocolFactory::initializeParams($this->workspace()->path())
         );

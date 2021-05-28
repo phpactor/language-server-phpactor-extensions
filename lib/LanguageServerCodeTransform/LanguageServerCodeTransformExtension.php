@@ -154,7 +154,8 @@ class LanguageServerCodeTransformExtension implements Extension
         });
         $container->register(ImportNameProvider::class, function (Container $container) {
             return new ImportNameProvider(
-                $container->get(CandidateFinder::class)
+                $container->get(CandidateFinder::class),
+                $container->getParameter(self::PARAM_REPORT_NON_EXISTING_NAMES)
             );
         }, [
             LanguageServerExtension::TAG_CODE_ACTION_PROVIDER => [],
