@@ -101,13 +101,16 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
             )
         );
 
-        if ($hasCandidates === null) {
+        if (null === $hasCandidates) {
             $hasCandidates = $this->finder->candidatesForUnresolvedName($unresolvedName)->current() !== null;
         }
 
-        if ($hasCandidates) {
+        if (false === $hasCandidates) {
+            if ($this->reportNonExistingClasses === false) {
+                return [];
+            }
             return [
-                true,
+                false,
                 new Diagnostic(
                     $range,
                     sprintf(
@@ -123,7 +126,7 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
         }
 
         return [
-            false,
+            true,
             new Diagnostic(
                 $range,
                 sprintf(
