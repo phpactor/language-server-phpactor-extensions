@@ -84,7 +84,8 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
                     isset($hasCandidatesHash[$nameString]) ? $hasCandidatesHash[$nameString] : null
                 );
                 $hasCandidatesHash[$nameString] = $hasCandidates;
-                $diagnostics[] = $diagnostic;
+                if($diagnostic !== null)
+                    $diagnostics[] = $diagnostic;
             }
 
             return $diagnostics;
@@ -107,7 +108,7 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
 
         if (false === $hasCandidates) {
             if ($this->reportNonExistingClasses === false) {
-                return [];
+                return [false, null];
             }
             return [
                 false,
