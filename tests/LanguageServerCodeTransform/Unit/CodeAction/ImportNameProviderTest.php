@@ -6,6 +6,7 @@ use Generator;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\LanguageServerCodeTransform\LanguageServerCodeTransformExtension;
 use Phpactor\Extension\LanguageServerCodeTransform\Tests\IntegrationTestCase;
+use Phpactor\LanguageServerProtocol\CodeAction;
 use Phpactor\LanguageServerProtocol\CodeActionContext;
 use Phpactor\LanguageServerProtocol\CodeActionParams;
 use Phpactor\LanguageServerProtocol\CodeActionRequest;
@@ -56,8 +57,10 @@ class ImportNameProviderTest extends IntegrationTestCase
 
         $tester->assertSuccess($result);
 
-        self::assertCount($expectedCount, $result->result, 'Number of code actions');
-        $tester->textDocument()->save('file:///foobar', $source);
+        self::assertCount($expectedCount, array_filter($result->result, function(CodeAction $action) { 
+            return $action->kind == "quickfix.import_class";
+        }), 'Number of code actions');
+        $tester->textDocument()->save('file:///foobar');
 
         $diagnostics = $tester->transmitter()->filterByMethod('textDocument/publishDiagnostics')->shiftNotification();
         self::assertNotNull($diagnostics);
@@ -171,7 +174,7 @@ class ImportNameProviderTest extends IntegrationTestCase
                 $bar = [];
                 explode(array_keys($bar));
                 EOT
-            , 3, 2, true
+            , 2, 2, true
         ];
 
         yield 'constant' => [
