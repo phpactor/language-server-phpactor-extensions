@@ -144,6 +144,7 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
 
     private function codeActionForFqn(NameWithByteOffset $unresolvedName, string $fqn, TextDocumentItem $item): CodeAction
     {
+        $diagnostics = $this->diagnosticsFromUnresolvedName($unresolvedName, $item, true);
         return CodeAction::fromArray([
             'title' => sprintf(
                 'Import %s "%s"',
@@ -152,7 +153,7 @@ class ImportNameProvider implements CodeActionProvider, DiagnosticsProvider
             ),
             'kind' => 'quickfix.import_class',
             'isPreferred' => false,
-            'diagnostics' => $this->diagnosticsFromUnresolvedName($unresolvedName, $item, true),
+            'diagnostics' => ($diagnostics[1] !== null) ? [$diagnostics[1]] : null,
             'command' => new Command(
                 'Import name',
                 ImportNameCommand::NAME,
