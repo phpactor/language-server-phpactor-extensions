@@ -57,8 +57,8 @@ class ImportNameProviderTest extends IntegrationTestCase
 
         $tester->assertSuccess($result);
 
-        self::assertCount($expectedCount, array_filter($result->result, function(CodeAction $action) { 
-            return $action->kind == "quickfix.import_class";
+        self::assertCount($expectedCount, array_filter($result->result, function (CodeAction $action) {
+            return $action->kind == 'quickfix.import_class';
         }), 'Number of code actions');
         $tester->textDocument()->save('file:///foobar');
 
