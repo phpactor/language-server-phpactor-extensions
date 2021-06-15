@@ -74,7 +74,15 @@ class CandidateFinder
                 continue;
             }
             $seen[$nameString] = true;
-            yield from $this->candidatesForUnresolvedName($unresolvedName);
+            foreach($this->candidatesForUnresolvedName($unresolvedName) as $candidate) {
+                assert($candidate instanceof NameCandidate);
+                $nameString = (string)$candidate->candidateFqn();
+                if (isset($seen[$nameString])) {
+                    continue;
+                }
+                $seen[$nameString] = true;
+                yield $candidate;
+            }
         }
     }
 
