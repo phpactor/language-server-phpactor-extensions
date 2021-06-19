@@ -5,11 +5,14 @@ namespace Phpactor\Extension\LanguageServerCompletion\Tests;
 use PHPUnit\Framework\TestCase;
 use Phpactor\Container\PhpactorContainer;
 use Phpactor\Extension\ClassToFile\ClassToFileExtension;
+use Phpactor\Extension\CodeTransform\CodeTransformExtension;
 use Phpactor\Extension\CompletionWorse\CompletionWorseExtension;
 use Phpactor\Extension\Completion\CompletionExtension;
 use Phpactor\Extension\ComposerAutoloader\ComposerAutoloaderExtension;
 use Phpactor\Extension\LanguageServerBridge\LanguageServerBridgeExtension;
+use Phpactor\Extension\LanguageServerCodeTransform\LanguageServerCodeTransformExtension;
 use Phpactor\Extension\LanguageServerCompletion\LanguageServerCompletionExtension;
+use Phpactor\Extension\LanguageServerCompletion\Tests\Extension\TestExtension;
 use Phpactor\Extension\LanguageServerHover\LanguageServerHoverExtension;
 use Phpactor\Extension\LanguageServerWorseReflection\LanguageServerWorseReflectionExtension;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
@@ -38,17 +41,20 @@ class IntegrationTestCase extends TestCase
             LoggingExtension::class,
             CompletionExtension::class,
             LanguageServerExtension::class,
+            LanguageServerCodeTransformExtension::class,
             LanguageServerCompletionExtension::class,
             FilePathResolverExtension::class,
             ClassToFileExtension::class,
             ComposerAutoloaderExtension::class,
 
+            CodeTransformExtension::class,
             WorseReflectionExtension::class,
             CompletionWorseExtension::class,
             SourceCodeFilesystemExtension::class,
             LanguageServerWorseReflectionExtension::class,
             LanguageServerHoverExtension::class,
             PhpExtension::class,
+            TestExtension::class,
             IndexerExtension::class,
             ReferenceFinderExtension::class,
 
@@ -58,7 +64,7 @@ class IntegrationTestCase extends TestCase
             LanguageServerHoverExtension::PARAM_TEMPLATE_PATHS => [],
             IndexerExtension::PARAM_ENABLED_WATCHERS => [],
         ]);
-        
+
         $builder = $container->get(LanguageServerBuilder::class);
         $this->assertInstanceOf(LanguageServerBuilder::class, $builder);
 

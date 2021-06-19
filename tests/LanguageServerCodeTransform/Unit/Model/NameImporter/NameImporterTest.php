@@ -128,7 +128,8 @@ class NameImporterTest extends TestCase
             $this->document,
             self::EXAMPLE_OFFSET,
             $importType,
-            $fqn
+            $fqn,
+            true
         );
 
         self::assertTrue($result->isSuccess());
@@ -151,7 +152,8 @@ class NameImporterTest extends TestCase
             $this->document,
             self::EXAMPLE_OFFSET,
             'class',
-            Exception::class
+            Exception::class,
+            true
         );
 
         self::assertFalse($result->isSuccess());
@@ -183,7 +185,8 @@ class NameImporterTest extends TestCase
             $this->document,
             self::EXAMPLE_OFFSET,
             'class',
-            Exception::class
+            Exception::class,
+            true
         );
 
         self::assertTrue($result->isSuccess());
@@ -195,7 +198,11 @@ class NameImporterTest extends TestCase
     public function testImportNameAlreadyImportedExceptionExisting(): void
     {
         $import = ImportClassNameImport::forClass(Exception::class);
-        $nameAlreadyImportedException = new NameAlreadyImportedException($import, Exception::class);
+        $nameAlreadyImportedException = new NameAlreadyImportedException(
+            $import,
+            'Exception',
+            Exception::class
+        );
 
         $this->importNameProphecy->importName(
             $this->sourceCode,
@@ -207,11 +214,12 @@ class NameImporterTest extends TestCase
             $this->document,
             self::EXAMPLE_OFFSET,
             'class',
-            Exception::class
+            Exception::class,
+            true
         );
 
         self::assertTrue($result->isSuccess());
-        self::assertNull($result->getNameImport());
+        self::assertEquals($import, $result->getNameImport());
         self::assertSame(null, $result->getTextEdits());
         self::assertNull($result->getError());
     }
@@ -219,7 +227,11 @@ class NameImporterTest extends TestCase
     public function testImportNameAlreadyImportedExceptionNotExisting(): void
     {
         $import = ImportClassNameImport::forClass(Exception::class);
-        $nameAlreadyImportedException = new NameAlreadyImportedException($import, RuntimeException::class);
+        $nameAlreadyImportedException = new NameAlreadyImportedException(
+            $import,
+            'RuntimeException',
+            RuntimeException::class
+        );
 
         $this->importNameProphecy->importName(
             $this->sourceCode,
@@ -239,7 +251,8 @@ class NameImporterTest extends TestCase
             $this->document,
             self::EXAMPLE_OFFSET,
             'class',
-            Exception::class
+            Exception::class,
+            true
         );
 
         self::assertTrue($result->isSuccess());

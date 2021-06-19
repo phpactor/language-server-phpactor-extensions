@@ -5,6 +5,10 @@ namespace Phpactor\Extension\LanguageServerCompletion\Tests\Unit\Handler;
 use Amp\Delayed;
 use DTL\Invoke\Invoke;
 use Generator;
+use Microsoft\PhpParser\Parser;
+use Phpactor\CodeTransform\Domain\Refactor\ImportClass\NameImport;
+use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\NameImporter;
+use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\NameImporterResult;
 use Phpactor\LanguageServerProtocol\CompletionItem;
 use Phpactor\LanguageServerProtocol\CompletionList;
 use Phpactor\LanguageServerProtocol\Position;
@@ -106,6 +110,129 @@ class CompletionHandlerTest extends TestCase
         $this->assertFalse($response->result->isIncomplete);
     }
 
+    public function testSuggestionWithImport(): void
+    {
+        $tester = $this->create(
+            [
+                Suggestion::createWithOptions(
+                    'hello',
+                    [
+                        'type'        => 'class',
+                        'name_import' => '\Foo\Bar',
+                        'range'       => PhpactorRange::fromStartAndEnd(0, 0),
+                    ]
+                ),
+            ],
+            true,
+            false,
+            [
+                [new TextEdit(new Range(new Position(0, 0), new Position(0, 4)), 'world')]
+            ]
+        );
+        $response = $tester->requestAndWait(
+            'textDocument/completion',
+            [
+                'textDocument' => ProtocolFactory::textDocumentIdentifier(self::EXAMPLE_URI),
+                'position'     => ProtocolFactory::position(0, 0)
+            ]
+        );
+        $this->assertEquals(
+            [
+                self::completionItem(
+                    'hello',
+                    null,
+                    [
+                        'kind' => 7,
+                        'detail' => '↓ ',
+                        'insertText' => 'hello',
+                        'textEdit'   => TextEdit::fromArray(
+                            [
+                                'newText' => 'hello',
+                                'range'   => Range::fromArray(
+                                    [
+                                        'start' => Position::fromArray(['line' => 0, 'character' => 0]),
+                                        'end'   => Position::fromArray(['line' => 0, 'character' => 0]),
+                                    ]
+                                )
+                            ]
+                        ),
+                        'additionalTextEdits' => [
+                            TextEdit::fromArray([
+                                'newText' => 'world',
+                                'range' => Range::fromArray([
+                                    'start' => Position::fromArray(['line' => 0, 'character' => 0]),
+                                    'end' => Position::fromArray(['line' => 0, 'character' => 4]),
+                                ])
+                            ])
+                        ]
+                    ]
+                )
+            ],
+            $response->result->items
+        );
+        $this->assertFalse($response->result->isIncomplete);
+    }
+
+    public function testSuggestionWithImportAlias(): void
+    {
+        $importTextEdit = new TextEdit(new Range(new Position(0, 0), new Position(0, 0)), 'FooBar');
+
+        $tester = $this->create(
+            [
+                Suggestion::createWithOptions(
+                    'hello',
+                    [
+                        'type'        => 'class',
+                        'name_import' => '\Foo\Bar',
+                        'range'       => PhpactorRange::fromStartAndEnd(0, 0),
+                    ]
+                ),
+            ],
+            true,
+            false,
+            [
+                [$importTextEdit]
+            ],
+            [
+                'FooBar'
+            ]
+        );
+        $response = $tester->requestAndWait(
+            'textDocument/completion',
+            [
+                'textDocument' => ProtocolFactory::textDocumentIdentifier(self::EXAMPLE_URI),
+                'position'     => ProtocolFactory::position(0, 0)
+            ]
+        );
+        $this->assertEquals(
+            [
+                self::completionItem(
+                    'hello',
+                    null,
+                    [
+                        'kind'       => 7,
+                        'detail'     => '↓ ',
+                        'insertText' => 'FooBar',
+                        'textEdit'   => TextEdit::fromArray(
+                            [
+                                'newText' => 'FooBar',
+                                'range'   => Range::fromArray(
+                                    [
+                                        'start' => Position::fromArray(['line' => 0, 'character' => 0]),
+                                        'end'   => Position::fromArray(['line' => 0, 'character' => 0]),
+                                    ]
+                                )
+                            ]
+                        ),
+                        'additionalTextEdits' => [$importTextEdit]
+                    ]
+                )
+            ],
+            $response->result->items
+        );
+        $this->assertFalse($response->result->isIncomplete);
+    }
+
     public function testCancelReturnsPartialResults(): void
     {
         $tester = $this->create(
@@ -193,7 +320,7 @@ class CompletionHandlerTest extends TestCase
         $this->assertFalse($response->result->isIncomplete);
     }
 
-    public function testHandleSuggestionsWithProiority(): void
+    public function testHandleSuggestionsWithPriority(): void
     {
         $tester = $this->create([
             Suggestion::createWithOptions('hello', [
@@ -246,8 +373,13 @@ class CompletionHandlerTest extends TestCase
         ], $data));
     }
 
-    private function create(array $suggestions, bool $supportSnippets = true, bool $isIncomplete = false): LanguageServerTester
-    {
+    private function create(
+        array $suggestions,
+        bool $supportSnippets = true,
+        bool $isIncomplete = false,
+        array $importNameTextEdits = [],
+        array $aliases = []
+    ): LanguageServerTester {
         $completor = $this->createCompletor($suggestions, $isIncomplete);
         $registry = new TypedCompletorRegistry([
             'php' => $completor,
@@ -257,12 +389,51 @@ class CompletionHandlerTest extends TestCase
             $builder->workspace(),
             $registry,
             new SuggestionNameFormatter(true),
+            $this->createNameImporter($suggestions, $aliases, $importNameTextEdits),
+            new Parser(),
             $supportSnippets,
             true
         ))->build();
         $tester->textDocument()->open(self::EXAMPLE_URI, self::EXAMPLE_TEXT);
 
         return $tester;
+    }
+
+    /**
+     * @param array<Suggestion> $suggestions
+     * @param array<string|null> $aliases
+     * @param array $importNameTextEdits
+     * @return NameImporter
+     */
+    private function createNameImporter(
+        array $suggestions,
+        array $aliases,
+        array $importNameTextEdits
+    ): NameImporter {
+        $results = [];
+
+        foreach ($suggestions as $i => $suggestion) {
+            /** @var Suggestion $suggestion */
+            $textEdits = $importNameTextEdits[$i] ?? null;
+            $alias = $aliases[$i] ?? null;
+
+            if ($suggestion->type() === 'function') {
+                $nameImport = NameImport::forFunction($suggestion->name(), $alias);
+            } else {
+                $nameImport = NameImport::forClass($suggestion->name(), $alias);
+            }
+
+            $results[] = NameImporterResult::createResult($nameImport, $textEdits);
+        }
+
+        $importNameMock = $this->getMockBuilder(NameImporter::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $importNameMock->method('__invoke')
+            ->willReturnOnConsecutiveCalls(...$results);
+
+        return $importNameMock;
     }
 
     private function createCompletor(array $suggestions, bool $isIncomplete = false): Completor

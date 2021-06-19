@@ -143,7 +143,7 @@ class LanguageServerCodeTransformExtension implements Extension
                 'name' => ImportAllUnresolvedNamesCommand::NAME
             ],
         ]);
-        
+
         $container->register(ExtractExpressionCommand::class, function (Container $container) {
             return new ExtractExpressionCommand(
                 $container->get(ClientApi::class),

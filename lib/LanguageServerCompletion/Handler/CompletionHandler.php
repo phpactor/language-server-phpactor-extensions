@@ -6,8 +6,11 @@ use Amp\CancellationToken;
 use Amp\CancelledException;
 use Amp\Delayed;
 use Amp\Promise;
+use Microsoft\PhpParser\Node\NamespaceUseClause;
+use Microsoft\PhpParser\Parser;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
-use Phpactor\LanguageServerProtocol\Command;
+use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\NameImporter;
+use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\NameImporterResult;
 use Phpactor\LanguageServerProtocol\CompletionItem;
 use Phpactor\LanguageServerProtocol\CompletionList;
 use Phpactor\LanguageServerProtocol\CompletionOptions;
@@ -18,24 +21,21 @@ use Phpactor\LanguageServerProtocol\ServerCapabilities;
 use Phpactor\LanguageServerProtocol\SignatureHelpOptions;
 use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\LanguageServerProtocol\TextEdit;
-use Phpactor\Completion\Core\Completor;
 use Phpactor\Completion\Core\Suggestion;
 use Phpactor\Completion\Core\TypedCompletorRegistry;
-use Phpactor\Extension\LanguageServerCodeTransform\LspCommand\ImportNameCommand;
 use Phpactor\Extension\LanguageServerCompletion\Util\PhpactorToLspCompletionType;
 use Phpactor\Extension\LanguageServerCompletion\Util\SuggestionNameFormatter;
 use Phpactor\LanguageServer\Core\Handler\CanRegisterCapabilities;
 use Phpactor\LanguageServer\Core\Handler\Handler;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
-use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocumentBuilder;
 
 class CompletionHandler implements Handler, CanRegisterCapabilities
 {
     /**
-     * @var Completor
+     * @var Parser
      */
-    private $completor;
+    private $parser;
 
     /**
      * @var TypedCompletorRegistry
@@ -62,10 +62,17 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
      */
     private $supportSnippets;
 
+    /**
+     * @var NameImporter
+     */
+    private $nameImporter;
+
     public function __construct(
         Workspace $workspace,
         TypedCompletorRegistry $registry,
         SuggestionNameFormatter $suggestionNameFormatter,
+        NameImporter $nameImporter,
+        Parser $parser,
         bool $supportSnippets,
         bool $provideTextEdit = false
     ) {
@@ -73,6 +80,8 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
         $this->provideTextEdit = $provideTextEdit;
         $this->workspace = $workspace;
         $this->suggestionNameFormatter = $suggestionNameFormatter;
+        $this->nameImporter = $nameImporter;
+        $this->parser = $parser;
         $this->supportSnippets = $supportSnippets;
     }
 
@@ -100,29 +109,42 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
             $items = [];
             $isIncomplete = false;
             foreach ($suggestions as $suggestion) {
-                $name = $this->suggestionNameFormatter->format($suggestion);
-                $insertText = $name;
-                $insertTextFormat = InsertTextFormat::PLAIN_TEXT;
+                /** @var Suggestion $suggestion */
 
-                if ($this->supportSnippets) {
-                    $insertText = $suggestion->snippet() ?: $name;
-                    $insertTextFormat = $suggestion->snippet()
-                        ? InsertTextFormat::SNIPPET
-                        : InsertTextFormat::PLAIN_TEXT
-                    ;
+                $parentNode = $this->parser
+                        ->parseSourceFile($textDocument->text)
+                        ->getDescendantNodeAtPosition($byteOffset->toInt())
+                        ->getParent();
+
+                $name = $this->suggestionNameFormatter->format($suggestion);
+
+                if ($parentNode instanceof NamespaceUseClause) {
+                    $insertText = $suggestion->nameImport() ?? $suggestion->name();
+                    $insertTextFormat = InsertTextFormat::PLAIN_TEXT;
+                    $textEdits = null;
+                } else {
+                    $nameImporterResult = $this->importClassOrFunctionName($suggestion, $params);
+
+                    list($insertText, $insertTextFormat) = $this->determineInsertTextAndFormat(
+                        $name,
+                        $suggestion,
+                        $nameImporterResult
+                    );
+
+                    $textEdits = $nameImporterResult->getTextEdits();
                 }
-                
-                $items[] = $i = CompletionItem::fromArray([
-                    'label' => $name,
-                    'kind' => PhpactorToLspCompletionType::fromPhpactorType($suggestion->type()),
-                    'detail' => $this->formatShortDescription($suggestion),
-                    'documentation' => $suggestion->documentation(),
-                    'insertText' => $insertText,
-                    'sortText' => $this->sortText($suggestion),
-                    'textEdit' => $this->textEdit($suggestion, $textDocument),
-                    'command' => $this->command($textDocument->uri, $byteOffset, $suggestion),
-                    'insertTextFormat' => $insertTextFormat
-                ]);
+
+                $items[] = CompletionItem::fromArray([
+                         'label' => $name,
+                         'kind' => PhpactorToLspCompletionType::fromPhpactorType($suggestion->type()),
+                         'detail' => $this->formatShortDescription($suggestion),
+                         'documentation' => $suggestion->documentation(),
+                         'insertText' => $insertText,
+                         'sortText' => $this->sortText($suggestion),
+                         'textEdit' => $this->textEdit($suggestion, $insertText, $textDocument),
+                         'additionalTextEdits' => $textEdits,
+                         'insertTextFormat' => $insertTextFormat
+                     ]);
 
                 try {
                     $token->throwIfRequested();
@@ -145,8 +167,63 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
         $capabilities->signatureHelpProvider = new SignatureHelpOptions(['(', ',']);
     }
 
-    private function textEdit(Suggestion $suggestion, TextDocumentItem $textDocument): ?TextEdit
-    {
+    private function determineInsertTextAndFormat(
+        string $name,
+        Suggestion $suggestion,
+        NameImporterResult $nameImporterResult
+    ): array {
+        $insertText = $name;
+        $insertTextFormat = InsertTextFormat::PLAIN_TEXT;
+
+        if ($this->supportSnippets) {
+            $insertText = $suggestion->snippet() ?: $name;
+            $insertTextFormat = $suggestion->snippet()
+                ? InsertTextFormat::SNIPPET
+                : InsertTextFormat::PLAIN_TEXT
+            ;
+        }
+
+        if ($nameImporterResult->isSuccessAndHasAliasedNameImport()) {
+            $alias = $nameImporterResult->getNameImport()->alias();
+            $insertText = str_replace($name, $alias, $insertText);
+        }
+
+        return [$insertText, $insertTextFormat];
+    }
+
+    private function importClassOrFunctionName(
+        Suggestion $suggestion,
+        CompletionParams $params
+    ): NameImporterResult {
+        $suggestionNameImport = $suggestion->nameImport();
+
+        if (!$suggestionNameImport) {
+            return NameImporterResult::createEmptyResult();
+        }
+
+        $suggestionType = $suggestion->type();
+
+        if (!in_array($suggestionType, [ 'class', 'function'])) {
+            return NameImporterResult::createEmptyResult();
+        }
+
+        $textDocument = $this->workspace->get($params->textDocument->uri);
+        $offset = PositionConverter::positionToByteOffset($params->position, $textDocument->text);
+
+        return ($this->nameImporter)(
+            $textDocument,
+            $offset->toInt(),
+            $suggestionType,
+            $suggestionNameImport,
+            false
+        );
+    }
+
+    private function textEdit(
+        Suggestion $suggestion,
+        string $insertText,
+        TextDocumentItem $textDocument
+    ): ?TextEdit {
         if (false === $this->provideTextEdit) {
             return null;
         }
@@ -156,30 +233,12 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
         if (!$range) {
             return null;
         }
-
         return new TextEdit(
             new Range(
                 PositionConverter::byteOffsetToPosition($range->start(), $textDocument->text),
                 PositionConverter::byteOffsetToPosition($range->end(), $textDocument->text),
             ),
-            $suggestion->name()
-        );
-    }
-
-    private function command(string $uri, ByteOffset $offset, Suggestion $suggestion): ?Command
-    {
-        if (!$suggestion->nameImport()) {
-            return null;
-        }
-
-        if (!in_array($suggestion->type(), [ 'class', 'function'])) {
-            return null;
-        }
-
-        return new Command(
-            'Import class',
-            ImportNameCommand::NAME,
-            [$uri, $offset->toInt(), $suggestion->type(), $suggestion->nameImport()]
+            $insertText
         );
     }
 
