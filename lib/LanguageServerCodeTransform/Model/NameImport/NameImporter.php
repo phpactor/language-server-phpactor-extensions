@@ -14,6 +14,7 @@ use Phpactor\LanguageServer\Core\Command\Command;
 use Phpactor\Name\FullyQualifiedName;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocumentUri;
+use Phpactor\TextDocument\TextEdits;
 
 class NameImporter implements Command
 {
@@ -47,12 +48,7 @@ class NameImporter implements Command
             NameImport::forClass($fqn, $alias);
 
         try {
-            $byteOffset = ByteOffset::fromInt($offset);
-            if ($updateReferences) {
-                $textEdits = $this->importName->importName($sourceCode, $byteOffset, $nameImport);
-            } else {
-                $textEdits = $this->importName->importNameOnly($sourceCode, $byteOffset, $nameImport);
-            }
+            $textEdits = $this->importNameTextEdits($sourceCode, $offset, $nameImport, $updateReferences);
             $lspTextEdits = TextEditConverter::toLspTextEdits($textEdits, $document->text);
             return NameImporterResult::createResult($nameImport, $lspTextEdits);
         } catch (NameAlreadyImportedException $error) {
@@ -75,14 +71,29 @@ class NameImporter implements Command
         }
     }
 
+    private function importNameTextEdits(
+        SourceCode $sourceCode,
+        int $offset,
+        NameImport $nameImport,
+        bool $updateReferences
+    ): TextEdits {
+        $byteOffset = ByteOffset::fromInt($offset);
+
+        if ($updateReferences) {
+            return $this->importName->importName($sourceCode, $byteOffset, $nameImport);
+        }
+
+        return $this->importName->importNameOnly($sourceCode, $byteOffset, $nameImport);
+    }
+
     private function createResultForAlreadyImportedFQN(
         NameImport $nameImport,
         NameAlreadyImportedException $error
     ): NameImporterResult {
+        $alias = null;
+
         if ($error->existingName() !== $nameImport->name()->head()->__toString()) {
             $alias = $error->existingName();
-        } else {
-            $alias = null;
         }
 
         $nameImport = $nameImport->type() === 'function' ?

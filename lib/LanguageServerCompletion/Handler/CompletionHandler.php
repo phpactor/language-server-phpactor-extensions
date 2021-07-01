@@ -100,7 +100,7 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
             $items = [];
             $isIncomplete = false;
             foreach ($suggestions as $suggestion) {
-                /** @var Suggestion $suggestion */
+                assert($suggestion instanceof Suggestion);
 
                 $name = $this->suggestionNameFormatter->format($suggestion);
                 $nameImporterResult = $this->importClassOrFunctionName($suggestion, $params);
