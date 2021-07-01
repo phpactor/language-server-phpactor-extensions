@@ -5,7 +5,6 @@ namespace Phpactor\Extension\LanguageServerCompletion\Tests\Unit\Handler;
 use Amp\Delayed;
 use DTL\Invoke\Invoke;
 use Generator;
-use Microsoft\PhpParser\Parser;
 use Phpactor\CodeTransform\Domain\Refactor\ImportClass\NameImport;
 use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\NameImporter;
 use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\NameImporterResult;
@@ -390,7 +389,6 @@ class CompletionHandlerTest extends TestCase
             $registry,
             new SuggestionNameFormatter(true),
             $this->createNameImporter($suggestions, $aliases, $importNameTextEdits),
-            new Parser(),
             $supportSnippets,
             true
         ))->build();

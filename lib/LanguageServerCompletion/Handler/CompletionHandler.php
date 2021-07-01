@@ -6,8 +6,6 @@ use Amp\CancellationToken;
 use Amp\CancelledException;
 use Amp\Delayed;
 use Amp\Promise;
-use Microsoft\PhpParser\Node\NamespaceUseClause;
-use Microsoft\PhpParser\Parser;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\NameImporter;
 use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\NameImporterResult;
@@ -32,11 +30,6 @@ use Phpactor\TextDocument\TextDocumentBuilder;
 
 class CompletionHandler implements Handler, CanRegisterCapabilities
 {
-    /**
-     * @var Parser
-     */
-    private $parser;
-
     /**
      * @var TypedCompletorRegistry
      */
@@ -72,7 +65,6 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
         TypedCompletorRegistry $registry,
         SuggestionNameFormatter $suggestionNameFormatter,
         NameImporter $nameImporter,
-        Parser $parser,
         bool $supportSnippets,
         bool $provideTextEdit = false
     ) {
@@ -81,7 +73,6 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
         $this->workspace = $workspace;
         $this->suggestionNameFormatter = $suggestionNameFormatter;
         $this->nameImporter = $nameImporter;
-        $this->parser = $parser;
         $this->supportSnippets = $supportSnippets;
     }
 
@@ -111,28 +102,16 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
             foreach ($suggestions as $suggestion) {
                 /** @var Suggestion $suggestion */
 
-                $parentNode = $this->parser
-                        ->parseSourceFile($textDocument->text)
-                        ->getDescendantNodeAtPosition($byteOffset->toInt())
-                        ->getParent();
-
                 $name = $this->suggestionNameFormatter->format($suggestion);
+                $nameImporterResult = $this->importClassOrFunctionName($suggestion, $params);
 
-                if ($parentNode instanceof NamespaceUseClause) {
-                    $insertText = $suggestion->nameImport() ?? $suggestion->name();
-                    $insertTextFormat = InsertTextFormat::PLAIN_TEXT;
-                    $textEdits = null;
-                } else {
-                    $nameImporterResult = $this->importClassOrFunctionName($suggestion, $params);
+                list($insertText, $insertTextFormat) = $this->determineInsertTextAndFormat(
+                    $name,
+                    $suggestion,
+                    $nameImporterResult
+                );
 
-                    list($insertText, $insertTextFormat) = $this->determineInsertTextAndFormat(
-                        $name,
-                        $suggestion,
-                        $nameImporterResult
-                    );
-
-                    $textEdits = $nameImporterResult->getTextEdits();
-                }
+                $textEdits = $nameImporterResult->getTextEdits();
 
                 $items[] = CompletionItem::fromArray([
                          'label' => $name,
