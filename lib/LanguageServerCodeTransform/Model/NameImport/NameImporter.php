@@ -14,6 +14,7 @@ use Phpactor\LanguageServer\Core\Command\Command;
 use Phpactor\Name\FullyQualifiedName;
 use Phpactor\TextDocument\ByteOffset;
 use Phpactor\TextDocument\TextDocumentUri;
+use Phpactor\TextDocument\TextEdits;
 
 class NameImporter implements Command
 {
@@ -34,6 +35,7 @@ class NameImporter implements Command
         int $offset,
         string $type,
         string $fqn,
+        bool $updateReferences,
         ?string $alias = null
     ): NameImporterResult {
         $sourceCode = SourceCode::fromStringAndPath(
@@ -46,16 +48,12 @@ class NameImporter implements Command
             NameImport::forClass($fqn, $alias);
 
         try {
-            $textEdits = $this->importName->importName(
-                $sourceCode,
-                ByteOffset::fromInt($offset),
-                $nameImport
-            );
+            $textEdits = $this->importNameTextEdits($sourceCode, $offset, $nameImport, $updateReferences);
             $lspTextEdits = TextEditConverter::toLspTextEdits($textEdits, $document->text);
             return NameImporterResult::createResult($nameImport, $lspTextEdits);
         } catch (NameAlreadyImportedException $error) {
-            if ($error->existingName() === $fqn) {
-                return NameImporterResult::createEmptyResult();
+            if ($error->existingFQN() === $fqn) {
+                return $this->createResultForAlreadyImportedFQN($nameImport, $error);
             }
 
             $name = FullyQualifiedName::fromString($fqn);
@@ -64,12 +62,44 @@ class NameImporter implements Command
                 $prefix = $name->toArray()[0];
             }
 
-            return $this->__invoke($document, $offset, $type, $fqn, $prefix . $error->name());
+            return $this->__invoke($document, $offset, $type, $fqn, $updateReferences, $prefix . $error->name());
         } catch (AliasAlreadyUsedException $error) {
             $prefix = 'Aliased';
-            return $this->__invoke($document, $offset, $type, $fqn, $prefix . $error->name());
+            return $this->__invoke($document, $offset, $type, $fqn, $updateReferences, $prefix . $error->name());
         } catch (TransformException $error) {
             return NameImporterResult::createErrorResult($error);
         }
+    }
+
+    private function importNameTextEdits(
+        SourceCode $sourceCode,
+        int $offset,
+        NameImport $nameImport,
+        bool $updateReferences
+    ): TextEdits {
+        $byteOffset = ByteOffset::fromInt($offset);
+
+        if ($updateReferences) {
+            return $this->importName->importName($sourceCode, $byteOffset, $nameImport);
+        }
+
+        return $this->importName->importNameOnly($sourceCode, $byteOffset, $nameImport);
+    }
+
+    private function createResultForAlreadyImportedFQN(
+        NameImport $nameImport,
+        NameAlreadyImportedException $error
+    ): NameImporterResult {
+        $alias = null;
+
+        if ($error->existingName() !== $nameImport->name()->head()->__toString()) {
+            $alias = $error->existingName();
+        }
+
+        $nameImport = $nameImport->type() === 'function' ?
+            NameImport::forFunction($error->existingFQN(), $alias) :
+            NameImport::forClass($error->existingFQN(), $alias);
+
+        return NameImporterResult::createResult($nameImport, null);
     }
 }

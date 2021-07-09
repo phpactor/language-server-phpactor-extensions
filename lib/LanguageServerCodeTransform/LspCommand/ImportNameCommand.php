@@ -47,7 +47,7 @@ class ImportNameCommand implements Command
         ?string $alias = null
     ): Promise {
         $document = $this->workspace->get($uri);
-        $result = $this->nameImporter->__invoke($document, $offset, $type, $fqn, $alias);
+        $result = $this->nameImporter->__invoke($document, $offset, $type, $fqn, true, $alias);
 
         if ($result->isSuccess()) {
             if (!$result->hasTextEdits()) {

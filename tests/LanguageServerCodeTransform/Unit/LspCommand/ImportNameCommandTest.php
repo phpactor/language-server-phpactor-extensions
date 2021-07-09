@@ -72,6 +72,7 @@ class ImportNameCommandTest extends TestCase
             self::EXAMPLE_OFFSET,
             'class',
             'Foobar',
+            true,
             null
         )->willReturn(NameImporterResult::createResult(
             \Phpactor\CodeTransform\Domain\Refactor\ImportClass\NameImport::forClass('Foobar'),
@@ -100,6 +101,7 @@ class ImportNameCommandTest extends TestCase
             self::EXAMPLE_OFFSET,
             'class',
             'Foobar',
+            true,
             null
         )->willReturn(NameImporterResult::createErrorResult(new TransformException('Sorry')));
 
