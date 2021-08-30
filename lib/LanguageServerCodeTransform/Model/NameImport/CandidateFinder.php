@@ -66,12 +66,24 @@ class CandidateFinder
     public function importCandidates(
         TextDocumentItem $item
     ): Generator {
-        $actions = [];
+        $seen = [];
         foreach ($this->unresolved($item) as $unresolvedName) {
-            yield from $this->candidatesForUnresolvedName($unresolvedName);
+            assert($unresolvedName instanceof NameWithByteOffset);
+            $nameString = (string)$unresolvedName->name();
+            if (isset($seen[$nameString])) {
+                continue;
+            }
+            $seen[$nameString] = true;
+            foreach ($this->candidatesForUnresolvedName($unresolvedName) as $candidate) {
+                assert($candidate instanceof NameCandidate);
+                $nameString = (string)$candidate->candidateFqn();
+                if (isset($seen[$nameString])) {
+                    continue;
+                }
+                $seen[$nameString] = true;
+                yield $candidate;
+            }
         }
-
-        return $actions;
     }
 
     public function candidatesForUnresolvedName(NameWithByteOffset $unresolvedName): Generator
@@ -130,7 +142,6 @@ class CandidateFinder
         )) as $candidate) {
             $candidates[] = $candidate;
         }
-
         return $candidates;
     }
 }

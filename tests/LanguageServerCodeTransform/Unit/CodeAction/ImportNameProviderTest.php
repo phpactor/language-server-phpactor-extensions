@@ -6,6 +6,7 @@ use Generator;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\LanguageServerCodeTransform\LanguageServerCodeTransformExtension;
 use Phpactor\Extension\LanguageServerCodeTransform\Tests\IntegrationTestCase;
+use Phpactor\LanguageServerProtocol\CodeAction;
 use Phpactor\LanguageServerProtocol\CodeActionContext;
 use Phpactor\LanguageServerProtocol\CodeActionParams;
 use Phpactor\LanguageServerProtocol\CodeActionRequest;
@@ -56,8 +57,10 @@ class ImportNameProviderTest extends IntegrationTestCase
 
         $tester->assertSuccess($result);
 
-        self::assertCount($expectedCount, $result->result, 'Number of code actions');
-        $tester->textDocument()->save('file:///foobar', $source);
+        self::assertCount($expectedCount, array_filter($result->result, function (CodeAction $action) {
+            return $action->kind == 'quickfix.import_class';
+        }), 'Number of code actions');
+        $tester->textDocument()->save('file:///foobar');
 
         $diagnostics = $tester->transmitter()->filterByMethod('textDocument/publishDiagnostics')->shiftNotification();
         self::assertNotNull($diagnostics);
@@ -86,7 +89,7 @@ class ImportNameProviderTest extends IntegrationTestCase
                 // File: subject.php
                 <?php new MissingNameFoo();'
                 EOT
-        , 0, 1
+            , 0, 1
         ];
 
         yield 'code actions + diagnostic for namespaced non-existant class' => [
@@ -94,7 +97,7 @@ class ImportNameProviderTest extends IntegrationTestCase
                 // File: subject.php
                 <?php namespace Bar; new MissingNameFoo();'
                 EOT
-        , 0, 1
+            , 0, 1
         ];
 
         yield 'code action and diagnostic for missing global class name with import globals' => [
@@ -104,7 +107,7 @@ class ImportNameProviderTest extends IntegrationTestCase
                 // File: Generator.php
                 <?php class Generator {}
                 EOT
-        , 1, 1, true
+            , 1, 1, true
         ];
 
         yield 'code action and diagnostic for missing global class name without import globals' => [
@@ -114,7 +117,7 @@ class ImportNameProviderTest extends IntegrationTestCase
                 // File: Generator.php
                 <?php class Generator {}
                 EOT
-        , 1, 1, false
+            , 1, 1, false
         ];
 
         yield 'no code action or diagnostics for missing global function name' => [
@@ -122,7 +125,7 @@ class ImportNameProviderTest extends IntegrationTestCase
                 // File: subject.php
                 <?php namespace Foobar; sprintf('foo %s', 'bar')
                 EOT
-        , 0, 0
+            , 0, 0
         ];
 
         yield 'no diagnostics for class declared in same namespace' => [
@@ -144,7 +147,7 @@ class ImportNameProviderTest extends IntegrationTestCase
                 {
                 }
                 EOT
-        , 0, 0
+            , 0, 0
         ];
 
         yield 'built in global funtion' => [
@@ -157,7 +160,7 @@ class ImportNameProviderTest extends IntegrationTestCase
                 $bar = [];
                 explode(array_keys($bar));
                 EOT
-        , 0, 0
+            , 0, 0
         ];
 
         yield 'built in global funtion with import globals' => [
@@ -171,7 +174,7 @@ class ImportNameProviderTest extends IntegrationTestCase
                 $bar = [];
                 explode(array_keys($bar));
                 EOT
-        , 3, 2, true
+            , 2, 2, true
         ];
 
         yield 'constant' => [
@@ -184,7 +187,7 @@ class ImportNameProviderTest extends IntegrationTestCase
                 if (INF) {
                 }
                 EOT
-        , 0, 0, true
+            , 0, 0, true
         ];
     }
 }
