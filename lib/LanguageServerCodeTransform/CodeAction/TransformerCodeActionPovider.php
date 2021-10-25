@@ -63,23 +63,24 @@ class TransformerCodeActionPovider implements DiagnosticsProvider, CodeActionPro
     public function provideActionsFor(TextDocumentItem $textDocument, Range $range): Promise
     {
         return call(function () use ($textDocument) {
-            if (0 === count($this->getDiagnostics($textDocument))) {
+            $diagnostics = $this->getDiagnostics($textDocument);
+            if (0 === count($diagnostics)) {
                 return [];
             }
 
             return [
                 CodeAction::fromArray([
-                'title' =>  $this->title,
-                'kind' => $this->kind(),
-                'diagnostics' => $this->getDiagnostics($textDocument),
-                'command' => new Command(
-                    $this->title,
-                    TransformCommand::NAME,
-                    [
-                        $textDocument->uri,
-                        $this->name
-                    ]
-                )
+                    'title' =>  $this->title,
+                    'kind' => $this->kind(),
+                    'diagnostics' => $diagnostics,
+                    'command' => new Command(
+                        $this->title,
+                        TransformCommand::NAME,
+                        [
+                            $textDocument->uri,
+                            $this->name
+                        ]
+                    )
                 ])
             ];
         });
