@@ -89,8 +89,8 @@ class IndexerHandlerTest extends IntegrationTestCase
 
         $tester->transmitter()->shift();
         $tester->transmitter()->shift();
-        $tester->transmitter()->shift();
 
-        self::assertStringContainsString('File watcher died:', $tester->transmitter()->shift()->params['message']);
+        $message = $tester->transmitter()->shift();
+        self::assertStringContainsString('File watcher died:', $message->params['message']);
     }
 }
