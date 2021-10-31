@@ -72,7 +72,7 @@ class CreateClassProvider implements DiagnosticsProvider, CodeActionProvider
                 $actions[] = CodeAction::fromArray([
                     'title' =>  $title,
                     'kind' => self::KIND,
-                    'diagnostics' => $this->getDiagnostics($textDocument),
+                    'diagnostics' => $diagnostics,
                     'command' => new Command(
                         $title,
                         CreateClassCommand::NAME,
@@ -93,9 +93,7 @@ class CreateClassProvider implements DiagnosticsProvider, CodeActionProvider
      */
     private function getDiagnostics(TextDocumentItem $textDocument): array
     {
-        $node = $this->parser->parseSourceFile($textDocument->text);
-
-        if ('' !== trim($node->getFileContents())) {
+        if ('' !== trim($textDocument->text)) {
             return [];
         }
 
