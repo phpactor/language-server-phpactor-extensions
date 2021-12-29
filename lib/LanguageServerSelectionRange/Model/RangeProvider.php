@@ -48,7 +48,7 @@ class RangeProvider
         return new SelectionRange(
             new Range(
                 PositionConverter::intByteOffsetToPosition(
-                    $node->getStart(),
+                    $node->getStartPosition(),
                     $source
                 ),
                 PositionConverter::intByteOffsetToPosition(

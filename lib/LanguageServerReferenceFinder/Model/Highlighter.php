@@ -94,7 +94,7 @@ class Highlighter
             if ($childNode instanceof Variable && $childNode->getName() === $name) {
                 yield new DocumentHighlight(
                     new Range(
-                        PositionConverter::intByteOffsetToPosition($childNode->getStart(), $childNode->getFileContents()),
+                        PositionConverter::intByteOffsetToPosition($childNode->getStartPosition(), $childNode->getFileContents()),
                         PositionConverter::intByteOffsetToPosition($childNode->getEndPosition(), $childNode->getFileContents())
                     ),
                     $this->variableKind($childNode)
@@ -138,7 +138,7 @@ class Highlighter
             if ($node instanceof Variable && $node->getFirstAncestor(PropertyDeclaration::class) && (string)$node->getName() === $name) {
                 yield new DocumentHighlight(
                     new Range(
-                        PositionConverter::intByteOffsetToPosition($node->getStart(), $node->getFileContents()),
+                        PositionConverter::intByteOffsetToPosition($node->getStartPosition(), $node->getFileContents()),
                         PositionConverter::intByteOffsetToPosition($node->getEndPosition(), $node->getFileContents())
                     ),
                     DocumentHighlightKind::TEXT
@@ -271,7 +271,7 @@ class Highlighter
                 if ($fullyQualfiiedName === (string)$node->getResolvedName()) {
                     yield new DocumentHighlight(
                         new Range(
-                            PositionConverter::intByteOffsetToPosition($node->getStart(), $node->getFileContents()),
+                            PositionConverter::intByteOffsetToPosition($node->getStartPosition(), $node->getFileContents()),
                             PositionConverter::intByteOffsetToPosition($node->getEndPosition(), $node->getFileContents())
                         ),
                         $this->variableKind($node)
