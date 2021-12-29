@@ -14,7 +14,7 @@ final class TokenUtil
     public static function offsetRangeFromToken($tokenOrNode, bool $hasDollar): ?ByteOffsetRange
     {
         if ($tokenOrNode instanceof Node) {
-            return ByteOffsetRange::fromInts($tokenOrNode->getStart(), $tokenOrNode->getEndPosition());
+            return ByteOffsetRange::fromInts($tokenOrNode->getStartPosition(), $tokenOrNode->getEndPosition());
         }
 
         if (!$tokenOrNode instanceof Token) {

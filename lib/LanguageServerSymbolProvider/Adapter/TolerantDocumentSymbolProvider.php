@@ -65,7 +65,7 @@ class TolerantDocumentSymbolProvider implements DocumentSymbolProvider
                 (string)$node->name->getText($source),
                 SymbolKind::FUNCTION,
                 new Range(
-                    PositionConverter::intByteOffsetToPosition($node->getStart(), $source),
+                    PositionConverter::intByteOffsetToPosition($node->getStartPosition(), $source),
                     PositionConverter::intByteOffsetToPosition($node->getEndPosition(), $source)
                 ),
                 new Range(
@@ -83,7 +83,7 @@ class TolerantDocumentSymbolProvider implements DocumentSymbolProvider
                 (string)$node->name->getText($source),
                 SymbolKind::CLASS_,
                 new Range(
-                    PositionConverter::intByteOffsetToPosition($node->getStart(), $source),
+                    PositionConverter::intByteOffsetToPosition($node->getStartPosition(), $source),
                     PositionConverter::intByteOffsetToPosition($node->getEndPosition(), $source)
                 ),
                 new Range(
@@ -101,7 +101,7 @@ class TolerantDocumentSymbolProvider implements DocumentSymbolProvider
                 (string)$node->name->getText($source),
                 SymbolKind::INTERFACE,
                 new Range(
-                    PositionConverter::intByteOffsetToPosition($node->getStart(), $source),
+                    PositionConverter::intByteOffsetToPosition($node->getStartPosition(), $source),
                     PositionConverter::intByteOffsetToPosition($node->getEndPosition(), $source)
                 ),
                 new Range(
@@ -120,7 +120,7 @@ class TolerantDocumentSymbolProvider implements DocumentSymbolProvider
                 (string)$node->name->getText($source),
                 SymbolKind::CLASS_,
                 new Range(
-                    PositionConverter::intByteOffsetToPosition($node->getStart(), $source),
+                    PositionConverter::intByteOffsetToPosition($node->getStartPosition(), $source),
                     PositionConverter::intByteOffsetToPosition($node->getEndPosition(), $source)
                 ),
                 new Range(
@@ -139,7 +139,7 @@ class TolerantDocumentSymbolProvider implements DocumentSymbolProvider
                 $name,
                 $name === '__construct' ? SymbolKind::CONSTRUCTOR : SymbolKind::METHOD,
                 new Range(
-                    PositionConverter::intByteOffsetToPosition($node->getStart(), $source),
+                    PositionConverter::intByteOffsetToPosition($node->getStartPosition(), $source),
                     PositionConverter::intByteOffsetToPosition($node->getEndPosition(), $source)
                 ),
                 new Range(
@@ -158,11 +158,11 @@ class TolerantDocumentSymbolProvider implements DocumentSymbolProvider
                     (string)$node->getName(),
                     SymbolKind::PROPERTY,
                     new Range(
-                        PositionConverter::intByteOffsetToPosition($node->parent->getStart(), $source),
+                        PositionConverter::intByteOffsetToPosition($node->parent->getStartPosition(), $source),
                         PositionConverter::intByteOffsetToPosition($node->parent->getEndPosition(), $source)
                     ),
                     new Range(
-                        PositionConverter::intByteOffsetToPosition($node->getStart(), $source),
+                        PositionConverter::intByteOffsetToPosition($node->getStartPosition(), $source),
                         PositionConverter::intByteOffsetToPosition($node->getEndPosition(), $source)
                     ),
                     null,
@@ -177,7 +177,7 @@ class TolerantDocumentSymbolProvider implements DocumentSymbolProvider
                 (string)$node->getName(),
                 SymbolKind::CONSTANT,
                 new Range(
-                    PositionConverter::intByteOffsetToPosition($node->getStart(), $source),
+                    PositionConverter::intByteOffsetToPosition($node->getStartPosition(), $source),
                     PositionConverter::intByteOffsetToPosition($node->getEndPosition(), $source)
                 ),
                 new Range(
