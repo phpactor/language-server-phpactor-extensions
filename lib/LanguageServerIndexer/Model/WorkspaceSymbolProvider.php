@@ -31,10 +31,16 @@ final class WorkspaceSymbolProvider
      */
     private $locator;
 
-    public function __construct(SearchClient $client, TextDocumentLocator $locator)
+    /**
+     * @var int
+     */
+    private $limit;
+
+    public function __construct(SearchClient $client, TextDocumentLocator $locator, int $limit)
     {
         $this->client = $client;
         $this->locator = $locator;
+        $this->limit = $limit;
     }
 
     /**
@@ -44,7 +50,11 @@ final class WorkspaceSymbolProvider
     {
         return \Amp\call(function () use ($query) {
             $infos = [];
-            foreach ($this->client->search(Criteria::shortNameContains($query)) as $record) {
+            foreach ($this->client->search(Criteria::shortNameContains($query)) as $count => $record) {
+                if ($count >= $this->limit) {
+                    break;
+                }
+
                 assert($record instanceof Record);
                 $infos[] = $this->informationFromRecord($record);
             }

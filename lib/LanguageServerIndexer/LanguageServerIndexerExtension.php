@@ -25,6 +25,8 @@ use Psr\EventDispatcher\EventDispatcherInterface;
 
 class LanguageServerIndexerExtension implements Extension
 {
+    public const WORKSPACE_SYMBOL_SEARCH_LIMIT = 'language_server_indexer.workspace_symbol_search_limit';
+
     /**
      * {@inheritDoc}
      */
@@ -34,7 +36,11 @@ class LanguageServerIndexerExtension implements Extension
 
         $container->register(WorkspaceSymbolHandler::class, function (Container $container) {
             return new WorkspaceSymbolHandler(
-                new WorkspaceSymbolProvider($container->get(SearchClient::class), $container->get(TextDocumentLocator::class))
+                new WorkspaceSymbolProvider(
+                    $container->get(SearchClient::class),
+                    $container->get(TextDocumentLocator::class),
+                    $container->getParameter(self::WORKSPACE_SYMBOL_SEARCH_LIMIT)
+                )
             );
         }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [] ]);
 
@@ -52,6 +58,9 @@ class LanguageServerIndexerExtension implements Extension
 
     public function configure(Resolver $schema): void
     {
+        $schema->setDefaults([
+            self::WORKSPACE_SYMBOL_SEARCH_LIMIT => 250,
+        ]);
     }
 
     private function registerSessionHandler(ContainerBuilder $container): void

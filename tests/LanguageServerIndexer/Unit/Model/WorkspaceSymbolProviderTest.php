@@ -4,6 +4,7 @@ namespace Phpactor\Extension\LanguageServerIndexer\Tests\Unit\Model;
 
 use Closure;
 use Generator;
+use Phpactor\Extension\LanguageServerIndexer\LanguageServerIndexerExtension;
 use Phpactor\Extension\LanguageServerIndexer\Model\WorkspaceSymbolProvider;
 use Phpactor\Extension\LanguageServerIndexer\Tests\IntegrationTestCase;
 use Phpactor\Indexer\Model\Indexer;
@@ -23,9 +24,11 @@ class WorkspaceSymbolProviderTest extends IntegrationTestCase
     /**
      * @dataProvider provideProvide
      */
-    public function testProvide(array $workspace, Closure $assertion, string $query): void
+    public function testProvide(array $workspace, Closure $assertion, string $query, int $limit = 250): void
     {
-        $container = $this->container();
+        $container = $this->container([
+            LanguageServerIndexerExtension::WORKSPACE_SYMBOL_SEARCH_LIMIT => $limit,
+        ]);
         foreach ($workspace as $path => $contents) {
             $this->workspace()->put($path, $contents);
         }
@@ -36,7 +39,7 @@ class WorkspaceSymbolProviderTest extends IntegrationTestCase
         $client = $container->get(SearchClient::class);
         $locator = $container->get(TextDocumentLocator::class);
 
-        $provider = new WorkspaceSymbolProvider($client, $locator);
+        $provider = new WorkspaceSymbolProvider($client, $locator, $limit);
         $informations = wait($provider->provideFor($query));
         $assertion($informations);
     }
@@ -106,6 +109,19 @@ class WorkspaceSymbolProviderTest extends IntegrationTestCase
                 self::assertEquals(SymbolKind::CONSTANT, $info->kind);
             },
             'Foo'
+        ];
+
+        yield 'Applies a limit' => [
+            [
+                'Foo5.php' => '<?php const FOOBAR = "barfoo"',
+                'Foo6.php' => '<?php const FOOBAZ = "barfoo"',
+                'Foo7.php' => '<?php const FOOBAL = "barfoo"',
+            ],
+            function (array $infos): void {
+                self::assertCount(2, $infos);
+            },
+            'Foo',
+            2
         ];
     }
 }
