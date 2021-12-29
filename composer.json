@@ -17,7 +17,7 @@
         "phpactor/code-transform-extension": "^0.2.2",
         "phpactor/completion": "~0.4.5",
         "phpactor/completion-extension": "^0.2.4",
-        "phpactor/completion-worse-extension": "^0.2.2",
+        "phpactor/completion-worse-extension": "^0.2.3",
         "phpactor/console-extension": "^0.1.6",
         "phpactor/container": "^2.0.0",
         "phpactor/file-path-resolver-extension": "^0.3.4",
