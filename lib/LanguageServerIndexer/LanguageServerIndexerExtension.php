@@ -19,6 +19,7 @@ use Phpactor\Indexer\Model\SearchClient;
 use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\LanguageServer\Core\Service\ServiceManager;
+use Phpactor\LanguageServer\WorkDoneProgress\ProgressNotifier;
 use Phpactor\MapResolver\Resolver;
 use Phpactor\TextDocument\TextDocumentLocator;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -70,6 +71,7 @@ class LanguageServerIndexerExtension implements Extension
                 $container->get(Indexer::class),
                 $container->get(Watcher::class),
                 $container->get(ClientApi::class),
+                $container->get(ProgressNotifier::class),
                 $container->get(LoggingExtension::SERVICE_LOGGER),
                 $container->get(EventDispatcherInterface::class)
             );

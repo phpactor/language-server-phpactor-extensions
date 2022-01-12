@@ -17,6 +17,8 @@ use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\Indexer\Model\Indexer;
 use Phpactor\LanguageServer\Core\Service\ServiceManager;
 use Phpactor\LanguageServer\Core\Service\ServiceProvider;
+use Phpactor\LanguageServer\WorkDoneProgress\ProgressNotifier;
+use Phpactor\LanguageServer\WorkDoneProgress\WorkDoneToken;
 use Phpactor\TextDocument\Exception\TextDocumentNotFound;
 use Phpactor\TextDocument\TextDocumentBuilder;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -47,6 +49,11 @@ class IndexerHandler implements Handler, ServiceProvider
     private $clientApi;
 
     /**
+     * @var ProgressNotifier
+     */
+    private $progressNotifier;
+
+    /**
      * @var ServiceManager
      */
     private $serviceManager;
@@ -65,6 +72,7 @@ class IndexerHandler implements Handler, ServiceProvider
         Indexer $indexer,
         Watcher $watcher,
         ClientApi $clientApi,
+        ProgressNotifier $progressNotifier,
         LoggerInterface $logger,
         EventDispatcherInterface $eventDispatcher
     ) {
@@ -72,6 +80,7 @@ class IndexerHandler implements Handler, ServiceProvider
         $this->watcher = $watcher;
         $this->logger = $logger;
         $this->clientApi = $clientApi;
+        $this->progressNotifier = $progressNotifier;
         $this->eventDispatcher = $eventDispatcher;
     }
 
@@ -103,22 +112,29 @@ class IndexerHandler implements Handler, ServiceProvider
         return \Amp\call(function () use ($cancel) {
             $job = $this->indexer->getJob();
             $size = $job->size();
-            $this->clientApi->window()->showMessage()->info(sprintf('Indexing "%s" PHP files', $size));
+            $workDoneToken = WorkDoneToken::generate();
+            $this->progressNotifier->create($workDoneToken);
+            $this->progressNotifier->begin(
+                $workDoneToken,
+                'Indexing',
+                sprintf('Indexing "%s" PHP files', $size),
+                0,
+                false,
+            );
 
             $start = microtime(true);
             $index = 0;
             foreach ($job->generator() as $file) {
                 $index++;
 
-                if ($index % 500 === 0) {
+                if ($index % 50 === 0) {
                     $usage = MemoryUsage::create();
-                    $this->clientApi->window()->showMessage()->info(sprintf(
-                        'Indexed %s/%s (%s%%) %s',
+                    $this->progressNotifier->report($workDoneToken, sprintf(
+                        'Indexed %s/%s %s',
                         $index,
                         $size,
-                        number_format($index / $size * 100, 2),
                         $usage->memoryUsageFormatted()
-                    ));
+                    ), (int) ($index / $size * 100), false);
                 }
 
                 try {
@@ -131,7 +147,7 @@ class IndexerHandler implements Handler, ServiceProvider
             }
 
             $process = yield $this->watcher->watch();
-            $this->clientApi->window()->showMessage()->info(sprintf(
+            $this->progressNotifier->end($workDoneToken, sprintf(
                 'Done indexing (%ss, %s), watching with %s',
                 number_format(microtime(true) - $start, 2),
                 MemoryUsage::create()->memoryUsageFormatted(),
