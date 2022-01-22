@@ -8,10 +8,13 @@ use Generator;
 use Phpactor\CodeTransform\Domain\Refactor\ImportClass\NameImport;
 use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\NameImporter;
 use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\NameImporterResult;
+use Phpactor\LanguageServerProtocol\ClientCapabilities;
+use Phpactor\LanguageServerProtocol\CompletionClientCapabilities;
 use Phpactor\LanguageServerProtocol\CompletionItem;
 use Phpactor\LanguageServerProtocol\CompletionList;
 use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\Range;
+use Phpactor\LanguageServerProtocol\TextDocumentClientCapabilities;
 use Phpactor\LanguageServerProtocol\TextEdit;
 use PHPUnit\Framework\TestCase;
 use Phpactor\Completion\Core\Completor;
@@ -389,12 +392,26 @@ class CompletionHandlerTest extends TestCase
             $registry,
             new SuggestionNameFormatter(true),
             $this->createNameImporter($suggestions, $aliases, $importNameTextEdits),
-            $supportSnippets,
+            $this->createClientCapabilities(true, $supportSnippets),
             true
         ))->build();
         $tester->textDocument()->open(self::EXAMPLE_URI, self::EXAMPLE_TEXT);
 
         return $tester;
+    }
+
+    private function createClientCapabilities(
+        bool $completion = true,
+        bool $supportSnippets = true,
+    ): ClientCapabilities {
+        $capabilities = new ClientCapabilities();
+        $capabilities->textDocument = new TextDocumentClientCapabilities();
+        $capabilities->textDocument->completion = $completion ? new CompletionClientCapabilities() : null;
+        if ($completion && $supportSnippets) {
+            $capabilities->textDocument->completion->completionItem['snippetSupport'] = true;
+        }
+
+        return $capabilities;
     }
 
     /**
