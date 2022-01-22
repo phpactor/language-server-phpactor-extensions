@@ -72,7 +72,7 @@ final class WorkspaceSymbolProvider
                 $record->fqn()->__toString(),
                 SymbolKind::CLASS_,
                 new Location(
-                    $record->filePath(),
+                    TextDocumentUri::fromString($record->filePath()),
                     new Range(
                         $this->toLspPosition($record->start(), $record->filePath()),
                         $this->toLspPosition($record->start()->add(mb_strlen($record->shortName())), $record->filePath())
@@ -86,7 +86,7 @@ final class WorkspaceSymbolProvider
                 $record->fqn()->__toString(),
                 SymbolKind::FUNCTION,
                 new Location(
-                    $record->filePath(),
+                    TextDocumentUri::fromString($record->filePath()),
                     new Range(
                         $this->toLspPosition($record->start(), $record->filePath()),
                         $this->toLspPosition($record->start()->add(mb_strlen($record->shortName())), $record->filePath())
@@ -100,7 +100,7 @@ final class WorkspaceSymbolProvider
                 $record->fqn()->__toString(),
                 SymbolKind::CONSTANT,
                 new Location(
-                    $record->filePath(),
+                    TextDocumentUri::fromString($record->filePath()),
                     new Range(
                         $this->toLspPosition($record->start(), $record->filePath()),
                         $this->toLspPosition($record->start()->add(mb_strlen($record->shortName())), $record->filePath())
