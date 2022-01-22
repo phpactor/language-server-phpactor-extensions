@@ -406,10 +406,18 @@ class CompletionHandlerTest extends TestCase
     ): ClientCapabilities {
         $capabilities = new ClientCapabilities();
         $capabilities->textDocument = new TextDocumentClientCapabilities();
-        $capabilities->textDocument->completion = $completion ? new CompletionClientCapabilities() : null;
-        if ($completion && $supportSnippets) {
-            $capabilities->textDocument->completion->completionItem['snippetSupport'] = true;
+
+        if (false === $completion) {
+            return $capabilities;
         }
+
+        $completionCapabilities = new CompletionClientCapabilities();
+
+        if ($supportSnippets) {
+            $completionCapabilities->completionItem['snippetSupport'] = true;
+        }
+
+        $capabilities->textDocument->completion = $completionCapabilities;
 
         return $capabilities;
     }
