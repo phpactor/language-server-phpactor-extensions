@@ -9,6 +9,7 @@ use Amp\Promise;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\NameImporter;
 use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\NameImporterResult;
+use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\LanguageServerProtocol\CompletionItem;
 use Phpactor\LanguageServerProtocol\CompletionList;
 use Phpactor\LanguageServerProtocol\CompletionOptions;
@@ -51,21 +52,21 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
     private $workspace;
 
     /**
-     * @var bool
-     */
-    private $supportSnippets;
-
-    /**
      * @var NameImporter
      */
     private $nameImporter;
+
+    /**
+     * @var ClientCapabilities
+     */
+    private ClientCapabilities $clientCapabilities;
 
     public function __construct(
         Workspace $workspace,
         TypedCompletorRegistry $registry,
         SuggestionNameFormatter $suggestionNameFormatter,
         NameImporter $nameImporter,
-        bool $supportSnippets,
+        ClientCapabilities $clientCapabilities,
         bool $provideTextEdit = false
     ) {
         $this->registry = $registry;
@@ -73,7 +74,7 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
         $this->workspace = $workspace;
         $this->suggestionNameFormatter = $suggestionNameFormatter;
         $this->nameImporter = $nameImporter;
-        $this->supportSnippets = $supportSnippets;
+        $this->clientCapabilities = $clientCapabilities;
     }
 
     public function methods(): array
@@ -142,8 +143,12 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
 
     public function registerCapabiltiies(ServerCapabilities $capabilities): void
     {
-        $capabilities->completionProvider = new CompletionOptions([':', '>', '$']);
-        $capabilities->signatureHelpProvider = new SignatureHelpOptions(['(', ',']);
+        $capabilities->completionProvider = (null !== $this->clientCapabilities->textDocument->completion)
+            ? new CompletionOptions([':', '>', '$'])
+            : null;
+        $capabilities->signatureHelpProvider = (null !== $this->clientCapabilities->textDocument->signatureHelp)
+            ? new SignatureHelpOptions(['(', ','])
+            : null;
     }
 
     private function determineInsertTextAndFormat(
@@ -154,7 +159,7 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
         $insertText = $name;
         $insertTextFormat = InsertTextFormat::PLAIN_TEXT;
 
-        if ($this->supportSnippets) {
+        if ($this->supportSnippets()) {
             $insertText = $suggestion->snippet() ?: $name;
             $insertTextFormat = $suggestion->snippet()
                 ? InsertTextFormat::SNIPPET
@@ -168,6 +173,11 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
         }
 
         return [$insertText, $insertTextFormat];
+    }
+
+    private function supportSnippets(): bool
+    {
+        return $this->clientCapabilities->textDocument->completion->completionItem['snippetSupport'] ?? false;
     }
 
     private function importClassOrFunctionName(

@@ -47,7 +47,7 @@ class LanguageServerCompletionExtension implements Extension
                 $container->get(CompletionExtension::SERVICE_REGISTRY),
                 $container->get(SuggestionNameFormatter::class),
                 $container->get(NameImporter::class),
-                $this->clientCapabilities($container)->textDocument->completion->completionItem['snippetSupport'] ?? false
+                $this->clientCapabilities($container)
             );
         }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [
             'methods' => [
@@ -62,7 +62,8 @@ class LanguageServerCompletionExtension implements Extension
         $container->register('language_server_completion.handler.signature_help', function (Container $container) {
             return new SignatureHelpHandler(
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
-                $container->get(CompletionExtension::SERVICE_SIGNATURE_HELPER)
+                $container->get(CompletionExtension::SERVICE_SIGNATURE_HELPER),
+                $this->clientCapabilities($container)
             );
         }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [] ]);
     }

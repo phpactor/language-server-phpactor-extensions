@@ -4,6 +4,7 @@ namespace Phpactor\Extension\LanguageServerCompletion\Handler;
 
 use Amp\Promise;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
+use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\ServerCapabilities;
 use Phpactor\LanguageServerProtocol\SignatureHelp;
@@ -29,10 +30,16 @@ class SignatureHelpHandler implements Handler, CanRegisterCapabilities
      */
     private $helper;
 
-    public function __construct(Workspace $workspace, SignatureHelper $helper)
+    /**
+     * @var ClientCapabilities
+     */
+    private ClientCapabilities $clientCapabilities;
+
+    public function __construct(Workspace $workspace, SignatureHelper $helper, ClientCapabilities $clientCapabilities)
     {
         $this->workspace = $workspace;
         $this->helper = $helper;
+        $this->clientCapabilities = $clientCapabilities;
     }
 
     /**
@@ -67,8 +74,8 @@ class SignatureHelpHandler implements Handler, CanRegisterCapabilities
 
     public function registerCapabiltiies(ServerCapabilities $capabilities): void
     {
-        $options = new SignatureHelpOptions();
-        $options->triggerCharacters = [ '(', ',' ];
-        $capabilities->signatureHelpProvider = $options;
+        $capabilities->signatureHelpProvider = (null !== $this->clientCapabilities->textDocument->signatureHelp)
+            ? new SignatureHelpOptions(['(', ','])
+            : null;
     }
 }
