@@ -8,7 +8,7 @@ $finder = PhpCsFixer\Finder::create()
     ])
 ;
 
-return PhpCsFixer\Config::create()
+return (new PhpCsFixer\Config())
     ->setRiskyAllowed(true)
     ->setRules([
         '@PSR2' => true,
@@ -22,4 +22,3 @@ return PhpCsFixer\Config::create()
     ])
     ->setFinder($finder)
 ;
-
