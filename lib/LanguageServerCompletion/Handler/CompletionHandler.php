@@ -142,9 +142,6 @@ class CompletionHandler extends AbstractHandler implements Handler, CanRegisterC
         $capabilities->completionProvider = (null !== $this->clientCapabilities->textDocument->completion)
             ? new CompletionOptions([':', '>', '$'])
             : null;
-        $capabilities->signatureHelpProvider = (null !== $this->clientCapabilities->textDocument->signatureHelp)
-            ? new SignatureHelpOptions(['(', ','])
-            : null;
     }
 
     private function determineInsertTextAndFormat(
