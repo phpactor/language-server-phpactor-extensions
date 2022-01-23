@@ -17,6 +17,7 @@ use Phpactor\Extension\LanguageServerReferenceFinder\Adapter\Indexer\WorkspaceUp
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
 use Phpactor\Indexer\Model\Indexer;
+use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\MapResolver\Resolver;
 use Phpactor\ReferenceFinder\ReferenceFinder;
@@ -34,7 +35,8 @@ class LanguageServerReferenceFinderExtension implements Extension
             return new GotoDefinitionHandler(
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
                 $container->get(ReferenceFinderExtension::SERVICE_DEFINITION_LOCATOR),
-                $container->get(LocationConverter::class)
+                $container->get(LocationConverter::class),
+                $this->clientCapabilities($container)
             );
         }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [] ]);
 
@@ -42,7 +44,8 @@ class LanguageServerReferenceFinderExtension implements Extension
             return new TypeDefinitionHandler(
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
                 $container->get(ReferenceFinderExtension::SERVICE_TYPE_LOCATOR),
-                $container->get(LocationConverter::class)
+                $container->get(LocationConverter::class),
+                $this->clientCapabilities($container)
             );
         }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [] ]);
 
@@ -61,7 +64,8 @@ class LanguageServerReferenceFinderExtension implements Extension
                 $container->get(ReferenceFinderExtension::SERVICE_DEFINITION_LOCATOR),
                 $container->get(LocationConverter::class),
                 $container->get(ClientApi::class),
-                $container->getParameter(self::PARAM_REFERENCE_TIMEOUT)
+                $container->getParameter(self::PARAM_REFERENCE_TIMEOUT),
+                $this->clientCapabilities($container)
             );
         }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [] ]);
 
@@ -69,14 +73,16 @@ class LanguageServerReferenceFinderExtension implements Extension
             return new GotoImplementationHandler(
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
                 $container->get(ReferenceFinderExtension::SERVICE_IMPLEMENTATION_FINDER),
-                $container->get(LocationConverter::class)
+                $container->get(LocationConverter::class),
+                $this->clientCapabilities($container)
             );
         }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [] ]);
 
         $container->register(HighlightHandler::class, function (Container $container) {
             return new HighlightHandler(
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
-                new Highlighter(new Parser())
+                new Highlighter(new Parser()),
+                $this->clientCapabilities($container)
             );
         }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [] ]);
     }
@@ -92,5 +98,10 @@ class LanguageServerReferenceFinderExtension implements Extension
         $schema->setDescriptions([
             self::PARAM_REFERENCE_TIMEOUT => 'Stop searching for references after this time (in seconds) has expired',
         ]);
+    }
+
+    private function clientCapabilities(Container $container): ClientCapabilities
+    {
+        return $container->get(ClientCapabilities::class);
     }
 }

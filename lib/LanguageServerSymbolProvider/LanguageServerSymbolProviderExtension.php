@@ -10,6 +10,7 @@ use Phpactor\Extension\LanguageServerSymbolProvider\Adapter\TolerantDocumentSymb
 use Phpactor\Extension\LanguageServerSymbolProvider\Handler\DocumentSymbolProviderHandler;
 use Phpactor\Extension\LanguageServerSymbolProvider\Model\DocumentSymbolProvider;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
+use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\MapResolver\Resolver;
 
 class LanguageServerSymbolProviderExtension implements Extension
@@ -22,7 +23,8 @@ class LanguageServerSymbolProviderExtension implements Extension
         $container->register(DocumentSymbolProviderHandler::class, function (Container $container) {
             return new DocumentSymbolProviderHandler(
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
-                $container->get(DocumentSymbolProvider::class)
+                $container->get(DocumentSymbolProvider::class),
+                $this->clientCapabilities($container)
             );
         }, [
             LanguageServerExtension::TAG_METHOD_HANDLER => [],
@@ -37,5 +39,10 @@ class LanguageServerSymbolProviderExtension implements Extension
      */
     public function configure(Resolver $schema): void
     {
+    }
+
+    private function clientCapabilities(Container $container): ClientCapabilities
+    {
+        return $container->get(ClientCapabilities::class);
     }
 }

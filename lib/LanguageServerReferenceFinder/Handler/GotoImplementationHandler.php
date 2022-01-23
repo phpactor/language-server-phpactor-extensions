@@ -4,6 +4,7 @@ namespace Phpactor\Extension\LanguageServerReferenceFinder\Handler;
 
 use Amp\Promise;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
+use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\LanguageServerProtocol\ImplementationParams;
 use Phpactor\LanguageServerProtocol\ServerCapabilities;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
@@ -30,11 +31,22 @@ class GotoImplementationHandler implements Handler, CanRegisterCapabilities
      */
     private $locationConverter;
 
-    public function __construct(Workspace $workspace, ClassImplementationFinder $finder, LocationConverter $locationConverter)
+    /**
+     * @var ClientCapabilities
+     */
+    private ClientCapabilities $clientCapabilities;
+
+    public function __construct(
+        Workspace $workspace,
+        ClassImplementationFinder $finder,
+        LocationConverter $locationConverter,
+        ClientCapabilities $clientCapabilities
+    )
     {
         $this->workspace = $workspace;
         $this->finder = $finder;
         $this->locationConverter = $locationConverter;
+        $this->clientCapabilities = $clientCapabilities;
     }
 
     /**
@@ -68,6 +80,6 @@ class GotoImplementationHandler implements Handler, CanRegisterCapabilities
 
     public function registerCapabiltiies(ServerCapabilities $capabilities): void
     {
-        $capabilities->implementationProvider = true;
+        $capabilities->implementationProvider = null !== $this->clientCapabilities->textDocument->implementation;
     }
 }

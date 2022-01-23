@@ -40,7 +40,8 @@ class LanguageServerIndexerExtension implements Extension
                     $container->get(SearchClient::class),
                     $container->get(TextDocumentLocator::class),
                     $container->getParameter(self::WORKSPACE_SYMBOL_SEARCH_LIMIT)
-                )
+                ),
+                $this->clientCapabilities($container)
             );
         }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [] ]);
 
@@ -83,5 +84,10 @@ class LanguageServerIndexerExtension implements Extension
         }, [
             LanguageServerExtension::TAG_LISTENER_PROVIDER => [],
         ]);
+    }
+
+    private function clientCapabilities(Container $container): ClientCapabilities
+    {
+        return $container->get(ClientCapabilities::class);
     }
 }

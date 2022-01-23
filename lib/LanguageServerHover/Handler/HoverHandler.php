@@ -4,6 +4,7 @@ namespace Phpactor\Extension\LanguageServerHover\Handler;
 
 use Amp\Promise;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
+use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\LanguageServerProtocol\Hover;
 use Phpactor\LanguageServerProtocol\MarkupContent;
 use Phpactor\LanguageServerProtocol\Position;
@@ -43,11 +44,21 @@ class HoverHandler implements Handler, CanRegisterCapabilities
      */
     private $workspace;
 
-    public function __construct(Workspace $workspace, Reflector $reflector, ObjectRenderer $renderer)
-    {
+    /**
+     * @var ClientCapabilities
+     */
+    private ClientCapabilities $clientCapabilities;
+
+    public function __construct(
+        Workspace $workspace,
+        Reflector $reflector,
+        ObjectRenderer $renderer,
+        ClientCapabilities $clientCapabilities
+    ) {
         $this->reflector = $reflector;
         $this->renderer = $renderer;
         $this->workspace = $workspace;
+        $this->clientCapabilities = $clientCapabilities;
     }
 
     public function methods(): array
@@ -73,7 +84,7 @@ class HoverHandler implements Handler, CanRegisterCapabilities
             $symbolContext = $offsetReflection->symbolContext();
             $info = $this->infoFromReflecionOffset($offsetReflection);
             $string = new MarkupContent('markdown', $info);
-            
+
             return new Hover($string, new Range(
                 PositionConverter::byteOffsetToPosition(
                     ByteOffset::fromInt($symbolContext->symbol()->position()->start()),
@@ -89,7 +100,7 @@ class HoverHandler implements Handler, CanRegisterCapabilities
 
     public function registerCapabiltiies(ServerCapabilities $capabilities): void
     {
-        $capabilities->hoverProvider = true;
+        $capabilities->hoverProvider = null !== $this->clientCapabilities->textDocument->hover;
     }
 
     private function infoFromReflecionOffset(ReflectionOffset $offset): string

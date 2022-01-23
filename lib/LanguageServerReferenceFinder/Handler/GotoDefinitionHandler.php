@@ -4,6 +4,7 @@ namespace Phpactor\Extension\LanguageServerReferenceFinder\Handler;
 
 use Amp\Promise;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
+use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\LanguageServerProtocol\DefinitionParams;
 use Phpactor\LanguageServerProtocol\ServerCapabilities;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
@@ -31,11 +32,21 @@ class GotoDefinitionHandler implements Handler, CanRegisterCapabilities
      */
     private $locationConverter;
 
-    public function __construct(Workspace $workspace, DefinitionLocator $definitionLocator, LocationConverter $locationConverter)
-    {
+    /**
+     * @var ClientCapabilities
+     */
+    private ClientCapabilities $clientCapabilities;
+
+    public function __construct(
+        Workspace $workspace,
+        DefinitionLocator $definitionLocator,
+        LocationConverter $locationConverter,
+        ClientCapabilities $clientCapabilities
+    ) {
         $this->definitionLocator = $definitionLocator;
         $this->workspace = $workspace;
         $this->locationConverter = $locationConverter;
+        $this->clientCapabilities = $clientCapabilities;
     }
 
     public function methods(): array
@@ -70,6 +81,6 @@ class GotoDefinitionHandler implements Handler, CanRegisterCapabilities
 
     public function registerCapabiltiies(ServerCapabilities $capabilities): void
     {
-        $capabilities->definitionProvider = true;
+        $capabilities->definitionProvider = null !== $this->clientCapabilities->textDocument->definition;
     }
 }

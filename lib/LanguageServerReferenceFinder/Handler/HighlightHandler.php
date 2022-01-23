@@ -6,6 +6,7 @@ use Amp\Promise;
 use Amp\Success;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\LanguageServerReferenceFinder\Model\Highlighter;
+use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\LanguageServerProtocol\DocumentHighlight;
 use Phpactor\LanguageServerProtocol\DocumentHighlightOptions;
 use Phpactor\LanguageServerProtocol\DocumentHighlightParams;
@@ -27,10 +28,16 @@ class HighlightHandler implements Handler, CanRegisterCapabilities
      */
     private $highlighter;
 
-    public function __construct(Workspace $workspace, Highlighter $highlighter)
+    /**
+     * @var ClientCapabilities
+     */
+    private ClientCapabilities $clientCapabilities;
+
+    public function __construct(Workspace $workspace, Highlighter $highlighter, ClientCapabilities $clientCapabilities)
     {
         $this->workspace = $workspace;
         $this->highlighter = $highlighter;
+        $this->clientCapabilities = $clientCapabilities;
     }
 
     /**
@@ -56,6 +63,10 @@ class HighlightHandler implements Handler, CanRegisterCapabilities
 
     public function registerCapabiltiies(ServerCapabilities $capabilities): void
     {
+        if (null === $this->clientCapabilities->textDocument->documentHighlight) {
+            return;
+        }
+
         $options = new DocumentHighlightOptions();
         $capabilities->documentHighlightProvider = $options;
     }
