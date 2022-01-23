@@ -37,8 +37,7 @@ class GotoImplementationHandler extends AbstractHandler implements Handler, CanR
         ClassImplementationFinder $finder,
         LocationConverter $locationConverter,
         ClientCapabilities $clientCapabilities
-    )
-    {
+    ) {
         $this->workspace = $workspace;
         $this->finder = $finder;
         $this->locationConverter = $locationConverter;

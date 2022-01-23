@@ -39,8 +39,7 @@ class TypeDefinitionHandler extends AbstractHandler implements Handler, CanRegis
         TypeLocator $typeLocator,
         LocationConverter $locationConverter,
         ClientCapabilities $clientCapabilities
-    )
-    {
+    ) {
         $this->typeLocator = $typeLocator;
         $this->workspace = $workspace;
         $this->locationConverter = $locationConverter;
