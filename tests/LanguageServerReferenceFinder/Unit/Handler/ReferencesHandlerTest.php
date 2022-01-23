@@ -3,6 +3,7 @@
 namespace Phpactor\Extension\LanguageServerReferenceFinder\Tests\Unit\Handler;
 
 use Phpactor\Extension\LanguageServerBridge\TextDocument\WorkspaceTextDocumentLocator;
+use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\LanguageServerProtocol\Location as LspLocation;
 use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\Range;
@@ -172,7 +173,9 @@ class ReferencesHandlerTest extends TestCase
                 $this->finder->reveal(),
                 $this->locator->reveal(),
                 new LocationConverter(new WorkspaceTextDocumentLocator($builder->workspace())),
-                new ClientApi(TestRpcClient::create())
+                new ClientApi(TestRpcClient::create()),
+                5.0,
+                ClientCapabilities::fromArray(['textDocument' => ['definition' => []]])
             )
         );
         $tester = $builder->build();
