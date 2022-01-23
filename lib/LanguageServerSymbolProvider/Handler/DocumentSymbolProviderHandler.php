@@ -30,7 +30,7 @@ class DocumentSymbolProviderHandler extends AbstractHandler implements Handler, 
     public function __construct(
         Workspace $workspace,
         DocumentSymbolProvider $provider,
-        ClientCapabilities $clientCapabilities,
+        ClientCapabilities $clientCapabilities
     ) {
         $this->workspace = $workspace;
         $this->provider = $provider;
