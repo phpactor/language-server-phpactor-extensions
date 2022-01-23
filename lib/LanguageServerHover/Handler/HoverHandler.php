@@ -3,6 +3,7 @@
 namespace Phpactor\Extension\LanguageServerHover\Handler;
 
 use Amp\Promise;
+use Phpactor\Extension\AbstractHandler;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\LanguageServerProtocol\Hover;
@@ -27,7 +28,7 @@ use Phpactor\WorseReflection\Core\Reflection\ReflectionOffset;
 use Phpactor\WorseReflection\Core\Type;
 use Phpactor\WorseReflection\Reflector;
 
-class HoverHandler implements Handler, CanRegisterCapabilities
+class HoverHandler extends AbstractHandler implements Handler, CanRegisterCapabilities
 {
     /**
      * @var Reflector
@@ -44,11 +45,6 @@ class HoverHandler implements Handler, CanRegisterCapabilities
      */
     private $workspace;
 
-    /**
-     * @var ClientCapabilities
-     */
-    private ClientCapabilities $clientCapabilities;
-
     public function __construct(
         Workspace $workspace,
         Reflector $reflector,
@@ -58,7 +54,7 @@ class HoverHandler implements Handler, CanRegisterCapabilities
         $this->reflector = $reflector;
         $this->renderer = $renderer;
         $this->workspace = $workspace;
-        $this->clientCapabilities = $clientCapabilities;
+        parent::__construct($clientCapabilities);
     }
 
     public function methods(): array

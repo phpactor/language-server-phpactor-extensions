@@ -4,6 +4,7 @@ namespace Phpactor\Extension\LanguageServerReferenceFinder\Handler;
 
 use Amp\Promise;
 use Amp\Success;
+use Phpactor\Extension\AbstractHandler;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\LanguageServerReferenceFinder\Model\Highlighter;
 use Phpactor\LanguageServerProtocol\ClientCapabilities;
@@ -16,7 +17,7 @@ use Phpactor\LanguageServer\Core\Handler\CanRegisterCapabilities;
 use Phpactor\LanguageServer\Core\Handler\Handler;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
 
-class HighlightHandler implements Handler, CanRegisterCapabilities
+class HighlightHandler extends AbstractHandler implements Handler, CanRegisterCapabilities
 {
     /**
      * @var Workspace
@@ -28,16 +29,11 @@ class HighlightHandler implements Handler, CanRegisterCapabilities
      */
     private $highlighter;
 
-    /**
-     * @var ClientCapabilities
-     */
-    private ClientCapabilities $clientCapabilities;
-
     public function __construct(Workspace $workspace, Highlighter $highlighter, ClientCapabilities $clientCapabilities)
     {
         $this->workspace = $workspace;
         $this->highlighter = $highlighter;
-        $this->clientCapabilities = $clientCapabilities;
+        parent::__construct($clientCapabilities);
     }
 
     /**

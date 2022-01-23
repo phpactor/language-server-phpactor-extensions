@@ -6,6 +6,7 @@ use Amp\CancellationToken;
 use Amp\CancelledException;
 use Amp\Delayed;
 use Amp\Promise;
+use Phpactor\Extension\AbstractHandler;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\NameImporter;
 use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\NameImporterResult;
@@ -29,7 +30,7 @@ use Phpactor\LanguageServer\Core\Handler\Handler;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\TextDocument\TextDocumentBuilder;
 
-class CompletionHandler implements Handler, CanRegisterCapabilities
+class CompletionHandler extends AbstractHandler implements Handler, CanRegisterCapabilities
 {
     /**
      * @var TypedCompletorRegistry
@@ -56,11 +57,6 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
      */
     private $nameImporter;
 
-    /**
-     * @var ClientCapabilities
-     */
-    private ClientCapabilities $clientCapabilities;
-
     public function __construct(
         Workspace $workspace,
         TypedCompletorRegistry $registry,
@@ -74,7 +70,7 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
         $this->workspace = $workspace;
         $this->suggestionNameFormatter = $suggestionNameFormatter;
         $this->nameImporter = $nameImporter;
-        $this->clientCapabilities = $clientCapabilities;
+        parent::__construct($clientCapabilities);
     }
 
     public function methods(): array

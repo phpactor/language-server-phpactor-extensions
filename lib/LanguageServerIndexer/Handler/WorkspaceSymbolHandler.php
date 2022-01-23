@@ -3,6 +3,7 @@
 namespace Phpactor\Extension\LanguageServerIndexer\Handler;
 
 use Amp\Promise;
+use Phpactor\Extension\AbstractHandler;
 use Phpactor\Extension\LanguageServerIndexer\Model\WorkspaceSymbolProvider;
 use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\LanguageServerProtocol\ServerCapabilities;
@@ -11,22 +12,17 @@ use Phpactor\LanguageServerProtocol\WorkspaceSymbolParams;
 use Phpactor\LanguageServer\Core\Handler\CanRegisterCapabilities;
 use Phpactor\LanguageServer\Core\Handler\Handler;
 
-class WorkspaceSymbolHandler implements Handler, CanRegisterCapabilities
+class WorkspaceSymbolHandler extends AbstractHandler implements Handler, CanRegisterCapabilities
 {
     /**
      * @var WorkspaceSymbolProvider
      */
     private $provider;
 
-    /**
-     * @var ClientCapabilities
-     */
-    private ClientCapabilities $clientCapabilities;
-
     public function __construct(WorkspaceSymbolProvider $provider, ClientCapabilities $clientCapabilities)
     {
         $this->provider = $provider;
-        $this->clientCapabilities = $clientCapabilities;
+        parent::__construct($clientCapabilities);
     }
 
     public function methods(): array
