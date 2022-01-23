@@ -52,7 +52,7 @@ class GotoImplementationHandlerTest extends TestCase
             $builder->workspace(),
             $this->finder->reveal(),
             new LocationConverter(new WorkspaceTextDocumentLocator($builder->workspace())),
-            ClientCapabilities::fromArray(['textDocument' => ['definition' => []]])
+            ClientCapabilities::fromArray(['textDocument' => ['implementation' => []]])
         ))->build();
         $tester->textDocument()->open(self::EXAMPLE_URI, self::EXAMPLE_TEXT);
 

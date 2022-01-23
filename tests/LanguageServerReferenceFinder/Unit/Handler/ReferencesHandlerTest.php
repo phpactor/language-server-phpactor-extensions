@@ -175,7 +175,7 @@ class ReferencesHandlerTest extends TestCase
                 new LocationConverter(new WorkspaceTextDocumentLocator($builder->workspace())),
                 new ClientApi(TestRpcClient::create()),
                 5.0,
-                ClientCapabilities::fromArray(['textDocument' => ['definition' => []]])
+                ClientCapabilities::fromArray(['textDocument' => ['references' => []]])
             )
         );
         $tester = $builder->build();
