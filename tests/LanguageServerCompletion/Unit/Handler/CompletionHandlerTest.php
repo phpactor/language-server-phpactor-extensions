@@ -431,7 +431,7 @@ class CompletionHandlerTest extends TestCase
 
     private function createClientCapabilities(
         bool $completion = true,
-        bool $supportSnippets = true,
+        bool $supportSnippets = true
     ): ClientCapabilities {
         $capabilities = new ClientCapabilities();
         $capabilities->textDocument = new TextDocumentClientCapabilities();
