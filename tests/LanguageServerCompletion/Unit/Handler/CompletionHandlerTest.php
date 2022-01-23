@@ -12,8 +12,10 @@ use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\LanguageServerProtocol\CompletionClientCapabilities;
 use Phpactor\LanguageServerProtocol\CompletionItem;
 use Phpactor\LanguageServerProtocol\CompletionList;
+use Phpactor\LanguageServerProtocol\CompletionOptions;
 use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\Range;
+use Phpactor\LanguageServerProtocol\ServerCapabilities;
 use Phpactor\LanguageServerProtocol\TextDocumentClientCapabilities;
 use Phpactor\LanguageServerProtocol\TextEdit;
 use PHPUnit\Framework\TestCase;
@@ -49,32 +51,40 @@ class CompletionHandlerTest extends TestCase
         $this->assertFalse($response->result->isIncomplete);
     }
 
-    public function testHandleWithDisabledCapability(): void
+    public function testDisbledCompletion(): void
     {
-        $tester = $this->create(
-            [
-                Suggestion::create('hello'),
-                Suggestion::create('goodbye'),
-            ],
-            true,
+        $handler = $this->createHandler(
+            LanguageServerTesterBuilder::create(),
+            [],
+            false,
             false,
             [],
             [],
             false
         );
-        $response = $tester->requestAndWait(
-            'textDocument/completion',
-            [
-                'textDocument' => ProtocolFactory::textDocumentIdentifier(self::EXAMPLE_URI),
-                'position' => ProtocolFactory::position(0, 0)
-            ]
+
+        $serverCapabilities = new ServerCapabilities();
+        $handler->registerCapabiltiies($serverCapabilities);
+
+        $this->assertNull($serverCapabilities->completionProvider);
+    }
+
+    public function testEnabledCompletion(): void
+    {
+        $handler = $this->createHandler(
+            LanguageServerTesterBuilder::create(),
+            [],
+            false,
+            false,
+            [],
+            [],
+            true
         );
-        $this->assertInstanceOf(CompletionList::class, $response->result);
-        $this->assertEquals([
-            self::completionItem('hello', null),
-            self::completionItem('goodbye', null),
-        ], $response->result->items);
-        $this->assertFalse($response->result->isIncomplete);
+
+        $serverCapabilities = new ServerCapabilities();
+        $handler->registerCapabiltiies($serverCapabilities);
+
+        $this->assertInstanceOf(CompletionOptions::class, $serverCapabilities->completionProvider);
     }
 
     public function testHandleACompleteListOfSuggestions(): void
@@ -411,22 +421,42 @@ class CompletionHandlerTest extends TestCase
         array $aliases = [],
         bool $supportCompletion = true
     ): LanguageServerTester {
+        $builder = LanguageServerTesterBuilder::create();
+        $tester = $builder->addHandler($this->createHandler(
+            $builder,
+            $suggestions,
+            $supportSnippets,
+            $isIncomplete,
+            $importNameTextEdits,
+            $aliases,
+            $supportCompletion
+        ))->build();
+        $tester->textDocument()->open(self::EXAMPLE_URI, self::EXAMPLE_TEXT);
+
+        return $tester;
+    }
+
+    private function createHandler(
+        LanguageServerTesterBuilder $builder,
+        array $suggestions,
+        bool $supportSnippets = true,
+        bool $isIncomplete = false,
+        array $importNameTextEdits = [],
+        array $aliases = [],
+        bool $supportCompletion = true
+    ): CompletionHandler {
         $completor = $this->createCompletor($suggestions, $isIncomplete);
         $registry = new TypedCompletorRegistry([
             'php' => $completor,
         ]);
-        $builder = LanguageServerTesterBuilder::create();
-        $tester = $builder->addHandler(new CompletionHandler(
+        return new CompletionHandler(
             $builder->workspace(),
             $registry,
             new SuggestionNameFormatter(true),
             $this->createNameImporter($suggestions, $aliases, $importNameTextEdits),
             $this->createClientCapabilities($supportCompletion, $supportSnippets),
             true
-        ))->build();
-        $tester->textDocument()->open(self::EXAMPLE_URI, self::EXAMPLE_TEXT);
-
-        return $tester;
+        );
     }
 
     private function createClientCapabilities(
