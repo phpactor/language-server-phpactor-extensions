@@ -5,6 +5,7 @@ namespace Phpactor\Extension\LanguageServerHover;
 use Phpactor\CodeBuilder\Domain\TemplatePathResolver\PhpVersionPathResolver;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
+use Phpactor\Extension\AbstractExtension;
 use Phpactor\Extension\Logger\LoggingExtension;
 use Phpactor\Extension\Php\Model\PhpVersionResolver;
 use Phpactor\Extension\WorseReflection\WorseReflectionExtension;
@@ -16,7 +17,7 @@ use Phpactor\Extension\LanguageServerHover\Handler\HoverHandler;
 use Phpactor\Container\Extension;
 use Phpactor\MapResolver\Resolver;
 
-class LanguageServerHoverExtension implements Extension
+class LanguageServerHoverExtension extends AbstractExtension implements Extension
 {
     public const PARAM_TEMPLATE_PATHS = 'language_server_hover.template_paths';
 
@@ -76,10 +77,5 @@ class LanguageServerHoverExtension implements Extension
 
             return $builder->build();
         });
-    }
-
-    private function clientCapabilities(Container $container): ClientCapabilities
-    {
-        return $container->get(ClientCapabilities::class);
     }
 }

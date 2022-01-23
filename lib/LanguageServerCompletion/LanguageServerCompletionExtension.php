@@ -5,6 +5,7 @@ namespace Phpactor\Extension\LanguageServerCompletion;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
+use Phpactor\Extension\AbstractExtension;
 use Phpactor\Extension\Completion\CompletionExtension;
 use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\NameImporter;
 use Phpactor\Extension\LanguageServerCompletion\Handler\SignatureHelpHandler;
@@ -14,7 +15,7 @@ use Phpactor\Extension\LanguageServerCompletion\Handler\CompletionHandler;
 use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\MapResolver\Resolver;
 
-class LanguageServerCompletionExtension implements Extension
+class LanguageServerCompletionExtension extends AbstractExtension implements Extension
 {
     private const PARAM_TRIM_LEADING_DOLLAR = 'language_server_completion.trim_leading_dollar';
 
@@ -66,10 +67,5 @@ class LanguageServerCompletionExtension implements Extension
                 $this->clientCapabilities($container)
             );
         }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [] ]);
-    }
-
-    private function clientCapabilities(Container $container): ClientCapabilities
-    {
-        return $container->get(ClientCapabilities::class);
     }
 }

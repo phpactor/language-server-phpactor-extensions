@@ -6,6 +6,7 @@ use Microsoft\PhpParser\Parser;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
+use Phpactor\Extension\AbstractExtension;
 use Phpactor\Extension\LanguageServerSymbolProvider\Adapter\TolerantDocumentSymbolProvider;
 use Phpactor\Extension\LanguageServerSymbolProvider\Handler\DocumentSymbolProviderHandler;
 use Phpactor\Extension\LanguageServerSymbolProvider\Model\DocumentSymbolProvider;
@@ -13,7 +14,7 @@ use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\MapResolver\Resolver;
 
-class LanguageServerSymbolProviderExtension implements Extension
+class LanguageServerSymbolProviderExtension extends AbstractExtension implements Extension
 {
     /**
      * {@inheritDoc}
@@ -39,10 +40,5 @@ class LanguageServerSymbolProviderExtension implements Extension
      */
     public function configure(Resolver $schema): void
     {
-    }
-
-    private function clientCapabilities(Container $container): ClientCapabilities
-    {
-        return $container->get(ClientCapabilities::class);
     }
 }

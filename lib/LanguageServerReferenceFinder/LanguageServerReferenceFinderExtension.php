@@ -6,6 +6,7 @@ use Microsoft\PhpParser\Parser;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
+use Phpactor\Extension\AbstractExtension;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\GotoDefinitionHandler;
 use Phpactor\Extension\LanguageServerReferenceFinder\Handler\GotoImplementationHandler;
@@ -22,7 +23,7 @@ use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\MapResolver\Resolver;
 use Phpactor\ReferenceFinder\ReferenceFinder;
 
-class LanguageServerReferenceFinderExtension implements Extension
+class LanguageServerReferenceFinderExtension extends AbstractExtension implements Extension
 {
     const PARAM_REFERENCE_TIMEOUT = 'language_server_reference_reference_finder.reference_timeout';
 
@@ -98,10 +99,5 @@ class LanguageServerReferenceFinderExtension implements Extension
         $schema->setDescriptions([
             self::PARAM_REFERENCE_TIMEOUT => 'Stop searching for references after this time (in seconds) has expired',
         ]);
-    }
-
-    private function clientCapabilities(Container $container): ClientCapabilities
-    {
-        return $container->get(ClientCapabilities::class);
     }
 }

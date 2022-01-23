@@ -6,6 +6,7 @@ use Phpactor\AmpFsWatch\Watcher;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
+use Phpactor\Extension\AbstractExtension;
 use Phpactor\Extension\LanguageServerIndexer\Handler\IndexerHandler;
 use Phpactor\Extension\LanguageServerIndexer\Handler\WorkspaceSymbolHandler;
 use Phpactor\Extension\LanguageServerIndexer\Listener\ReindexListener;
@@ -23,7 +24,7 @@ use Phpactor\MapResolver\Resolver;
 use Phpactor\TextDocument\TextDocumentLocator;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
-class LanguageServerIndexerExtension implements Extension
+class LanguageServerIndexerExtension extends AbstractExtension implements Extension
 {
     public const WORKSPACE_SYMBOL_SEARCH_LIMIT = 'language_server_indexer.workspace_symbol_search_limit';
 
@@ -84,10 +85,5 @@ class LanguageServerIndexerExtension implements Extension
         }, [
             LanguageServerExtension::TAG_LISTENER_PROVIDER => [],
         ]);
-    }
-
-    private function clientCapabilities(Container $container): ClientCapabilities
-    {
-        return $container->get(ClientCapabilities::class);
     }
 }
