@@ -18,7 +18,6 @@ use Phpactor\LanguageServerProtocol\CompletionParams;
 use Phpactor\LanguageServerProtocol\InsertTextFormat;
 use Phpactor\LanguageServerProtocol\Range;
 use Phpactor\LanguageServerProtocol\ServerCapabilities;
-use Phpactor\LanguageServerProtocol\SignatureHelpOptions;
 use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\LanguageServerProtocol\TextEdit;
 use Phpactor\Completion\Core\Suggestion;
