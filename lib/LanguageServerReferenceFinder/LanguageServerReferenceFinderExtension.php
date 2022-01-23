@@ -18,7 +18,6 @@ use Phpactor\Extension\LanguageServerReferenceFinder\Adapter\Indexer\WorkspaceUp
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\ReferenceFinder\ReferenceFinderExtension;
 use Phpactor\Indexer\Model\Indexer;
-use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\LanguageServer\Core\Server\ClientApi;
 use Phpactor\MapResolver\Resolver;
 use Phpactor\ReferenceFinder\ReferenceFinder;

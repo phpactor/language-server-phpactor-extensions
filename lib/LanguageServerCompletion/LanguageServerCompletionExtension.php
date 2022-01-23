@@ -12,7 +12,6 @@ use Phpactor\Extension\LanguageServerCompletion\Handler\SignatureHelpHandler;
 use Phpactor\Extension\LanguageServerCompletion\Util\SuggestionNameFormatter;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\LanguageServerCompletion\Handler\CompletionHandler;
-use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\MapResolver\Resolver;
 
 class LanguageServerCompletionExtension extends AbstractExtension implements Extension

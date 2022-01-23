@@ -11,7 +11,6 @@ use Phpactor\Extension\LanguageServerSymbolProvider\Adapter\TolerantDocumentSymb
 use Phpactor\Extension\LanguageServerSymbolProvider\Handler\DocumentSymbolProviderHandler;
 use Phpactor\Extension\LanguageServerSymbolProvider\Model\DocumentSymbolProvider;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
-use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\MapResolver\Resolver;
 
 class LanguageServerSymbolProviderExtension extends AbstractExtension implements Extension
