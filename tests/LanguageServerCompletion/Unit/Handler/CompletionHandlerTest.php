@@ -49,6 +49,34 @@ class CompletionHandlerTest extends TestCase
         $this->assertFalse($response->result->isIncomplete);
     }
 
+    public function testHandleWithDisabledCapability(): void
+    {
+        $tester = $this->create(
+            [
+                Suggestion::create('hello'),
+                Suggestion::create('goodbye'),
+            ],
+            true,
+            false,
+            [],
+            [],
+            false
+        );
+        $response = $tester->requestAndWait(
+            'textDocument/completion',
+            [
+                'textDocument' => ProtocolFactory::textDocumentIdentifier(self::EXAMPLE_URI),
+                'position' => ProtocolFactory::position(0, 0)
+            ]
+        );
+        $this->assertInstanceOf(CompletionList::class, $response->result);
+        $this->assertEquals([
+            self::completionItem('hello', null),
+            self::completionItem('goodbye', null),
+        ], $response->result->items);
+        $this->assertFalse($response->result->isIncomplete);
+    }
+
     public function testHandleACompleteListOfSuggestions(): void
     {
         $tester = $this->create([
@@ -380,7 +408,8 @@ class CompletionHandlerTest extends TestCase
         bool $supportSnippets = true,
         bool $isIncomplete = false,
         array $importNameTextEdits = [],
-        array $aliases = []
+        array $aliases = [],
+        bool $supportCompletion = true
     ): LanguageServerTester {
         $completor = $this->createCompletor($suggestions, $isIncomplete);
         $registry = new TypedCompletorRegistry([
@@ -392,7 +421,7 @@ class CompletionHandlerTest extends TestCase
             $registry,
             new SuggestionNameFormatter(true),
             $this->createNameImporter($suggestions, $aliases, $importNameTextEdits),
-            $this->createClientCapabilities(true, $supportSnippets),
+            $this->createClientCapabilities($supportCompletion, $supportSnippets),
             true
         ))->build();
         $tester->textDocument()->open(self::EXAMPLE_URI, self::EXAMPLE_TEXT);
