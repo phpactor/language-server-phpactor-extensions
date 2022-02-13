@@ -6,13 +6,14 @@ use Microsoft\PhpParser\Parser;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
+use Phpactor\Extension\AbstractExtension;
 use Phpactor\Extension\LanguageServerSymbolProvider\Adapter\TolerantDocumentSymbolProvider;
 use Phpactor\Extension\LanguageServerSymbolProvider\Handler\DocumentSymbolProviderHandler;
 use Phpactor\Extension\LanguageServerSymbolProvider\Model\DocumentSymbolProvider;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\MapResolver\Resolver;
 
-class LanguageServerSymbolProviderExtension implements Extension
+class LanguageServerSymbolProviderExtension extends AbstractExtension implements Extension
 {
     /**
      * {@inheritDoc}
@@ -22,7 +23,8 @@ class LanguageServerSymbolProviderExtension implements Extension
         $container->register(DocumentSymbolProviderHandler::class, function (Container $container) {
             return new DocumentSymbolProviderHandler(
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
-                $container->get(DocumentSymbolProvider::class)
+                $container->get(DocumentSymbolProvider::class),
+                $this->clientCapabilities($container)
             );
         }, [
             LanguageServerExtension::TAG_METHOD_HANDLER => [],

@@ -4,7 +4,9 @@ namespace Phpactor\Extension\LanguageServerSymbolProvider\Handler;
 
 use Amp\Promise;
 use Amp\Success;
+use Phpactor\Extension\AbstractHandler;
 use Phpactor\Extension\LanguageServerSymbolProvider\Model\DocumentSymbolProvider;
+use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\LanguageServerProtocol\DocumentSymbolOptions;
 use Phpactor\LanguageServerProtocol\DocumentSymbolParams;
 use Phpactor\LanguageServerProtocol\DocumentSymbolRequest;
@@ -13,7 +15,7 @@ use Phpactor\LanguageServer\Core\Handler\CanRegisterCapabilities;
 use Phpactor\LanguageServer\Core\Handler\Handler;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
 
-class DocumentSymbolProviderHandler implements Handler, CanRegisterCapabilities
+class DocumentSymbolProviderHandler extends AbstractHandler implements Handler, CanRegisterCapabilities
 {
     /**
      * @var Workspace
@@ -25,10 +27,14 @@ class DocumentSymbolProviderHandler implements Handler, CanRegisterCapabilities
      */
     private $provider;
 
-    public function __construct(Workspace $workspace, DocumentSymbolProvider $provider)
-    {
+    public function __construct(
+        Workspace $workspace,
+        DocumentSymbolProvider $provider,
+        ClientCapabilities $clientCapabilities
+    ) {
         $this->workspace = $workspace;
         $this->provider = $provider;
+        parent::__construct($clientCapabilities);
     }
 
     /**
@@ -53,6 +59,10 @@ class DocumentSymbolProviderHandler implements Handler, CanRegisterCapabilities
 
     public function registerCapabiltiies(ServerCapabilities $capabilities): void
     {
+        if (null === $this->clientCapabilities->textDocument->documentSymbol) {
+            return;
+        }
+
         $capabilities->documentSymbolProvider = new DocumentSymbolOptions();
     }
 }

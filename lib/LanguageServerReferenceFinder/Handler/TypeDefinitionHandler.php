@@ -3,7 +3,9 @@
 namespace Phpactor\Extension\LanguageServerReferenceFinder\Handler;
 
 use Amp\Promise;
+use Phpactor\Extension\AbstractHandler;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
+use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\ServerCapabilities;
 use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
@@ -15,7 +17,7 @@ use Phpactor\ReferenceFinder\Exception\CouldNotLocateType;
 use Phpactor\ReferenceFinder\TypeLocator;
 use Phpactor\TextDocument\TextDocumentBuilder;
 
-class TypeDefinitionHandler implements Handler, CanRegisterCapabilities
+class TypeDefinitionHandler extends AbstractHandler implements Handler, CanRegisterCapabilities
 {
     /**
      * @var TypeLocator
@@ -32,11 +34,16 @@ class TypeDefinitionHandler implements Handler, CanRegisterCapabilities
      */
     private $locationConverter;
 
-    public function __construct(Workspace $workspace, TypeLocator $typeLocator, LocationConverter $locationConverter)
-    {
+    public function __construct(
+        Workspace $workspace,
+        TypeLocator $typeLocator,
+        LocationConverter $locationConverter,
+        ClientCapabilities $clientCapabilities
+    ) {
         $this->typeLocator = $typeLocator;
         $this->workspace = $workspace;
         $this->locationConverter = $locationConverter;
+        parent::__construct($clientCapabilities);
     }
 
     public function methods(): array
@@ -70,6 +77,6 @@ class TypeDefinitionHandler implements Handler, CanRegisterCapabilities
 
     public function registerCapabiltiies(ServerCapabilities $capabilities): void
     {
-        $capabilities->typeDefinitionProvider = true;
+        $capabilities->typeDefinitionProvider = null !== $this->clientCapabilities->textDocument->typeDefinition;
     }
 }

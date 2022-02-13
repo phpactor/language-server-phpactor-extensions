@@ -4,7 +4,9 @@ namespace Phpactor\Extension\LanguageServerReferenceFinder\Handler;
 
 use Amp\Delayed;
 use Amp\Promise;
+use Phpactor\Extension\AbstractHandler;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
+use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\LanguageServerProtocol\Location as LspLocation;
 use Phpactor\LanguageServerProtocol\Position;
 use Phpactor\LanguageServerProtocol\ReferenceContext;
@@ -23,7 +25,7 @@ use Phpactor\TextDocument\Location;
 use Phpactor\TextDocument\Locations;
 use Phpactor\TextDocument\TextDocumentBuilder;
 
-class ReferencesHandler implements Handler, CanRegisterCapabilities
+class ReferencesHandler extends AbstractHandler implements Handler, CanRegisterCapabilities
 {
     /**
      * @var Workspace
@@ -61,7 +63,8 @@ class ReferencesHandler implements Handler, CanRegisterCapabilities
         DefinitionLocator $definitionLocator,
         LocationConverter $locationConverter,
         ClientApi $clientApi,
-        float $timeoutSeconds = 5.0
+        float $timeoutSeconds = 5.0,
+        ClientCapabilities $clientCapabilities
     ) {
         $this->workspace = $workspace;
         $this->finder = $finder;
@@ -69,6 +72,7 @@ class ReferencesHandler implements Handler, CanRegisterCapabilities
         $this->timeoutSeconds = $timeoutSeconds;
         $this->locationConverter = $locationConverter;
         $this->clientApi = $clientApi;
+        parent::__construct($clientCapabilities);
     }
 
     /**
@@ -157,7 +161,7 @@ class ReferencesHandler implements Handler, CanRegisterCapabilities
 
     public function registerCapabiltiies(ServerCapabilities $capabilities): void
     {
-        $capabilities->referencesProvider = true;
+        $capabilities->referencesProvider = null !== $this->clientCapabilities->textDocument->references;
     }
 
     /**

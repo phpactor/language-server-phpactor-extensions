@@ -3,7 +3,9 @@
 namespace Phpactor\Extension\LanguageServerReferenceFinder\Handler;
 
 use Amp\Promise;
+use Phpactor\Extension\AbstractHandler;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
+use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\LanguageServerProtocol\ImplementationParams;
 use Phpactor\LanguageServerProtocol\ServerCapabilities;
 use Phpactor\Extension\LanguageServerBridge\Converter\LocationConverter;
@@ -13,7 +15,7 @@ use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\ReferenceFinder\ClassImplementationFinder;
 use Phpactor\TextDocument\TextDocumentBuilder;
 
-class GotoImplementationHandler implements Handler, CanRegisterCapabilities
+class GotoImplementationHandler extends AbstractHandler implements Handler, CanRegisterCapabilities
 {
     /**
      * @var Workspace
@@ -30,11 +32,16 @@ class GotoImplementationHandler implements Handler, CanRegisterCapabilities
      */
     private $locationConverter;
 
-    public function __construct(Workspace $workspace, ClassImplementationFinder $finder, LocationConverter $locationConverter)
-    {
+    public function __construct(
+        Workspace $workspace,
+        ClassImplementationFinder $finder,
+        LocationConverter $locationConverter,
+        ClientCapabilities $clientCapabilities
+    ) {
         $this->workspace = $workspace;
         $this->finder = $finder;
         $this->locationConverter = $locationConverter;
+        parent::__construct($clientCapabilities);
     }
 
     /**
@@ -68,6 +75,6 @@ class GotoImplementationHandler implements Handler, CanRegisterCapabilities
 
     public function registerCapabiltiies(ServerCapabilities $capabilities): void
     {
-        $capabilities->implementationProvider = true;
+        $capabilities->implementationProvider = null !== $this->clientCapabilities->textDocument->implementation;
     }
 }

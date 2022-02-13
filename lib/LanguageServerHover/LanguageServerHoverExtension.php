@@ -5,6 +5,7 @@ namespace Phpactor\Extension\LanguageServerHover;
 use Phpactor\CodeBuilder\Domain\TemplatePathResolver\PhpVersionPathResolver;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
+use Phpactor\Extension\AbstractExtension;
 use Phpactor\Extension\Logger\LoggingExtension;
 use Phpactor\Extension\Php\Model\PhpVersionResolver;
 use Phpactor\Extension\WorseReflection\WorseReflectionExtension;
@@ -15,10 +16,10 @@ use Phpactor\Extension\LanguageServerHover\Handler\HoverHandler;
 use Phpactor\Container\Extension;
 use Phpactor\MapResolver\Resolver;
 
-class LanguageServerHoverExtension implements Extension
+class LanguageServerHoverExtension extends AbstractExtension implements Extension
 {
     public const PARAM_TEMPLATE_PATHS = 'language_server_hover.template_paths';
-    
+
     private const SERVICE_MARKDOWN_RENDERER = 'language_server_completion.object_renderer.markdown';
 
     /**
@@ -47,7 +48,8 @@ class LanguageServerHoverExtension implements Extension
             return new HoverHandler(
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
                 $container->get(WorseReflectionExtension::SERVICE_REFLECTOR),
-                $container->get(self::SERVICE_MARKDOWN_RENDERER)
+                $container->get(self::SERVICE_MARKDOWN_RENDERER),
+                $this->clientCapabilities($container)
             );
         }, [ LanguageServerExtension::TAG_METHOD_HANDLER => []]);
 
@@ -71,7 +73,7 @@ class LanguageServerHoverExtension implements Extension
             foreach ($paths as $path) {
                 $builder = $builder->addTemplatePath($path);
             }
-            
+
             return $builder->build();
         });
     }

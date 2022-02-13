@@ -6,9 +6,11 @@ use Amp\CancellationToken;
 use Amp\CancelledException;
 use Amp\Delayed;
 use Amp\Promise;
+use Phpactor\Extension\AbstractHandler;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
 use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\NameImporter;
 use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\NameImporterResult;
+use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\LanguageServerProtocol\CompletionItem;
 use Phpactor\LanguageServerProtocol\CompletionList;
 use Phpactor\LanguageServerProtocol\CompletionOptions;
@@ -16,7 +18,6 @@ use Phpactor\LanguageServerProtocol\CompletionParams;
 use Phpactor\LanguageServerProtocol\InsertTextFormat;
 use Phpactor\LanguageServerProtocol\Range;
 use Phpactor\LanguageServerProtocol\ServerCapabilities;
-use Phpactor\LanguageServerProtocol\SignatureHelpOptions;
 use Phpactor\LanguageServerProtocol\TextDocumentItem;
 use Phpactor\LanguageServerProtocol\TextEdit;
 use Phpactor\Completion\Core\Suggestion;
@@ -28,7 +29,7 @@ use Phpactor\LanguageServer\Core\Handler\Handler;
 use Phpactor\LanguageServer\Core\Workspace\Workspace;
 use Phpactor\TextDocument\TextDocumentBuilder;
 
-class CompletionHandler implements Handler, CanRegisterCapabilities
+class CompletionHandler extends AbstractHandler implements Handler, CanRegisterCapabilities
 {
     /**
      * @var TypedCompletorRegistry
@@ -51,11 +52,6 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
     private $workspace;
 
     /**
-     * @var bool
-     */
-    private $supportSnippets;
-
-    /**
      * @var NameImporter
      */
     private $nameImporter;
@@ -65,7 +61,7 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
         TypedCompletorRegistry $registry,
         SuggestionNameFormatter $suggestionNameFormatter,
         NameImporter $nameImporter,
-        bool $supportSnippets,
+        ClientCapabilities $clientCapabilities,
         bool $provideTextEdit = false
     ) {
         $this->registry = $registry;
@@ -73,7 +69,7 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
         $this->workspace = $workspace;
         $this->suggestionNameFormatter = $suggestionNameFormatter;
         $this->nameImporter = $nameImporter;
-        $this->supportSnippets = $supportSnippets;
+        parent::__construct($clientCapabilities);
     }
 
     public function methods(): array
@@ -142,8 +138,9 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
 
     public function registerCapabiltiies(ServerCapabilities $capabilities): void
     {
-        $capabilities->completionProvider = new CompletionOptions([':', '>', '$']);
-        $capabilities->signatureHelpProvider = new SignatureHelpOptions(['(', ',']);
+        $capabilities->completionProvider = (null !== $this->clientCapabilities->textDocument->completion)
+            ? new CompletionOptions([':', '>', '$'])
+            : null;
     }
 
     private function determineInsertTextAndFormat(
@@ -154,7 +151,7 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
         $insertText = $name;
         $insertTextFormat = InsertTextFormat::PLAIN_TEXT;
 
-        if ($this->supportSnippets) {
+        if ($this->supportSnippets()) {
             $insertText = $suggestion->snippet() ?: $name;
             $insertTextFormat = $suggestion->snippet()
                 ? InsertTextFormat::SNIPPET
@@ -168,6 +165,11 @@ class CompletionHandler implements Handler, CanRegisterCapabilities
         }
 
         return [$insertText, $insertTextFormat];
+    }
+
+    private function supportSnippets(): bool
+    {
+        return $this->clientCapabilities->textDocument->completion->completionItem['snippetSupport'] ?? false;
     }
 
     private function importClassOrFunctionName(

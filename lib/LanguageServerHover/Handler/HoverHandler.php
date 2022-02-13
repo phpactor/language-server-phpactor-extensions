@@ -3,7 +3,9 @@
 namespace Phpactor\Extension\LanguageServerHover\Handler;
 
 use Amp\Promise;
+use Phpactor\Extension\AbstractHandler;
 use Phpactor\Extension\LanguageServerBridge\Converter\PositionConverter;
+use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\LanguageServerProtocol\Hover;
 use Phpactor\LanguageServerProtocol\MarkupContent;
 use Phpactor\LanguageServerProtocol\Position;
@@ -26,7 +28,7 @@ use Phpactor\WorseReflection\Core\Reflection\ReflectionOffset;
 use Phpactor\WorseReflection\Core\Type;
 use Phpactor\WorseReflection\Reflector;
 
-class HoverHandler implements Handler, CanRegisterCapabilities
+class HoverHandler extends AbstractHandler implements Handler, CanRegisterCapabilities
 {
     /**
      * @var Reflector
@@ -43,11 +45,16 @@ class HoverHandler implements Handler, CanRegisterCapabilities
      */
     private $workspace;
 
-    public function __construct(Workspace $workspace, Reflector $reflector, ObjectRenderer $renderer)
-    {
+    public function __construct(
+        Workspace $workspace,
+        Reflector $reflector,
+        ObjectRenderer $renderer,
+        ClientCapabilities $clientCapabilities
+    ) {
         $this->reflector = $reflector;
         $this->renderer = $renderer;
         $this->workspace = $workspace;
+        parent::__construct($clientCapabilities);
     }
 
     public function methods(): array
@@ -73,7 +80,7 @@ class HoverHandler implements Handler, CanRegisterCapabilities
             $symbolContext = $offsetReflection->symbolContext();
             $info = $this->infoFromReflecionOffset($offsetReflection);
             $string = new MarkupContent('markdown', $info);
-            
+
             return new Hover($string, new Range(
                 PositionConverter::byteOffsetToPosition(
                     ByteOffset::fromInt($symbolContext->symbol()->position()->start()),
@@ -89,7 +96,7 @@ class HoverHandler implements Handler, CanRegisterCapabilities
 
     public function registerCapabiltiies(ServerCapabilities $capabilities): void
     {
-        $capabilities->hoverProvider = true;
+        $capabilities->hoverProvider = null !== $this->clientCapabilities->textDocument->hover;
     }
 
     private function infoFromReflecionOffset(ReflectionOffset $offset): string

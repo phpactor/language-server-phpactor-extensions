@@ -5,16 +5,16 @@ namespace Phpactor\Extension\LanguageServerCompletion;
 use Phpactor\Container\Container;
 use Phpactor\Container\ContainerBuilder;
 use Phpactor\Container\Extension;
+use Phpactor\Extension\AbstractExtension;
 use Phpactor\Extension\Completion\CompletionExtension;
 use Phpactor\Extension\LanguageServerCodeTransform\Model\NameImport\NameImporter;
 use Phpactor\Extension\LanguageServerCompletion\Handler\SignatureHelpHandler;
 use Phpactor\Extension\LanguageServerCompletion\Util\SuggestionNameFormatter;
 use Phpactor\Extension\LanguageServer\LanguageServerExtension;
 use Phpactor\Extension\LanguageServerCompletion\Handler\CompletionHandler;
-use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\MapResolver\Resolver;
 
-class LanguageServerCompletionExtension implements Extension
+class LanguageServerCompletionExtension extends AbstractExtension implements Extension
 {
     private const PARAM_TRIM_LEADING_DOLLAR = 'language_server_completion.trim_leading_dollar';
 
@@ -47,7 +47,7 @@ class LanguageServerCompletionExtension implements Extension
                 $container->get(CompletionExtension::SERVICE_REGISTRY),
                 $container->get(SuggestionNameFormatter::class),
                 $container->get(NameImporter::class),
-                $this->clientCapabilities($container)->textDocument->completion->completionItem['snippetSupport'] ?? false
+                $this->clientCapabilities($container)
             );
         }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [
             'methods' => [
@@ -62,13 +62,9 @@ class LanguageServerCompletionExtension implements Extension
         $container->register('language_server_completion.handler.signature_help', function (Container $container) {
             return new SignatureHelpHandler(
                 $container->get(LanguageServerExtension::SERVICE_SESSION_WORKSPACE),
-                $container->get(CompletionExtension::SERVICE_SIGNATURE_HELPER)
+                $container->get(CompletionExtension::SERVICE_SIGNATURE_HELPER),
+                $this->clientCapabilities($container)
             );
         }, [ LanguageServerExtension::TAG_METHOD_HANDLER => [] ]);
-    }
-
-    private function clientCapabilities(Container $container): ClientCapabilities
-    {
-        return $container->get(ClientCapabilities::class);
     }
 }

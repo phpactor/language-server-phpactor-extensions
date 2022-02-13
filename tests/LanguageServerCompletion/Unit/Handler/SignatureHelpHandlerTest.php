@@ -2,7 +2,10 @@
 
 namespace Phpactor\Extension\LanguageServerCompletion\Tests\Unit\Handler;
 
+use Phpactor\LanguageServerProtocol\ClientCapabilities;
 use Phpactor\LanguageServerProtocol\SignatureHelp as LspSignatureHelp;
+use Phpactor\LanguageServerProtocol\SignatureHelpClientCapabilities;
+use Phpactor\LanguageServerProtocol\TextDocumentClientCapabilities;
 use Phpactor\LanguageServerProtocol\TextDocumentIdentifier;
 use PHPUnit\Framework\TestCase;
 use Phpactor\Completion\Core\SignatureHelp;
@@ -38,8 +41,25 @@ class SignatureHelpHandlerTest extends TestCase
         $builder = LanguageServerTesterBuilder::create();
         return $builder->addHandler(new SignatureHelpHandler(
             $builder->workspace(),
-            $this->createHelper()
+            $this->createHelper(),
+            $this->createClientCapabilities(true)
         ))->build();
+    }
+
+    private function createClientCapabilities(
+        bool $supportSignatureHelp = true
+    ): ClientCapabilities {
+        $capabilities = new ClientCapabilities();
+        $capabilities->textDocument = new TextDocumentClientCapabilities();
+
+        if (false === $supportSignatureHelp) {
+            return $capabilities;
+        }
+
+        $signatureHelpCapabilities = new SignatureHelpClientCapabilities();
+        $capabilities->textDocument->signatureHelp = $signatureHelpCapabilities;
+
+        return $capabilities;
     }
 
     private function createHelper(): SignatureHelper
