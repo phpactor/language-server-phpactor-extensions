@@ -174,6 +174,30 @@ class HighlighterTest extends TestCase
                 self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
             }
         ];
+
+        yield 'class name and use statement' => [
+            '<?php use Barfoo\Foobar; new Foo<>bar()',
+            function (Highlights $highlights) {
+                self::assertCount(2, $highlights);
+                self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
+            }
+        ];
+
+        yield 'class name and multiple use statements' => [
+            <<<'EOT'
+<?php 
+use Bartoo\Barf;
+use Barfoo\Foobar; 
+use BazBar;
+
+new Foo<>bar()
+EOT
+            ,
+            function (Highlights $highlights) {
+                self::assertCount(2, $highlights);
+                self::assertEquals(DocumentHighlightKind::TEXT, $highlights->at(0)->kind);
+            }
+        ];
     }
 
     /**
